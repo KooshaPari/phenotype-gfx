@@ -1,0 +1,11 @@
+/target
+**/*.rs.bk
+*.pdb
+Cargo.lock.bak
+
+# Editor noise
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
