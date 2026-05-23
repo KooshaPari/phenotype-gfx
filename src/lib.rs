@@ -32,6 +32,7 @@ pub mod lod;
 pub mod material;
 pub mod mesh;
 pub mod octree;
+pub mod world;
 
 pub use chunk::{Chunk, ChunkId, ChunkView};
 pub use coord::{to_chunk_coord, ChunkCoord, WorldCoord, FIXED_SCALE};
@@ -40,6 +41,7 @@ pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
 pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
+pub use world::VoxelWorld;
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes
 /// so consumers can detect API drift in `.civreplay` / serialized voxel diffs.
