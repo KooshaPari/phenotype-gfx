@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::chunk::{Chunk, ChunkId, CHUNK_EDGE, CHUNK_VOXELS};
 use crate::coord::{to_chunk_coord, ChunkCoord, WorldCoord};
 use crate::delta::{DirtyChunkEvent, WriteSeq};
+use crate::octree::VoxelOctree;
 
 /// World container.
 ///
@@ -24,6 +25,10 @@ pub struct VoxelWorld<T: Default + Clone + PartialEq> {
     voxel_span: i64,
     /// Dense leaf chunks indexed by chunk-grid coordinates.
     chunks: BTreeMap<ChunkCoord, Chunk<T>>,
+    /// Sparse voxel octree for coordinates whose dense leaves have been
+    /// promoted into uniform values. Reads fall through to this when a
+    /// `ChunkCoord` is absent from `chunks` (see [`VoxelWorld::read`]).
+    octree: VoxelOctree<T>,
     /// Monotonic write sequence.
     write_seq: WriteSeq,
     /// Dirty events not yet drained. Always kept sorted by `(chunk_id, write_seq)`
@@ -40,6 +45,7 @@ impl<T: Default + Clone + PartialEq> VoxelWorld<T> {
         Self {
             voxel_span,
             chunks: BTreeMap::new(),
+            octree: VoxelOctree::default(),
             write_seq: WriteSeq::default(),
             dirty: Vec::new(),
         }
@@ -84,27 +90,67 @@ impl<T: Default + Clone + PartialEq> VoxelWorld<T> {
         out
     }
 
-    /// Read a voxel at the given world position. Returns the default value when
-    /// the containing chunk has not been allocated yet.
+    /// Read a voxel at the given world position. Falls back to the sparse
+    /// octree when the containing chunk has been compacted into a uniform
+    /// region. Returns the default value when neither store knows about the
+    /// coord.
     #[must_use]
     pub fn read(&self, pos: WorldCoord) -> T {
         let coord = to_chunk_coord(pos, self.voxel_span, CHUNK_EDGE as i32);
-        let Some(chunk) = self.chunks.get(&coord) else {
-            return T::default();
-        };
-        let edge = CHUNK_EDGE as i64;
-        let world_edge = self.voxel_span * edge;
-        let local_x = pos.x.rem_euclid(world_edge).div_euclid(self.voxel_span) as usize;
-        let local_y = pos.y.rem_euclid(world_edge).div_euclid(self.voxel_span) as usize;
-        let local_z = pos.z.rem_euclid(world_edge).div_euclid(self.voxel_span) as usize;
-        let idx = local_x + local_y * CHUNK_EDGE + local_z * CHUNK_EDGE * CHUNK_EDGE;
-        chunk.voxels[idx].clone()
+        if let Some(chunk) = self.chunks.get(&coord) {
+            let edge = CHUNK_EDGE as i64;
+            let world_edge = self.voxel_span * edge;
+            let local_x = pos.x.rem_euclid(world_edge).div_euclid(self.voxel_span) as usize;
+            let local_y = pos.y.rem_euclid(world_edge).div_euclid(self.voxel_span) as usize;
+            let local_z = pos.z.rem_euclid(world_edge).div_euclid(self.voxel_span) as usize;
+            let idx = local_x + local_y * CHUNK_EDGE + local_z * CHUNK_EDGE * CHUNK_EDGE;
+            return chunk.voxels[idx].clone();
+        }
+        if let Some(v) = self.octree.uniform_value(coord) {
+            return v;
+        }
+        T::default()
     }
 
-    /// Number of allocated chunks. Test-friendly observability.
+    /// Number of allocated *dense* chunks. Test-friendly observability.
     #[must_use]
     pub fn chunk_count(&self) -> usize {
         self.chunks.len()
+    }
+
+    /// Number of chunks promoted into the sparse octree as uniform regions.
+    #[must_use]
+    pub fn uniform_chunk_count(&self) -> usize {
+        self.octree.nodes.len()
+    }
+
+    /// Borrow the sparse octree (read-only).
+    #[must_use]
+    pub fn octree(&self) -> &VoxelOctree<T> {
+        &self.octree
+    }
+
+    /// Compact the world: walk dense chunks, identify those that are fully
+    /// uniform, drop them from dense storage, and promote them into the sparse
+    /// octree as [`crate::octree::OctreeNode::Uniform`].
+    ///
+    /// Returns the number of chunks promoted in this pass. The operation is
+    /// idempotent — re-running on an already-compacted world is a no-op.
+    pub fn compact(&mut self) -> usize {
+        let mut promote: Vec<(ChunkCoord, T)> = Vec::new();
+        for (coord, chunk) in &self.chunks {
+            if let Some(first) = chunk.voxels.first() {
+                let uniform = chunk.voxels.iter().all(|v| v == first);
+                if uniform {
+                    promote.push((*coord, first.clone()));
+                }
+            }
+        }
+        for (coord, value) in &promote {
+            self.chunks.remove(coord);
+            self.octree.insert_uniform(*coord, value.clone());
+        }
+        promote.len()
     }
 }
 
@@ -198,6 +244,124 @@ mod tests {
                 assert!(window[0].chunk_id < window[1].chunk_id);
             }
         }
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-006 — `compact()` promotes a uniform dense chunk
+    /// into the sparse octree, drops it from dense storage, and read() still
+    /// returns the correct material via the octree fallback.
+    #[test]
+    fn compact_promotes_uniform_chunks() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        // Fill a 16-cell column at the origin so the whole 16³ chunk = 1.
+        for z in 0..16 {
+            for y in 0..16 {
+                for x in 0..16 {
+                    w.write(
+                        WorldCoord {
+                            x: x * 1_000_000,
+                            y: y * 1_000_000,
+                            z: z * 1_000_000,
+                        },
+                        1u8,
+                    );
+                }
+            }
+        }
+        assert_eq!(w.chunk_count(), 1);
+        let promoted = w.compact();
+        assert_eq!(promoted, 1);
+        assert_eq!(w.chunk_count(), 0);
+        assert_eq!(w.uniform_chunk_count(), 1);
+        // Read still works through the octree fallback.
+        assert_eq!(w.read(WorldCoord { x: 0, y: 0, z: 0 }), 1);
+        assert_eq!(
+            w.read(WorldCoord {
+                x: 5_000_000,
+                y: 5_000_000,
+                z: 5_000_000
+            }),
+            1
+        );
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-007 — `compact()` does not promote a chunk that
+    /// has any non-uniform voxels.
+    #[test]
+    fn compact_skips_non_uniform_chunks() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        w.write(WorldCoord { x: 0, y: 0, z: 0 }, 1);
+        w.write(
+            WorldCoord {
+                x: 1_000_000,
+                y: 0,
+                z: 0,
+            },
+            2,
+        );
+        let promoted = w.compact();
+        assert_eq!(promoted, 0);
+        assert_eq!(w.chunk_count(), 1);
+        assert_eq!(w.uniform_chunk_count(), 0);
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-008 — repeated `compact()` is idempotent.
+    #[test]
+    fn compact_is_idempotent() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        for z in 0..16 {
+            for y in 0..16 {
+                for x in 0..16 {
+                    w.write(
+                        WorldCoord {
+                            x: x * 1_000_000,
+                            y: y * 1_000_000,
+                            z: z * 1_000_000,
+                        },
+                        7,
+                    );
+                }
+            }
+        }
+        let first = w.compact();
+        let second = w.compact();
+        assert_eq!(first, 1);
+        assert_eq!(second, 0);
+        assert_eq!(w.uniform_chunk_count(), 1);
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-009 — replay determinism holds across compact()
+    /// boundaries: two worlds that follow identical write+compact sequences
+    /// share identical state.
+    #[test]
+    fn replay_holds_across_compact() {
+        fn build(w: &mut VoxelWorld<u8>) {
+            for z in 0..16 {
+                for y in 0..16 {
+                    for x in 0..16 {
+                        w.write(
+                            WorldCoord {
+                                x: x * 1_000_000,
+                                y: y * 1_000_000,
+                                z: z * 1_000_000,
+                            },
+                            9,
+                        );
+                    }
+                }
+            }
+        }
+        let mut w1: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        let mut w2: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        build(&mut w1);
+        build(&mut w2);
+        assert_eq!(w1.drain_dirty(), w2.drain_dirty());
+        w1.compact();
+        w2.compact();
+        assert_eq!(w1.chunk_count(), w2.chunk_count());
+        assert_eq!(w1.uniform_chunk_count(), w2.uniform_chunk_count());
+        // Reads through the octree fallback agree.
+        let probe = WorldCoord { x: 0, y: 0, z: 0 };
+        assert_eq!(w1.read(probe), w2.read(probe));
     }
 
     /// FR-PHENO-VOXEL-WORLD-005 — replaying the same write sequence on a fresh
