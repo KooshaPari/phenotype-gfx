@@ -31,6 +31,20 @@ pub struct ChunkCoord {
     pub cz: i32,
 }
 
+impl ChunkCoord {
+    /// Canonical packed `ChunkId` used by the kernel for deterministic chunk
+    /// identity and dirty-event ordering.
+    #[must_use]
+    pub fn chunk_id(self) -> crate::chunk::ChunkId {
+        // Treat the i32 components as u32 bit-patterns so the resulting ID is
+        // unique for every distinct (cx, cy, cz) triple.
+        let cx = (self.cx as u32) as u64;
+        let cy = (self.cy as u32) as u64;
+        let cz = (self.cz as u32) as u64;
+        crate::chunk::ChunkId((cx << 40) | (cy << 16) | (cz & 0xFFFF))
+    }
+}
+
 /// Convert a fixed-point world position to chunk-grid coordinates given the per-axis
 /// chunk edge in voxels and the per-voxel fixed-point span.
 #[must_use]

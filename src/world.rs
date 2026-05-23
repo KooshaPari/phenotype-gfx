@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::chunk::{Chunk, ChunkId, CHUNK_EDGE, CHUNK_VOXELS};
+use crate::chunk::{Chunk, CHUNK_EDGE, CHUNK_VOXELS};
 use crate::coord::{to_chunk_coord, ChunkCoord, WorldCoord};
 use crate::delta::{DirtyChunkEvent, WriteSeq};
 use crate::octree::VoxelOctree;
@@ -72,7 +72,7 @@ impl<T: Default + Clone + PartialEq> VoxelWorld<T> {
         if chunk.voxels[idx] != value {
             chunk.voxels[idx] = value;
             self.dirty.push(DirtyChunkEvent {
-                chunk_id: chunk_id_for(coord),
+                chunk_id: coord.chunk_id(),
                 write_seq: self.write_seq.advance(),
             });
         }
@@ -118,6 +118,39 @@ impl<T: Default + Clone + PartialEq> VoxelWorld<T> {
         self.chunks.len()
     }
 
+    /// Total voxels represented by the dense chunk store.
+    #[must_use]
+    pub fn total_voxel_count(&self) -> usize {
+        self.chunks.len() * CHUNK_VOXELS
+    }
+
+    /// Borrow a dense chunk by chunk-grid coordinate.
+    ///
+    /// Returns `None` when the chunk has been compacted into the sparse octree;
+    /// callers should use [`VoxelWorld::octree`] / [`VoxelOctree::uniform_value`]
+    /// for uniform regions.
+    #[must_use]
+    pub fn chunk(&self, coord: ChunkCoord) -> Option<&Chunk<T>> {
+        self.chunks.get(&coord)
+    }
+
+    /// Iterate over all dense chunks in deterministic `BTreeMap` order.
+    pub fn chunks_dense(&self) -> impl Iterator<Item = (ChunkCoord, &Chunk<T>)> {
+        self.chunks.iter().map(|(coord, chunk)| (*coord, chunk))
+    }
+
+    /// Return the dense chunks named by `coords` in the order provided.
+    pub fn chunks_dense_at(&self, coords: &[ChunkCoord]) -> Vec<(ChunkCoord, &Chunk<T>)> {
+        coords
+            .iter()
+            .filter_map(|coord| {
+                self.chunks
+                    .get_key_value(coord)
+                    .map(|(c, chunk)| (*c, chunk))
+            })
+            .collect()
+    }
+
     /// Number of chunks promoted into the sparse octree as uniform regions.
     #[must_use]
     pub fn uniform_chunk_count(&self) -> usize {
@@ -152,19 +185,6 @@ impl<T: Default + Clone + PartialEq> VoxelWorld<T> {
         }
         promote.len()
     }
-}
-
-/// Stable per-`ChunkCoord` [`ChunkId`]. Packs the signed grid coordinates into a
-/// single `u64` so dirty events can be ordered without leaking BTreeMap ordering.
-fn chunk_id_for(c: ChunkCoord) -> ChunkId {
-    // Treat the i32 components as u32 bit-patterns so the resulting ID is unique
-    // for every distinct (cx, cy, cz) triple. Truncate Z to the bottom byte because
-    // 24+24+16=64 fits in a u64 but the planet-scale world is heavily wider on the
-    // XY plane than Z. This is the same encoding choice as Minecraft's chunk hash.
-    let cx = (c.cx as u32) as u64;
-    let cy = (c.cy as u32) as u64;
-    let cz = (c.cz as u32) as u64;
-    ChunkId((cx << 40) | (cy << 16) | (cz & 0xFFFF))
 }
 
 #[cfg(test)]
@@ -409,5 +429,145 @@ mod tests {
             w2.write(pos, v);
         }
         assert_eq!(w1.drain_dirty(), w2.drain_dirty());
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-010 — `chunk()` returns `None` for an empty world.
+    #[test]
+    fn chunk_returns_none_for_empty_world() {
+        let w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        assert!(w
+            .chunk(ChunkCoord {
+                cx: 0,
+                cy: 0,
+                cz: 0
+            })
+            .is_none());
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-011 — `chunk()` returns `Some` after a write.
+    #[test]
+    fn chunk_returns_some_after_write() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        let coord = w.write(WorldCoord { x: 0, y: 0, z: 0 }, 11);
+        assert!(w.chunk(coord).is_some());
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-012 — `chunk()` returns `None` after compaction
+    /// promotes the dense chunk into the octree.
+    #[test]
+    fn chunk_returns_none_after_compaction() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        for z in 0..16 {
+            for y in 0..16 {
+                for x in 0..16 {
+                    w.write(
+                        WorldCoord {
+                            x: x * 1_000_000,
+                            y: y * 1_000_000,
+                            z: z * 1_000_000,
+                        },
+                        3,
+                    );
+                }
+            }
+        }
+        let coord = ChunkCoord {
+            cx: 0,
+            cy: 0,
+            cz: 0,
+        };
+        assert!(w.chunk(coord).is_some());
+        assert_eq!(w.compact(), 1);
+        assert!(w.chunk(coord).is_none());
+        assert_eq!(w.octree().uniform_value(coord), Some(3));
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-013 — `chunks_dense()` iterates in `BTreeMap`
+    /// coordinate order.
+    #[test]
+    fn chunks_dense_iterates_in_order() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        w.write(
+            WorldCoord {
+                x: 32_000_000,
+                y: 0,
+                z: 0,
+            },
+            1,
+        );
+        w.write(
+            WorldCoord {
+                x: 0,
+                y: 32_000_000,
+                z: 0,
+            },
+            2,
+        );
+        w.write(
+            WorldCoord {
+                x: 16_000_000,
+                y: 0,
+                z: 0,
+            },
+            3,
+        );
+
+        let coords: Vec<ChunkCoord> = w.chunks_dense().map(|(coord, _)| coord).collect();
+        assert_eq!(
+            coords,
+            vec![
+                ChunkCoord {
+                    cx: 0,
+                    cy: 2,
+                    cz: 0
+                },
+                ChunkCoord {
+                    cx: 1,
+                    cy: 0,
+                    cz: 0
+                },
+                ChunkCoord {
+                    cx: 2,
+                    cy: 0,
+                    cz: 0
+                },
+            ]
+        );
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-014 — `ChunkCoord::chunk_id()` matches the kernel's
+    /// canonical packed chunk-ID encoding.
+    #[test]
+    fn chunk_coord_chunk_id_matches_kernel_packing() {
+        let coord = ChunkCoord {
+            cx: -1,
+            cy: 0x1234_5678,
+            cz: -2,
+        };
+        let expected = crate::chunk::ChunkId(
+            (((coord.cx as u32) as u64) << 40)
+                | (((coord.cy as u32) as u64) << 16)
+                | (((coord.cz as u32) as u64) & 0xFFFF),
+        );
+        assert_eq!(coord.chunk_id(), expected);
+
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        w.write(
+            WorldCoord {
+                x: -1_000_000,
+                y: 0,
+                z: 0,
+            },
+            9,
+        );
+        assert_eq!(
+            w.drain_dirty()[0].chunk_id,
+            ChunkCoord {
+                cx: -1,
+                cy: 0,
+                cz: 0
+            }
+            .chunk_id()
+        );
     }
 }

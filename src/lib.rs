@@ -47,7 +47,7 @@ pub use world::VoxelWorld;
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes
 /// so consumers can detect API drift in `.civreplay` / serialized voxel diffs.
-pub const SCHEMA_VERSION: u32 = 0;
+pub const SCHEMA_VERSION: u32 = 1;
 
 /// Default `VoxelScaleMultiplier` derived from WSM3D's hard-won visible-default lesson
 /// (mesh-local 11x5x1 ✕ sprite-scale 0.1 ≈ ~1.1x0.5x0.1 world → invisible; multiplier
