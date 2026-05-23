@@ -3,8 +3,11 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Stable per-world material identifier.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+/// Stable per-world material identifier. Default = `MaterialId(0)` is conventionally
+/// "air" / empty space for cubic-mesher consumers.
+#[derive(
+    Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
 pub struct MaterialId(pub u16);
 
 /// Mesh-neutral material description. The renderer pairs `MaterialId` with its own

@@ -27,6 +27,7 @@
 
 pub mod chunk;
 pub mod coord;
+pub mod cubic_mesher;
 pub mod delta;
 pub mod lod;
 pub mod material;
@@ -36,6 +37,7 @@ pub mod world;
 
 pub use chunk::{Chunk, ChunkId, ChunkView};
 pub use coord::{to_chunk_coord, ChunkCoord, WorldCoord, FIXED_SCALE};
+pub use cubic_mesher::{CubicMesher, CubicVoxel};
 pub use delta::{DirtyChunkEvent, WriteSeq};
 pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
 pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
