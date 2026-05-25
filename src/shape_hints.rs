@@ -18,7 +18,7 @@
 //!
 //! let reg = ShapeHintRegistry::with_wsm3d_defaults();
 //! assert_eq!(reg.get("tree_oak"), ShapeHint::Cylinder);
-//! assert_eq!(reg.get("wall_stone"), ShapeHint::LongX);
+//! assert_eq!(reg.get("wall_segment"), ShapeHint::LongX);
 //! assert_eq!(reg.get("unknown_widget"), ShapeHint::Auto);
 //! ```
 
