@@ -33,9 +33,16 @@ pub mod lod;
 pub mod material;
 pub mod mesh;
 pub mod octree;
+pub mod shape_hints;
+pub mod sprite_voxelizer;
 pub mod world;
 
 pub use chunk::{Chunk, ChunkId, ChunkView};
+pub use shape_hints::{ShapeHint, ShapeHintRegistry};
+pub use sprite_voxelizer::{
+    compute_manhattan_dist_to_air, voxelize_image, ExtrusionMode, SpriteVoxel, VoxelizeConfig,
+    DEFAULT_DEPTH,
+};
 pub use coord::{to_chunk_coord, ChunkCoord, WorldCoord, FIXED_SCALE};
 pub use cubic_mesher::{CubicMesher, CubicVoxel};
 pub use delta::{DirtyChunkEvent, WriteSeq};
