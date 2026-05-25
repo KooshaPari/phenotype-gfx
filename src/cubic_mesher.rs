@@ -296,4 +296,112 @@ mod tests {
         let res = CubicMesher::mesh_cubic(view, LodLevel(0));
         assert!(matches!(res, Err(MeshError::BadChunkSize { .. })));
     }
+
+    /// FR-PHENO-VOXEL-CUBIC-006 — a solid voxel placed at the maximum chunk corner
+    /// (CHUNK_EDGE-1, CHUNK_EDGE-1, CHUNK_EDGE-1) still emits exactly 6 faces:
+    /// all neighbours are out-of-bounds and therefore treated as air.
+    #[test]
+    fn voxel_at_chunk_corner_emits_six_faces() {
+        let edge = CHUNK_EDGE as i32 - 1;
+        let mut c = Chunk::<MaterialId>::default();
+        c.voxels[idx(edge, edge, edge)] = MaterialId(1);
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        assert_eq!(mesh.vertices.len(), 24, "corner voxel must emit 6 faces (24 verts)");
+        assert_eq!(mesh.indices.len(), 36);
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-007 — a voxel with all 6 neighbours solid emits zero
+    /// faces (completely buried).
+    #[test]
+    fn buried_voxel_emits_no_faces() {
+        let mut c = Chunk::<MaterialId>::default();
+        // Fill a 3×3×3 cube so that (1,1,1) is completely surrounded.
+        for z in 0..3_i32 {
+            for y in 0..3_i32 {
+                for x in 0..3_i32 {
+                    c.voxels[idx(x, y, z)] = MaterialId(1);
+                }
+            }
+        }
+        // Count only the faces that belong to position (1,1,1).
+        // The easiest proxy: mesh the whole chunk and compare against the
+        // outer-shell count.  A 3×3×3 fully-solid block has 6 faces × 9 per
+        // side = 54 exposed faces → 54×4 = 216 vertices.
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        // 3×3 grid on each of 6 faces = 54 quads, 216 verts.
+        assert_eq!(
+            mesh.vertices.len(),
+            216,
+            "only outer-shell faces should be emitted for a solid 3×3×3 block"
+        );
+        assert_eq!(mesh.indices.len(), 54 * 6);
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-008 — each emitted face carries the correct outward
+    /// normal.  For a single voxel at the origin the six normals must be the six
+    /// axis-aligned unit vectors, each appearing exactly 4 times (once per vertex).
+    #[test]
+    fn face_normals_are_outward() {
+        let c = single_voxel_chunk_at_origin();
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+
+        let expected_normals: [[f32; 3]; 6] = [
+            [1.0, 0.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, -1.0],
+        ];
+        for n in &expected_normals {
+            let count = mesh.vertices.iter().filter(|v| &v.normal == n).count();
+            assert_eq!(count, 4, "normal {:?} should appear exactly 4 times", n);
+        }
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-009 — material id is propagated to every vertex of a
+    /// face.  A chunk with two voxels of different materials must have both ids
+    /// present in the vertex stream.
+    #[test]
+    fn vertex_material_ids_match_voxels() {
+        let mut c = Chunk::<MaterialId>::default();
+        c.voxels[idx(0, 0, 0)] = MaterialId(7);
+        c.voxels[idx(0, 1, 0)] = MaterialId(13);
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let has_7 = mesh.vertices.iter().any(|v| v.material == MaterialId(7));
+        let has_13 = mesh.vertices.iter().any(|v| v.material == MaterialId(13));
+        assert!(has_7, "material 7 must appear in vertex stream");
+        assert!(has_13, "material 13 must appear in vertex stream");
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-010 — index buffer only references valid vertex slots.
+    #[test]
+    fn index_buffer_in_bounds() {
+        let c = single_voxel_chunk_at_origin();
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let vcount = mesh.vertices.len() as u32;
+        for &i in &mesh.indices {
+            assert!(i < vcount, "index {} out of bounds (vcount={})", i, vcount);
+        }
+    }
 }
