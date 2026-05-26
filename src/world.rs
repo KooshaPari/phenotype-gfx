@@ -535,6 +535,90 @@ mod tests {
         );
     }
 
+    /// FR-PHENO-VOXEL-WORLD-015 — out-of-bounds / extreme coordinates never panic;
+    /// they map to a valid chunk via euclidean-division and round-trip correctly.
+    #[test]
+    fn out_of_bounds_coords_do_not_panic() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        let extreme_coords = [
+            WorldCoord {
+                x: i64::MAX / 2,
+                y: 0,
+                z: 0,
+            },
+            WorldCoord {
+                x: i64::MIN / 2,
+                y: 0,
+                z: 0,
+            },
+            WorldCoord {
+                x: -1_000_000_000,
+                y: -1_000_000_000,
+                z: -1_000_000_000,
+            },
+            WorldCoord {
+                x: 1_000_000_000,
+                y: 1_000_000_000,
+                z: 1_000_000_000,
+            },
+        ];
+        for pos in extreme_coords {
+            // Must not panic; the return value is a valid ChunkCoord.
+            let coord = w.write(pos, 7u8);
+            // Read back must equal what was written.
+            assert_eq!(w.read(pos), 7, "round-trip failed at {pos:?}");
+            // The dense chunk must exist.
+            assert!(
+                w.chunk(coord).is_some(),
+                "chunk not allocated for {pos:?}"
+            );
+        }
+        // All four extreme writes produced exactly four chunks (different chunk-grid
+        // coordinates) or fewer if any of them happen to share a chunk.
+        assert!(w.chunk_count() >= 1 && w.chunk_count() <= 4);
+    }
+
+    /// FR-PHENO-VOXEL-WORLD-016 — multiple writes to the same chunk coexist
+    /// independently; distinct voxels within one chunk each return their own value.
+    #[test]
+    fn multiple_writes_to_same_chunk_coexist() {
+        let mut w: VoxelWorld<u8> = VoxelWorld::new(1_000_000);
+        // All three positions are inside the 16³ chunk at origin (voxel_span=1e6).
+        let p0 = WorldCoord { x: 0, y: 0, z: 0 };
+        let p1 = WorldCoord {
+            x: 1_000_000,
+            y: 0,
+            z: 0,
+        };
+        let p2 = WorldCoord {
+            x: 0,
+            y: 1_000_000,
+            z: 0,
+        };
+        let p3 = WorldCoord {
+            x: 0,
+            y: 0,
+            z: 1_000_000,
+        };
+        w.write(p0, 10);
+        w.write(p1, 20);
+        w.write(p2, 30);
+        w.write(p3, 40);
+        // All in the same chunk.
+        assert_eq!(w.chunk_count(), 1, "expected a single chunk for all writes");
+        // Each voxel retains its own value.
+        assert_eq!(w.read(p0), 10);
+        assert_eq!(w.read(p1), 20);
+        assert_eq!(w.read(p2), 30);
+        assert_eq!(w.read(p3), 40);
+        // Overwriting one voxel must not disturb its neighbours.
+        w.write(p0, 99);
+        assert_eq!(w.read(p0), 99);
+        assert_eq!(w.read(p1), 20);
+        assert_eq!(w.read(p2), 30);
+        assert_eq!(w.read(p3), 40);
+    }
+
     /// FR-PHENO-VOXEL-WORLD-014 — `ChunkCoord::chunk_id()` matches the kernel's
     /// canonical packed chunk-ID encoding.
     #[test]
