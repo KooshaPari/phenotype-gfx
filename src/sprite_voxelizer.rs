@@ -250,6 +250,8 @@ pub fn compute_manhattan_dist_to_air(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+    use std::collections::HashSet;
 
     fn solid_pixel() -> [u8; 4] {
         [200, 100, 50, 255]
@@ -344,5 +346,76 @@ mod tests {
         };
         let vol = voxelize_image(&pixels, 1, 1, &cfg);
         assert_eq!(vol.len(), 1);
+    }
+
+    proptest! {
+        /// Random flat-mode images stay within the declared X/Y/Z bounds and
+        /// produce one `depth`-sized column per opaque pixel.
+        #[test]
+        fn flat_mode_respects_volume_dimensions(
+            (width, height, depth, pixels) in (1u32..8, 1u32..8, 1u32..8).prop_flat_map(|(width, height, depth)| {
+                let pixel_count = (width * height) as usize;
+                prop::collection::vec(any::<[u8; 4]>(), pixel_count)
+                    .prop_map(move |pixels| (width, height, depth, pixels))
+            })
+        ) {
+            let cfg = VoxelizeConfig {
+                depth,
+                ..Default::default()
+            };
+            let vol = voxelize_image(&pixels, width, height, &cfg);
+            let expected_opaque = pixels.iter().filter(|p| p[3] > ALPHA_THRESHOLD).count();
+
+            prop_assert_eq!(vol.len(), expected_opaque * depth as usize);
+            prop_assert!(vol.iter().all(|v| v.x < width && v.y < height && v.z < depth));
+        }
+
+        /// Fully transparent images should never generate voxels, regardless
+        /// of dimensions or depth.
+        #[test]
+        fn transparent_pixels_produce_no_voxels(
+            (width, height, depth, pixels) in (1u32..8, 1u32..8, 1u32..8).prop_flat_map(|(width, height, depth)| {
+                let pixel_count = (width * height) as usize;
+                prop::collection::vec(any::<[u8; 3]>(), pixel_count)
+                    .prop_map(move |pixels| (width, height, depth, pixels))
+            })
+        ) {
+            let pixels = pixels
+                .into_iter()
+                .map(|[r, g, b]| [r, g, b, 0])
+                .collect::<Vec<_>>();
+            let cfg = VoxelizeConfig {
+                depth,
+                ..Default::default()
+            };
+            let vol = voxelize_image(&pixels, width, height, &cfg);
+
+            prop_assert!(vol.is_empty());
+        }
+
+        /// Flat extrusion should be symmetric around the Z axis: every voxel
+        /// has a mirrored voxel at `depth - 1 - z` for the same X/Y position.
+        #[test]
+        fn flat_mode_extrusion_is_z_symmetric(
+            (width, height, depth, pixels) in (1u32..8, 1u32..8, 1u32..8).prop_flat_map(|(width, height, depth)| {
+                let pixel_count = (width * height) as usize;
+                prop::collection::vec(any::<[u8; 4]>(), pixel_count)
+                    .prop_map(move |pixels| (width, height, depth, pixels))
+            })
+        ) {
+            let cfg = VoxelizeConfig {
+                depth,
+                ..Default::default()
+            };
+            let vol = voxelize_image(&pixels, width, height, &cfg);
+            let voxels = vol
+                .iter()
+                .map(|v| (v.x, v.y, v.z))
+                .collect::<HashSet<_>>();
+
+            for voxel in &vol {
+                prop_assert!(voxels.contains(&(voxel.x, voxel.y, depth - 1 - voxel.z)));
+            }
+        }
     }
 }
