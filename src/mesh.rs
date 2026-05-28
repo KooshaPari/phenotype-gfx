@@ -30,6 +30,17 @@ pub struct MeshBuffer {
     pub vertices: Vec<MeshVertex>,
     /// Triangle indices. Length must be a multiple of 3.
     pub indices: Vec<u32>,
+    /// Per-vertex ambient occlusion values, parallel to `vertices`.
+    ///
+    /// Each entry is in `0..=3`: **3 = fully lit** (no occlusion), **0 = maximum
+    /// occlusion** (vertex is wedged into a solid corner).  The classic voxel-AO
+    /// rule: if both side neighbours are solid the value is 0, otherwise
+    /// `3 - (side1_solid + side2_solid + corner_solid)`.
+    ///
+    /// `CubicMesher` populates this field.  `GreedyMesher` leaves all entries at
+    /// the default of 3 (TODO: add greedy AO in a future pass).
+    /// Length is always equal to `vertices.len()`.
+    pub ao: Vec<u8>,
 }
 
 /// Result of a mesher pass.
