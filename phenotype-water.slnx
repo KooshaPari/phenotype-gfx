@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/phenotype-water.tests.csproj" />
+  </Folder>
+  <Project Path="phenotype-water.csproj" />
+</Solution>

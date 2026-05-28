@@ -9,8 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Exclude the tests subfolder from the library's compile glob -->
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(ProgramFiles)/Steam/steamapps/common/worldbox/worldbox_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\worldbox\worldbox_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
