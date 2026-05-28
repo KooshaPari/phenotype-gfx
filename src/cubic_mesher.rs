@@ -310,7 +310,11 @@ mod tests {
             voxels: &c.voxels,
         };
         let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
-        assert_eq!(mesh.vertices.len(), 24, "corner voxel must emit 6 faces (24 verts)");
+        assert_eq!(
+            mesh.vertices.len(),
+            24,
+            "corner voxel must emit 6 faces (24 verts)"
+        );
         assert_eq!(mesh.indices.len(), 36);
     }
 

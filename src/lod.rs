@@ -97,7 +97,7 @@ mod tests {
     fn near_boundary_is_lod_zero() {
         let p = LodPolicy::default();
         let scale = VoxelScaleMultiplier::default(); // 8.0
-        // Exactly at the near threshold in voxel-edges: near_voxel_edges * scale
+                                                     // Exactly at the near threshold in voxel-edges: near_voxel_edges * scale
         let at_threshold = p.near_voxel_edges * scale.0;
         assert_eq!(select_lod(at_threshold, scale, p), LodLevel(0));
         // One unit inside the threshold.

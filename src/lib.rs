@@ -38,11 +38,6 @@ pub mod sprite_voxelizer;
 pub mod world;
 
 pub use chunk::{Chunk, ChunkId, ChunkView};
-pub use shape_hints::{ShapeHint, ShapeHintRegistry};
-pub use sprite_voxelizer::{
-    compute_manhattan_dist_to_air, voxelize_image, ExtrusionMode, SpriteVoxel, VoxelizeConfig,
-    DEFAULT_DEPTH,
-};
 pub use coord::{to_chunk_coord, ChunkCoord, WorldCoord, FIXED_SCALE};
 pub use cubic_mesher::{CubicMesher, CubicVoxel};
 pub use delta::{DirtyChunkEvent, WriteSeq};
@@ -50,6 +45,11 @@ pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
 pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
+pub use shape_hints::{ShapeHint, ShapeHintRegistry};
+pub use sprite_voxelizer::{
+    compute_manhattan_dist_to_air, voxelize_image, ExtrusionMode, SpriteVoxel, VoxelizeConfig,
+    DEFAULT_DEPTH,
+};
 pub use world::VoxelWorld;
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes

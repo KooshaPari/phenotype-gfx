@@ -568,10 +568,7 @@ mod tests {
             // Read back must equal what was written.
             assert_eq!(w.read(pos), 7, "round-trip failed at {pos:?}");
             // The dense chunk must exist.
-            assert!(
-                w.chunk(coord).is_some(),
-                "chunk not allocated for {pos:?}"
-            );
+            assert!(w.chunk(coord).is_some(), "chunk not allocated for {pos:?}");
         }
         // All four extreme writes produced exactly four chunks (different chunk-grid
         // coordinates) or fewer if any of them happen to share a chunk.

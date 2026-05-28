@@ -182,11 +182,7 @@ pub fn voxelize_image(
 /// A row-major `Vec<u32>` of length `width * height`. Transparent pixels hold 0.
 /// If the image is entirely solid (no air pixels), a fallback seeding from the
 /// border pixels is applied (matching WSM3D's fallback branch).
-pub fn compute_manhattan_dist_to_air(
-    pixels: &[[u8; 4]],
-    width: u32,
-    height: u32,
-) -> Vec<u32> {
+pub fn compute_manhattan_dist_to_air(pixels: &[[u8; 4]], width: u32, height: u32) -> Vec<u32> {
     let n = (width * height) as usize;
     let mut dist = vec![u32::MAX / 4; n];
     let mut queue: std::collections::VecDeque<(u32, u32)> = std::collections::VecDeque::new();
