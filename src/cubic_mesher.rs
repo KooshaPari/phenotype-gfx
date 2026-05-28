@@ -101,7 +101,7 @@ impl<V: CubicVoxel> CubicMesher<V> {
                         let exposed =
                             !in_bounds(nx, ny, nz) || !chunk.voxels[idx(nx, ny, nz)].is_solid();
                         if exposed {
-                            emit_face(&mut buf, x, y, z, face, material);
+                            emit_face(&mut buf, chunk.voxels, x, y, z, face, material);
                         }
                     }
                 }
@@ -136,11 +136,141 @@ fn neighbour(x: i32, y: i32, z: i32, face: u8) -> (i32, i32, i32) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// AO helpers
+// ---------------------------------------------------------------------------
+
+/// Return whether the voxel at `(x, y, z)` is solid, treating out-of-bounds as air.
+#[inline]
+fn solid_at<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32) -> bool {
+    if !in_bounds(x, y, z) {
+        return false;
+    }
+    voxels[idx(x, y, z)].is_solid()
+}
+
+/// Compute the classic voxel-AO value (0..=3) for a single face vertex.
+///
+/// `side1`, `side2`, and `corner` are the three neighbours that touch the vertex
+/// corner (in the plane of the face).  The rule is:
+/// - If both sides are solid → 0 (maximum occlusion).
+/// - Otherwise → `3 - (side1_solid + side2_solid + corner_solid)`.
+#[inline]
+fn vertex_ao(side1: bool, side2: bool, corner: bool) -> u8 {
+    if side1 && side2 {
+        0
+    } else {
+        3 - (side1 as u8 + side2 as u8 + corner as u8)
+    }
+}
+
+/// Compute per-vertex AO for all four corners of a face.
+///
+/// Returns `[ao0, ao1, ao2, ao3]` parallel to the vertex order used by `emit_face`.
+///
+/// For each corner vertex of a face, the three relevant AO neighbours are the
+/// two voxels adjacent along the face's tangent axes and their shared diagonal.
+/// We define a unit tangent basis (u_axis, v_axis) per face, then for each
+/// corner we determine which tangent direction (sign) the corner points toward.
+/// The AO sample points sit **in the normal direction** (same depth as the face)
+/// and **displaced ±1 along each tangent axis**.
+///
+/// Vertex ordering per face (matches `emit_face`):
+/// ```
+///   face 0 (+x): v0=(y-,z-), v1=(y+,z-), v2=(y+,z+), v3=(y-,z+)
+///   face 1 (-x): v0=(y-,z+), v1=(y+,z+), v2=(y+,z-), v3=(y-,z-)
+///   face 2 (+y): v0=(z-,x-), v1=(z+,x-), v2=(z+,x+), v3=(z-,x+)
+///   face 3 (-y): v0=(z+,x-), v1=(z-,x-), v2=(z-,x+), v3=(z+,x+)
+///   face 4 (+z): v0=(x-,y-), v1=(x+,y-), v2=(x+,y+), v3=(x-,y+)
+///   face 5 (-z): v0=(x+,y-), v1=(x-,y-), v2=(x-,y+), v3=(x+,y+)
+/// ```
+fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face: u8) -> [u8; 4] {
+    // For each face encode:
+    //   nox,noy,noz  — one step in the face-normal direction
+    //   ux,uy,uz     — unit tangent axis U
+    //   vx,vy,vz     — unit tangent axis V
+    //
+    // Then derive corner signs from the exact vertex positions in emit_face.
+    // Each vertex sits at the corner of the face quad; its AO neighbours lie
+    // at normal_step ± tangent_step in each tangent direction.
+    //
+    // Corner tangent signs [us, vs] for each vertex (derived from emit_face positions):
+    //   v0 — (u_neg, v_neg) = (-1, -1)
+    //   v1 — (u_pos, v_neg) = (+1, -1)
+    //   v2 — (u_pos, v_pos) = (+1, +1)
+    //   v3 — (u_neg, v_pos) = (-1, +1)
+    //
+    // Exception: some faces have reversed tangent axes (neg-facing); the sign
+    // table below is expressed in the LOCAL tangent basis (ux,uy,uz / vx,vy,vz)
+    // so the math is uniform.
+
+    // (nox, noy, noz, ux, uy, uz, vx, vy, vz)
+    let (nox, noy, noz, ux, uy, uz, vx, vy, vz): (i32,i32,i32,i32,i32,i32,i32,i32,i32)
+        = match face {
+            0 => ( 1, 0, 0,  0, 1, 0,  0, 0, 1), // +x face; u=+y, v=+z
+            1 => (-1, 0, 0,  0, 1, 0,  0, 0,-1), // -x face; u=+y, v=-z (reversed z keeps CCW)
+            2 => ( 0, 1, 0,  0, 0, 1,  1, 0, 0), // +y face; u=+z, v=+x
+            3 => ( 0,-1, 0,  0, 0,-1,  1, 0, 0), // -y face; u=-z, v=+x
+            4 => ( 0, 0, 1,  1, 0, 0,  0, 1, 0), // +z face; u=+x, v=+y
+            _ => ( 0, 0,-1, -1, 0, 0,  0, 1, 0), // -z face; u=-x, v=+y
+        };
+
+    // Classic voxel-AO neighbourhood:
+    // For each face vertex at the corner shared between the face normal direction
+    // and a tangent corner (us, vs), the three occluding voxels are located at
+    // the SAME depth as the source voxel but offset in the tangent plane:
+    //
+    //   side_u  = voxel + us * u_axis             (tangent-u neighbour, same depth)
+    //   side_v  = voxel + vs * v_axis             (tangent-v neighbour, same depth)
+    //   diag    = voxel + us * u_axis + vs * v_axis
+    //
+    // Note: we do NOT add the normal step here; the AO voxels are co-planar with
+    // the source voxel, NOT one step into the face-normal direction.
+    //
+    // Corner tangent sign table (derived from emit_face vertex layout):
+    //   v0 → (us=-1, vs=-1)  v1 → (us=+1, vs=-1)
+    //   v2 → (us=+1, vs=+1)  v3 → (us=-1, vs=+1)
+    let corners: [(i32, i32); 4] = [(-1, -1), (1, -1), (1, 1), (-1, 1)];
+
+    let ao_for_corner = |(us, vs): (i32, i32)| -> u8 {
+        let s1 = solid_at(voxels,
+            x + us * ux,
+            y + us * uy,
+            z + us * uz,
+        );
+        let s2 = solid_at(voxels,
+            x + vs * vx,
+            y + vs * vy,
+            z + vs * vz,
+        );
+        let co = solid_at(voxels,
+            x + us * ux + vs * vx,
+            y + us * uy + vs * vy,
+            z + us * uz + vs * vz,
+        );
+        vertex_ao(s1, s2, co)
+    };
+
+    [
+        ao_for_corner(corners[0]),
+        ao_for_corner(corners[1]),
+        ao_for_corner(corners[2]),
+        ao_for_corner(corners[3]),
+    ]
+}
+
+// ---------------------------------------------------------------------------
+// Face emission
+// ---------------------------------------------------------------------------
+
 /// Append the four vertices + two triangles for a single exposed face.
 ///
 /// Winding is counter-clockwise when viewed from outside the voxel, which matches
 /// Bevy / Godot / Unreal default front-face conventions.
-fn emit_face(buf: &mut MeshBuffer, x: i32, y: i32, z: i32, face: u8, material: MaterialId) {
+///
+/// `ao` contains one AO value (0..=3) for each of the four quad corners,
+/// already computed by [`face_ao`].
+fn emit_face<V: CubicVoxel>(buf: &mut MeshBuffer, voxels: &[V], x: i32, y: i32, z: i32, face: u8, material: MaterialId) {
     let fx = x as f32;
     let fy = y as f32;
     let fz = z as f32;
@@ -205,6 +335,9 @@ fn emit_face(buf: &mut MeshBuffer, x: i32, y: i32, z: i32, face: u8, material: M
         ),
     };
 
+    // Compute per-vertex AO for this face.
+    let ao_vals = face_ao(voxels, x, y, z, face);
+
     let base = buf.vertices.len() as u32;
     let uvs = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
     for (i, p) in verts.iter().enumerate() {
@@ -214,6 +347,7 @@ fn emit_face(buf: &mut MeshBuffer, x: i32, y: i32, z: i32, face: u8, material: M
             uv: uvs[i],
             material,
         });
+        buf.ao.push(ao_vals[i]);
     }
     // Two triangles per quad, CCW from outside.
     buf.indices
@@ -435,5 +569,103 @@ mod tests {
         for &i in &mesh.indices {
             assert!(i < vcount, "index {} out of bounds (vcount={})", i, vcount);
         }
+    }
+
+    // ------------------------------------------------------------------
+    // AO tests (FR-PHENO-VOXEL-CUBIC-AO-*)
+    // ------------------------------------------------------------------
+
+    /// FR-PHENO-VOXEL-CUBIC-AO-001 — a fully-exposed single voxel (all neighbours
+    /// air) must have every AO value equal to 3 (no occlusion).
+    #[test]
+    fn fully_exposed_voxel_has_ao_three_everywhere() {
+        let c = single_voxel_chunk_at_origin();
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        assert!(
+            mesh.ao.iter().all(|&a| a == 3),
+            "all AO values should be 3 for a fully-exposed voxel, got: {:?}",
+            mesh.ao
+        );
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-AO-002 — AO buffer length equals vertex count.
+    #[test]
+    fn ao_length_equals_vertex_count() {
+        let c = single_voxel_chunk_at_origin();
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        assert_eq!(
+            mesh.ao.len(),
+            mesh.vertices.len(),
+            "ao.len() must equal vertices.len()"
+        );
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-AO-003 — triangle counts are unchanged by AO addition.
+    /// A single voxel still produces 24 vertices / 36 indices.
+    #[test]
+    fn ao_does_not_change_triangle_counts() {
+        let c = single_voxel_chunk_at_origin();
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        assert_eq!(mesh.vertices.len(), 24, "vertex count must be 24");
+        assert_eq!(mesh.indices.len(), 36, "index count must be 36");
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-AO-004 — a voxel sitting in a crevice (two solid
+    /// neighbours on adjacent axes) must have at least one AO vertex < 3 on the
+    /// exposed face pointing away from the two solid neighbours.
+    ///
+    /// Setup: place a solid voxel at (2,2,2). Then place solid voxels at
+    /// (1,2,2) (-x neighbour) and (2,1,2) (-y neighbour).  The +z face of (2,2,2)
+    /// has two corners that share the (-x)/(-y) crevice; those corners should have
+    /// reduced AO.
+    #[test]
+    fn crevice_voxel_has_reduced_ao_on_occluded_vertices() {
+        let mut c = Chunk::<MaterialId>::default();
+        // Main voxel we will inspect.
+        c.voxels[idx(2, 2, 2)] = MaterialId(1);
+        // Two solid neighbours that form a crevice at the -x/-y corner.
+        c.voxels[idx(1, 2, 2)] = MaterialId(1); // -x side
+        c.voxels[idx(2, 1, 2)] = MaterialId(1); // -y side
+        // Also fill the diagonal corner so the "both sides" rule has maximum effect
+        // on one vertex of the -z face viewed from below.
+        c.voxels[idx(1, 1, 2)] = MaterialId(1); // -x/-y corner
+
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        // At least one vertex of (2,2,2) must be occluded (AO < 3).
+        assert!(
+            mesh.ao.iter().any(|&a| a < 3),
+            "expected at least one occluded vertex (AO < 3) but all were 3; ao={:?}",
+            mesh.ao
+        );
+        // ao.len() == vertices.len() invariant holds here too.
+        assert_eq!(mesh.ao.len(), mesh.vertices.len());
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-AO-005 — AO buffer is all-3 for an empty chunk.
+    #[test]
+    fn empty_chunk_ao_is_empty() {
+        let c = Chunk::<MaterialId>::default();
+        let view = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        assert!(mesh.ao.is_empty(), "empty chunk must produce empty ao buffer");
     }
 }

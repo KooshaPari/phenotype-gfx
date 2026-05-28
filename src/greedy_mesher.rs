@@ -287,6 +287,9 @@ fn emit_quad(
             uv: uvs[i],
             material,
         });
+        // GreedyMesher defaults AO to 3 (fully lit) — per-vertex AO for greedy
+        // quads is future work (TODO: propagate corner AO through the greedy pass).
+        buf.ao.push(3);
     }
     // Two triangles, CCW.
     buf.indices
