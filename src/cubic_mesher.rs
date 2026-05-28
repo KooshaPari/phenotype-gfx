@@ -35,38 +35,45 @@ impl CubicVoxel for MaterialId {
     }
 }
 
-/// Engine-neutral reference cubic mesher.
+/// Engine-neutral reference cubic mesher, generic over any [`CubicVoxel`] type.
+///
+/// The `PhantomData<V>` field carries the voxel type at zero runtime cost and
+/// lets `impl<V: CubicVoxel> Mesher for CubicMesher<V>` set `type VoxelKind = V`,
+/// satisfying the trait's associated-type requirement without an extra indirection.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct CubicMesher;
+pub struct CubicMesher<V>(core::marker::PhantomData<V>);
 
-impl Mesher for CubicMesher {
-    type Mesh = MeshBuffer;
-
-    fn mesh_chunk<T: Default + Clone>(
-        &self,
-        _chunk: ChunkView<'_, T>,
-        _lod: LodLevel,
-    ) -> MeshResult<Self::Mesh> {
-        // The trait can't statically know that T: CubicVoxel, so use the
-        // typed variant `mesh_cubic` below. We return BadChunkSize{got:0,expected:0}
-        // to signal "wrong entry point" — callers should prefer `mesh_cubic`.
-        Err(MeshError::BadChunkSize {
-            got: 0,
-            expected: 0,
-        })
+impl<V: CubicVoxel> CubicMesher<V> {
+    /// Construct a new `CubicMesher` for voxel type `V`.
+    pub fn new() -> Self {
+        Self(core::marker::PhantomData)
     }
 }
 
-impl CubicMesher {
-    /// Typed entry point that requires the voxel value type to implement
-    /// [`CubicVoxel`]. Use this instead of the trait method when meshing a
-    /// concrete voxel world.
+impl<V: CubicVoxel> Mesher for CubicMesher<V> {
+    type VoxelKind = V;
+    type Mesh = MeshBuffer;
+
+    /// Delegates directly to [`CubicMesher::mesh_cubic`] so all meshing logic
+    /// lives in one place and the trait boundary is fully enforced at compile time.
+    fn mesh_chunk(
+        &self,
+        chunk: ChunkView<'_, V>,
+        lod: LodLevel,
+    ) -> MeshResult<Self::Mesh> {
+        Self::mesh_cubic(chunk, lod)
+    }
+}
+
+impl<V: CubicVoxel> CubicMesher<V> {
+    /// Core meshing logic. Shared by the `Mesher` impl and any direct callers
+    /// that already have a concrete `V: CubicVoxel` in scope.
     ///
     /// LOD currently affects nothing for the cubic mesher (every level emits the
     /// same geometry). Future LOD-aware meshers will collapse far chunks into
     /// merged-face geometry.
-    pub fn mesh_cubic<T: CubicVoxel>(
-        chunk: ChunkView<'_, T>,
+    pub fn mesh_cubic(
+        chunk: ChunkView<'_, V>,
         _lod: LodLevel,
     ) -> MeshResult<MeshBuffer> {
         let expected = CHUNK_EDGE * CHUNK_EDGE * CHUNK_EDGE;
@@ -217,11 +224,32 @@ fn emit_face(buf: &mut MeshBuffer, x: i32, y: i32, z: i32, face: u8, material: M
 mod tests {
     use super::*;
     use crate::chunk::Chunk;
+    use crate::mesh::Mesher;
 
     fn single_voxel_chunk_at_origin() -> Chunk<MaterialId> {
         let mut c = Chunk::<MaterialId>::default();
         c.voxels[idx(0, 0, 0)] = MaterialId(1);
         c
+    }
+
+    /// FR-PHENO-VOXEL-CUBIC-011 — `Mesher::mesh_chunk` on `CubicMesher<MaterialId>`
+    /// produces the same result as the direct `mesh_cubic` call, confirming the
+    /// new `VoxelKind` associated-type ergonomics work end-to-end.
+    #[test]
+    fn mesher_trait_mesh_chunk_matches_mesh_cubic() {
+        let c = single_voxel_chunk_at_origin();
+        let view_a = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let view_b = ChunkView {
+            id: crate::chunk::ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesher = CubicMesher::<MaterialId>::new();
+        let via_trait = mesher.mesh_chunk(view_a, LodLevel(0)).expect("mesh via trait");
+        let via_direct = CubicMesher::<MaterialId>::mesh_cubic(view_b, LodLevel(0)).expect("mesh direct");
+        assert_eq!(via_trait, via_direct, "mesh_chunk must delegate to mesh_cubic identically");
     }
 
     /// FR-PHENO-VOXEL-CUBIC-001 — a single solid voxel in an otherwise empty
@@ -233,7 +261,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         assert_eq!(mesh.vertices.len(), 24);
         assert_eq!(mesh.indices.len(), 36);
     }
@@ -267,7 +295,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         assert_eq!(mesh.vertices.len(), 40);
         assert_eq!(mesh.indices.len(), 60);
     }
@@ -280,7 +308,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         assert!(mesh.vertices.is_empty());
         assert!(mesh.indices.is_empty());
     }
@@ -293,7 +321,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &v,
         };
-        let res = CubicMesher::mesh_cubic(view, LodLevel(0));
+        let res = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0));
         assert!(matches!(res, Err(MeshError::BadChunkSize { .. })));
     }
 
@@ -309,7 +337,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         assert_eq!(
             mesh.vertices.len(),
             24,
@@ -339,7 +367,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         // 3×3 grid on each of 6 faces = 54 quads, 216 verts.
         assert_eq!(
             mesh.vertices.len(),
@@ -359,7 +387,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
 
         let expected_normals: [[f32; 3]; 6] = [
             [1.0, 0.0, 0.0],
@@ -387,7 +415,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         let has_7 = mesh.vertices.iter().any(|v| v.material == MaterialId(7));
         let has_13 = mesh.vertices.iter().any(|v| v.material == MaterialId(13));
         assert!(has_7, "material 7 must appear in vertex stream");
@@ -402,7 +430,7 @@ mod tests {
             id: crate::chunk::ChunkId(0),
             voxels: &c.voxels,
         };
-        let mesh = CubicMesher::mesh_cubic(view, LodLevel(0)).expect("mesh");
+        let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
         let vcount = mesh.vertices.len() as u32;
         for &i in &mesh.indices {
             assert!(i < vcount, "index {} out of bounds (vcount={})", i, vcount);

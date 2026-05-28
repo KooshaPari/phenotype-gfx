@@ -50,14 +50,20 @@ pub enum MeshError {
 
 /// A per-engine adapter that turns a chunk view + LOD level into an engine-specific
 /// mesh artifact (Bevy `Mesh`, Godot `ArrayMesh`, Unreal procedural mesh, …).
+///
+/// The associated `VoxelKind` type pins which voxel value type this mesher
+/// consumes, eliminating the unsound `mesh_chunk<T>` generic that previously
+/// couldn't enforce `T: CubicVoxel` at the trait boundary.
 pub trait Mesher {
+    /// Voxel value type this mesher consumes.
+    type VoxelKind: Default + Clone;
     /// Engine-specific mesh artifact type.
     type Mesh;
     /// Mesh `chunk` at level `lod`. Implementations should be deterministic for a
     /// given (chunk, lod) pair so replay produces identical meshes.
-    fn mesh_chunk<T: Default + Clone>(
+    fn mesh_chunk(
         &self,
-        chunk: ChunkView<'_, T>,
+        chunk: ChunkView<'_, Self::VoxelKind>,
         lod: LodLevel,
     ) -> MeshResult<Self::Mesh>;
 }
