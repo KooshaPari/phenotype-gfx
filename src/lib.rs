@@ -33,6 +33,7 @@ pub mod lod;
 pub mod material;
 pub mod mesh;
 pub mod octree;
+pub mod serial;
 pub mod shape_hints;
 pub mod sprite_voxelizer;
 pub mod world;
@@ -50,6 +51,7 @@ pub use sprite_voxelizer::{
     compute_manhattan_dist_to_air, voxelize_image, ExtrusionMode, SpriteVoxel, VoxelizeConfig,
     DEFAULT_DEPTH,
 };
+pub use serial::{load_chunk, save_chunk};
 pub use world::VoxelWorld;
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes
