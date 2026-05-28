@@ -24,6 +24,10 @@ proptest = "1.4"
 name = "voxelizer_bench"
 harness = false
 
+[[bench]]
+name = "mesher_compare"
+harness = false
+
 [features]
 default = []
 bevy = []
