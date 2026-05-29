@@ -29,6 +29,10 @@ harness = false
 name = "mesher_compare"
 harness = false
 
+[[bench]]
+name = "perf_suite"
+harness = false
+
 [[example]]
 name = "consume_mesh"
 path = "examples/consume_mesh.rs"
