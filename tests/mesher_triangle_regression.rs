@@ -114,9 +114,15 @@ fn sparse_chunk_greedy_le_cubic() {
 /// *strictly fewer* triangles than cubic (the key optimisation must hold).
 ///
 /// Cubic emits one quad per exposed voxel-face: 6 * CHUNK_EDGE² outer faces
-/// each at 2 triangles = 12 * CHUNK_EDGE² triangles.
-/// Greedy merges the entire face of the cube into a single quad per side:
-/// 6 quads * 2 triangles = 12 triangles.
+/// each at 2 triangles = 6 * CHUNK_EDGE² * 2 triangles.
+///
+/// AO-aware greedy (PLAN-VOXEL-001): face cells only merge when both material
+/// AND per-corner AO signature are equal.  On a fully-solid chunk the outer
+/// faces have varying AO (edge/corner voxels are occluded differently from
+/// centre voxels), so the 16×16 face is not fully merged.  The previous
+/// "exactly 12 tris" invariant assumed material-only merging; it is replaced
+/// by the weaker (but still meaningful) strict-less-than invariant, which
+/// catches any future regression that causes greedy to balloon back to cubic.
 #[test]
 fn dense_solid_chunk_greedy_strictly_fewer_triangles() {
     let c = dense_solid_chunk();
@@ -130,14 +136,8 @@ fn dense_solid_chunk_greedy_strictly_fewer_triangles() {
         "cubic dense-solid triangle count sanity check failed: got {cubic}, expected {expected_cubic}"
     );
 
-    // Greedy must merge all co-planar same-material quads into 1 per side → 12 tris.
-    let expected_greedy = 6 * 2; // 6 faces, each 1 merged quad = 2 tris
-    assert_eq!(
-        greedy, expected_greedy,
-        "greedy dense-solid must produce {expected_greedy} tris (1 merged quad/side), got {greedy}"
-    );
-
-    // Strict inequality: this is the regression lock.
+    // Strict inequality: AO-aware greedy must still beat cubic.
+    // (Uniform-AO interior regions collapse; only AO boundary cells split.)
     assert!(
         greedy < cubic,
         "REGRESSION: greedy ({greedy} tris) must be STRICTLY FEWER than cubic ({cubic} tris) for dense-solid chunk"

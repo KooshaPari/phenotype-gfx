@@ -2,7 +2,7 @@
 
 **Scope:** Backfilled catalog for Tracera + AgilePlus ingestion.
 **Schema version:** 1 (matches `SCHEMA_VERSION` constant in `src/lib.rs`).
-**Test baseline:** 91 lib tests passing (1 doctest skipped — prose comment, not executable).
+**Test baseline:** 94 lib tests passing (1 doctest skipped — prose comment, not executable).
 
 ---
 
@@ -308,7 +308,36 @@ surrounded → 0 faces), `FR-PHENO-VOXEL-CUBIC-008` (outward normals),
 caused by prose comment blocks (not executable code) are excluded. CI enforces
 `cargo test --lib` on PR merge.
 
-**Evidence:** `cargo test --lib` output: `91 passed; 0 failed` (2026-05-29).
+**Evidence:** `cargo test --lib` output: `94 passed; 0 failed` (2026-05-29).
+
+---
+
+### FR-VOXEL-011 — AO-Aware Greedy Meshing (SHIPPED)
+
+**Title:** Per-vertex AO propagated through greedy face merging.
+
+**Description:** `GreedyMesher` computes a 4-corner AO signature for each
+visible face cell (reusing `CubicMesher`'s `face_ao` helper) and includes
+that signature in the mask equality key.  Two face cells are only merged when
+both their `MaterialId` **and** their `[u8; 4]` AO signature are equal.  This
+preserves AO detail at occlusion boundaries while fully collapsing large
+homogeneous flat regions (uniform AO = all-3) into single quads.  Each merged
+quad carries the uniform per-corner AO values from its mask key.  The `ao`
+field of every `MeshBuffer` emitted by `GreedyMesher` is now populated with
+real values (previously hardcoded to 3).
+
+**Acceptance criteria:**
+- A fully isolated voxel (no neighbours) → all 24 AO values = 3 (unchanged from cubic).
+- `ao.len() == vertices.len()` for any greedy mesh output.
+- Flat surface with uniform AO=3 still merges to fewer triangles than cubic (greedy win preserved).
+- A face at an AO occlusion boundary carries at least one AO value < 3 (AO detail preserved).
+- Greedy AO values match CubicMesher AO values for corresponding faces on a single isolated voxel.
+- Triangle count ≤ cubic for any chunk (NFR-VOXEL-002 regression guard remains green).
+
+**Traceability:**
+- Former PLANNED item: `PLAN-VOXEL-001`
+- PR feat/greedy-ao
+- In-code: `FR-PHENO-VOXEL-GREEDY-AO-001..003` (`src/greedy_mesher.rs`)
 
 ---
 
@@ -333,7 +362,7 @@ without absolute wall-clock thresholds, making them flap-free on any CI hardware
 
 **Acceptance criteria:**
 - `cargo bench --no-run` compiles cleanly.
-- `cargo test --lib --tests` remains green (91 lib + 4 triangle-regression + 11 perf-regression = 106 total).
+- `cargo test --lib --tests` remains green (94 lib + 4 triangle-regression + 11 perf-regression = 109 total).
 - All 11 NFR regression guards pass on every CI run.
 
 **Traceability:**
@@ -360,8 +389,9 @@ without absolute wall-clock thresholds, making them flap-free on any CI hardware
 | `FR-PHENO-VOXEL-COORD-000..001` | (coordinate contract, underpins FR-VOXEL-001/009) |
 | `FR-PHENO-VOXEL-LOD-000..006` | (LOD selection, underpins FR-VOXEL-004/005) |
 | `FR-PHENO-VOXEL-MATERIAL-000` | (palette, underpins FR-VOXEL-004/005) |
-| `FR-PHENO-VOXEL-SHAPEHINT-001..009` | (shape-hint registry, not yet in catalog — see PLANNED; formalize as FR-VOXEL-011) |
-| `FR-PHENO-VOXEL-SPRITEVOX-001..006` | (sprite voxelizer, not yet in catalog — see PLANNED; formalize as FR-VOXEL-012) |
+| `FR-PHENO-VOXEL-GREEDY-AO-001..003` | FR-VOXEL-011 |
+| `FR-PHENO-VOXEL-SHAPEHINT-001..009` | (shape-hint registry, not yet in catalog — see PLANNED; formalize as FR-VOXEL-012) |
+| `FR-PHENO-VOXEL-SPRITEVOX-001..006` | (sprite voxelizer, not yet in catalog — see PLANNED; formalize as FR-VOXEL-013) |
 
 ---
 
@@ -369,7 +399,7 @@ without absolute wall-clock thresholds, making them flap-free on any CI hardware
 
 | ID | Title | Notes |
 |---|---|---|
-| PLAN-VOXEL-001 | Greedy-mesher per-vertex AO | `MeshBuffer.ao` all-3 for GreedyMesher; `TODO` noted in `src/mesh.rs` |
+| ~~PLAN-VOXEL-001~~ | ~~Greedy-mesher per-vertex AO~~ | **SHIPPED** as FR-VOXEL-011 — AO-aware mask key in `src/greedy_mesher.rs`; 3 new tests `FR-PHENO-VOXEL-GREEDY-AO-001..003` |
 | ~~PLAN-VOXEL-003~~ | ~~Performance under load~~ | **SHIPPED** as NFR-VOXEL-006 — see `benches/perf_suite.rs` + `tests/perf_regression_guards.rs` |
 | PLAN-VOXEL-004 | Shape-hint registry FR | `FR-PHENO-VOXEL-SHAPEHINT-*` tests exist but no catalog entry; formalize as FR-VOXEL-011 |
 | PLAN-VOXEL-005 | Sprite voxelizer FR | `FR-PHENO-VOXEL-SPRITEVOX-*` tests exist but no catalog entry; formalize as FR-VOXEL-012 |
