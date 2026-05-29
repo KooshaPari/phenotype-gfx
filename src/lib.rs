@@ -32,6 +32,8 @@ pub mod delta;
 pub mod greedy_mesher;
 pub mod lod;
 pub mod material;
+#[cfg(feature = "bevy")]
+pub mod bevy_adapter;
 pub mod mesh;
 pub mod octree;
 pub mod serial;
@@ -46,6 +48,8 @@ pub use greedy_mesher::GreedyMesher;
 pub use delta::{DirtyChunkEvent, WriteSeq};
 pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
 pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
+#[cfg(feature = "bevy")]
+pub use bevy_adapter::to_bevy_mesh;
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
 pub use shape_hints::{ShapeHint, ShapeHintRegistry};

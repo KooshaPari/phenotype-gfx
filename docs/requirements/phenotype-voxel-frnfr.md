@@ -219,6 +219,27 @@ events. `DirtyChunkEvent` and `WriteSeq` are `Serialize/Deserialize`.
 
 ---
 
+### FR-VOXEL-010 — Optional Bevy Mesh Adapter
+
+**Title:** Feature-gated Bevy adapter from `MeshBuffer` to `bevy::render::mesh::Mesh`.
+
+**Description:** When the non-default `bevy` cargo feature is enabled, the crate
+exposes `to_bevy_mesh(&MeshBuffer) -> bevy::render::mesh::Mesh`. The adapter maps
+positions, normals, UVs, triangle indices, and a custom per-vertex AO attribute
+into Bevy's mesh type without changing the engine-neutral `MeshBuffer` surface.
+The core crate stays dep-light by default because the adapter is fully optional.
+
+**Acceptance criteria:**
+- `cargo build --features bevy` compiles.
+- The produced Bevy mesh contains position, normal, UV0, AO, and index data.
+- `cargo test --lib` remains green with no features enabled.
+
+**Traceability:**
+- Former PLANNED item: `PLAN-VOXEL-002`
+- In-code: `FR-PHENO-VOXEL-BEVY-000` (`src/bevy_adapter.rs`)
+
+---
+
 ## Non-Functional Requirements
 
 ### NFR-VOXEL-001 — Determinism
@@ -303,11 +324,12 @@ caused by prose comment blocks (not executable code) are excluded. CI enforces
 | `FR-PHENO-VOXEL-OCTREE-000..015` | FR-VOXEL-008 |
 | `FR-PHENO-VOXEL-DELTA-000..001` | FR-VOXEL-009 |
 | `FR-PHENO-VOXEL-WORLD-001..016` | FR-VOXEL-009, NFR-VOXEL-001 |
+| `FR-PHENO-VOXEL-BEVY-000` | FR-VOXEL-010 (SHIPPED — `bevy` feature, `src/bevy_adapter.rs`) |
 | `FR-PHENO-VOXEL-COORD-000..001` | (coordinate contract, underpins FR-VOXEL-001/009) |
 | `FR-PHENO-VOXEL-LOD-000..006` | (LOD selection, underpins FR-VOXEL-004/005) |
 | `FR-PHENO-VOXEL-MATERIAL-000` | (palette, underpins FR-VOXEL-004/005) |
-| `FR-PHENO-VOXEL-SHAPEHINT-001..009` | (shape-hint registry, not yet in catalog — see PLANNED) |
-| `FR-PHENO-VOXEL-SPRITEVOX-001..006` | (sprite voxelizer, not yet in catalog — see PLANNED) |
+| `FR-PHENO-VOXEL-SHAPEHINT-001..009` | (shape-hint registry, not yet in catalog — see PLANNED; formalize as FR-VOXEL-011) |
+| `FR-PHENO-VOXEL-SPRITEVOX-001..006` | (sprite voxelizer, not yet in catalog — see PLANNED; formalize as FR-VOXEL-012) |
 
 ---
 
@@ -316,9 +338,8 @@ caused by prose comment blocks (not executable code) are excluded. CI enforces
 | ID | Title | Notes |
 |---|---|---|
 | PLAN-VOXEL-001 | Greedy-mesher per-vertex AO | `MeshBuffer.ao` all-3 for GreedyMesher; `TODO` noted in `src/mesh.rs` |
-| PLAN-VOXEL-002 | Bevy adapter crate | `phenotype-voxel-bevy` consuming `MeshBuffer.to_interleaved()`; zero engine deps in core (NFR-VOXEL-003) |
 | PLAN-VOXEL-003 | Performance under load | No bench for world-scale writes or SVO traversal; Criterion suite covers mesher only |
-| PLAN-VOXEL-004 | Shape-hint registry FR | `FR-PHENO-VOXEL-SHAPEHINT-*` tests exist but no catalog entry; formalize as FR-VOXEL-010 |
-| PLAN-VOXEL-005 | Sprite voxelizer FR | `FR-PHENO-VOXEL-SPRITEVOX-*` tests exist but no catalog entry; formalize as FR-VOXEL-011 |
+| PLAN-VOXEL-004 | Shape-hint registry FR | `FR-PHENO-VOXEL-SHAPEHINT-*` tests exist but no catalog entry; formalize as FR-VOXEL-011 |
+| PLAN-VOXEL-005 | Sprite voxelizer FR | `FR-PHENO-VOXEL-SPRITEVOX-*` tests exist but no catalog entry; formalize as FR-VOXEL-012 |
 | PLAN-VOXEL-006 | Full recursive SVO subdivision | `octree.rs` notes "8-way branches reserved for follow-up PR"; current model is flat `BTreeMap` |
 | PLAN-VOXEL-007 | Doctest hygiene | 1 doctest fails on Windows (prose comment mistaken for code block in `cubic_mesher.rs`); fix or mark `ignore` |
