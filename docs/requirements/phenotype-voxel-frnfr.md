@@ -312,6 +312,38 @@ caused by prose comment blocks (not executable code) are excluded. CI enforces
 
 ---
 
+### NFR-VOXEL-006 — Extended Performance Benchmark Suite (SHIPPED)
+
+**Title:** Criterion benchmarks + regression guards for all perf-critical paths beyond mesher_compare.
+
+**Description:** A dedicated `benches/perf_suite.rs` Criterion benchmark suite covers:
+- RLE chunk serialize (`serial_save`) and deserialize (`serial_load`) throughput across
+  empty / sparse / dense / checkerboard shapes (u8 voxels — `Pod`-satisfying).
+- SVO compaction throughput: 8-leaf single-group and 64-leaf two-level pyramid fixpoint.
+- AO computation cost: `CubicMesher` on dense-solid and checkerboard fixtures.
+- World fill + dirty-tracking drain: 4096 writes in one chunk + idempotent-write path.
+
+A complementary integration test file (`tests/perf_regression_guards.rs`) provides
+11 lightweight `#[test]` guards that assert cost-ordering and upper-bound invariants
+without absolute wall-clock thresholds, making them flap-free on any CI hardware:
+- Serial byte-size ordering (empty < alternating), exact 16-byte empty invariant, ratio >= 50x.
+- SVO compact: exact node removal counts for 8-leaf, 64-leaf, mixed-value groups.
+- AO: `ao.len() == vertices.len()` for all shapes; fully-exposed voxel all-3.
+- Dirty: exact event counts, idempotent-write emits 0, fill-one-chunk under 1s, count scales with writes.
+
+**Acceptance criteria:**
+- `cargo bench --no-run` compiles cleanly.
+- `cargo test --lib --tests` remains green (91 lib + 4 triangle-regression + 11 perf-regression = 106 total).
+- All 11 NFR regression guards pass on every CI run.
+
+**Traceability:**
+- PLAN-VOXEL-003 (formerly PLANNED) → SHIPPED in PR bench/perf-suite
+- `benches/perf_suite.rs`, `tests/perf_regression_guards.rs`
+- In-code guard IDs: `NFR-VOXEL-006-SERIAL-001..003`, `NFR-VOXEL-006-SVO-001..003`,
+  `NFR-VOXEL-006-AO-001..002`, `NFR-VOXEL-006-DIRTY-001..003`
+
+---
+
 ## Test-ID to Catalog Mapping
 
 | In-code test series | Catalog FR/NFR |
@@ -338,7 +370,7 @@ caused by prose comment blocks (not executable code) are excluded. CI enforces
 | ID | Title | Notes |
 |---|---|---|
 | PLAN-VOXEL-001 | Greedy-mesher per-vertex AO | `MeshBuffer.ao` all-3 for GreedyMesher; `TODO` noted in `src/mesh.rs` |
-| PLAN-VOXEL-003 | Performance under load | No bench for world-scale writes or SVO traversal; Criterion suite covers mesher only |
+| ~~PLAN-VOXEL-003~~ | ~~Performance under load~~ | **SHIPPED** as NFR-VOXEL-006 — see `benches/perf_suite.rs` + `tests/perf_regression_guards.rs` |
 | PLAN-VOXEL-004 | Shape-hint registry FR | `FR-PHENO-VOXEL-SHAPEHINT-*` tests exist but no catalog entry; formalize as FR-VOXEL-011 |
 | PLAN-VOXEL-005 | Sprite voxelizer FR | `FR-PHENO-VOXEL-SPRITEVOX-*` tests exist but no catalog entry; formalize as FR-VOXEL-012 |
 | PLAN-VOXEL-006 | Full recursive SVO subdivision | `octree.rs` notes "8-way branches reserved for follow-up PR"; current model is flat `BTreeMap` |
