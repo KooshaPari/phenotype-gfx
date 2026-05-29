@@ -28,6 +28,10 @@ harness = false
 name = "mesher_compare"
 harness = false
 
+[[example]]
+name = "consume_mesh"
+path = "examples/consume_mesh.rs"
+
 [features]
 default = []
 bevy = []
