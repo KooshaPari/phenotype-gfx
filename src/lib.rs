@@ -54,8 +54,8 @@ pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
 pub use shape_hints::{ShapeHint, ShapeHintRegistry};
 pub use sprite_voxelizer::{
-    compute_manhattan_dist_to_air, voxelize_image, ExtrusionMode, SpriteVoxel, VoxelizeConfig,
-    DEFAULT_DEPTH,
+    compute_manhattan_dist_to_air, voxelize_image, voxelize_to_chunk, ExtrusionMode, SpriteVoxel,
+    VoxelizeConfig, DEFAULT_DEPTH,
 };
 pub use serial::{load_chunk, save_chunk};
 pub use world::VoxelWorld;

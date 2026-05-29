@@ -31,6 +31,9 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::chunk::{Chunk, CHUNK_EDGE};
+use crate::material::MaterialId;
+
 /// Alpha threshold below which a pixel is considered transparent ("air").
 /// WSM3D uses 16 / 255; we adopt the same constant.
 pub const ALPHA_THRESHOLD: u8 = 16;
@@ -243,6 +246,60 @@ pub fn compute_manhattan_dist_to_air(pixels: &[[u8; 4]], width: u32, height: u32
     dist
 }
 
+/// Convert a flat RGBA8 pixel grid into a `Chunk<MaterialId>` via Z-extrusion.
+///
+/// # Parameters
+/// - `pixels` — row-major RGBA8 pixels, length `width * height`.
+/// - `width`, `height` — image dimensions in pixels (each must be ≤ `CHUNK_EDGE`).
+/// - `depth` — number of Z slices to extrude per opaque pixel (must be ≤ `CHUNK_EDGE`).
+/// - `pixel_to_material` — closure mapping an RGBA8 pixel to a `MaterialId`. Called
+///   once per opaque pixel; transparent pixels are skipped (they remain `MaterialId(0)`,
+///   the conventional "air" value).
+///
+/// # Out-of-bounds handling
+/// Pixels / depth values that would exceed `CHUNK_EDGE` in any dimension are silently
+/// clamped so the function never panics on oversized inputs.
+///
+/// # Returns
+/// A `Chunk<MaterialId>` of size `CHUNK_EDGE³`. Opaque pixels write their `MaterialId`
+/// into all `z ∈ [0, depth)` slices at their `(x, y)` grid position. All other voxels
+/// remain `MaterialId(0)`.
+pub fn voxelize_to_chunk(
+    pixels: &[[u8; 4]],
+    width: u32,
+    height: u32,
+    depth: u32,
+    pixel_to_material: impl Fn([u8; 4]) -> MaterialId,
+) -> Chunk<MaterialId> {
+    let mut chunk = Chunk::<MaterialId>::default();
+    let edge = CHUNK_EDGE as u32;
+    let clamped_width = width.min(edge);
+    let clamped_height = height.min(edge);
+    let clamped_depth = depth.min(edge).max(1);
+
+    for y in 0..clamped_height {
+        for x in 0..clamped_width {
+            let idx = (x + y * width) as usize;
+            if idx >= pixels.len() {
+                continue;
+            }
+            let pixel = pixels[idx];
+            if pixel[3] <= ALPHA_THRESHOLD {
+                continue;
+            }
+            let mat = pixel_to_material(pixel);
+            for z in 0..clamped_depth {
+                // Chunk storage: x + y * EDGE + z * EDGE * EDGE
+                let voxel_idx =
+                    x as usize + y as usize * CHUNK_EDGE + z as usize * CHUNK_EDGE * CHUNK_EDGE;
+                chunk.voxels[voxel_idx] = mat;
+            }
+        }
+    }
+
+    chunk
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -413,5 +470,105 @@ mod tests {
                 prop_assert!(voxels.contains(&(voxel.x, voxel.y, depth - 1 - voxel.z)));
             }
         }
+    }
+
+    // ── voxelize_to_chunk tests ────────────────────────────────────────────────
+
+    use crate::chunk::CHUNK_EDGE;
+    use crate::material::MaterialId;
+
+    fn red_pixel() -> [u8; 4] {
+        [255, 0, 0, 255]
+    }
+
+    fn blue_pixel() -> [u8; 4] {
+        [0, 0, 255, 255]
+    }
+
+    fn air_pixel() -> [u8; 4] {
+        [0, 0, 0, 0]
+    }
+
+    fn identity_palette(pixel: [u8; 4]) -> MaterialId {
+        // Map R channel to a MaterialId (simple palette for tests).
+        MaterialId(pixel[0] as u16)
+    }
+
+    /// FR-PHENO-VOXEL-SPRITEVOX-007 — 2×2 fully-opaque sprite with depth D
+    /// produces exactly 4 * D solid voxels in the chunk.
+    #[test]
+    fn chunk_2x2_opaque_sprite_voxel_count() {
+        let depth = 3u32;
+        let pixels = vec![red_pixel(); 4];
+        let chunk = voxelize_to_chunk(&pixels, 2, 2, depth, identity_palette);
+        let solid_count = chunk.voxels.iter().filter(|&&m| m != MaterialId(0)).count();
+        assert_eq!(solid_count, 4 * depth as usize);
+    }
+
+    /// FR-PHENO-VOXEL-SPRITEVOX-008 — transparent pixels produce no solid voxels.
+    #[test]
+    fn chunk_transparent_pixels_skipped() {
+        let pixels = vec![air_pixel(); 4];
+        let chunk = voxelize_to_chunk(&pixels, 2, 2, 4, identity_palette);
+        assert!(chunk.voxels.iter().all(|&m| m == MaterialId(0)));
+    }
+
+    /// FR-PHENO-VOXEL-SPRITEVOX-009 — palette closure maps pixel color → MaterialId.
+    #[test]
+    fn chunk_palette_mapping_correct() {
+        // 1×2 image: top pixel red (R=255), bottom pixel blue (B=255, R=0).
+        let pixels = vec![red_pixel(), blue_pixel()];
+        let chunk = voxelize_to_chunk(&pixels, 1, 2, 1, |px| MaterialId(px[0] as u16));
+        // y=0 → red_pixel → MaterialId(255)
+        let voxel_y0 = chunk.voxels[0]; // x=0, y=0, z=0
+        // y=1 → blue_pixel → MaterialId(0) (R=0) — but 0 is "air"; use a different mapping
+        // Actually R=0 means MaterialId(0) which is air. Let's verify the red one.
+        assert_eq!(voxel_y0, MaterialId(255));
+        // blue pixel has R=0 → MaterialId(0), so it's indistinguishable from air.
+        // Use a different mapping: use B channel for blue pixel.
+        let chunk2 = voxelize_to_chunk(&pixels, 1, 2, 1, |px| MaterialId(px[2] as u16));
+        let voxel_y1 = chunk2.voxels[0 + 1 * CHUNK_EDGE]; // x=0, y=1, z=0
+        assert_eq!(voxel_y1, MaterialId(255)); // B=255 for blue pixel
+    }
+
+    /// FR-PHENO-VOXEL-SPRITEVOX-010 — extrusion depth respected: voxels span exactly
+    /// z ∈ [0, depth) and z ≥ depth is empty.
+    #[test]
+    fn chunk_extrusion_depth_respected() {
+        let depth = 3u32;
+        let pixels = vec![red_pixel()];
+        let chunk = voxelize_to_chunk(&pixels, 1, 1, depth, identity_palette);
+        for z in 0..depth as usize {
+            assert_ne!(chunk.voxels[z * CHUNK_EDGE * CHUNK_EDGE], MaterialId(0), "z={z} should be solid");
+        }
+        // z >= depth should be empty (up to CHUNK_EDGE)
+        for z in depth as usize..CHUNK_EDGE {
+            assert_eq!(chunk.voxels[z * CHUNK_EDGE * CHUNK_EDGE], MaterialId(0), "z={z} should be air");
+        }
+    }
+
+    /// FR-PHENO-VOXEL-SPRITEVOX-011 — empty sprite (0×0 or all transparent) → empty chunk.
+    #[test]
+    fn chunk_empty_sprite_produces_empty_chunk() {
+        // All transparent
+        let pixels = vec![air_pixel(); 4];
+        let chunk = voxelize_to_chunk(&pixels, 2, 2, 4, identity_palette);
+        assert!(chunk.voxels.iter().all(|&m| m == MaterialId(0)));
+        // Zero-pixel image (empty slice)
+        let chunk2 = voxelize_to_chunk(&[], 0, 0, 4, identity_palette);
+        assert!(chunk2.voxels.iter().all(|&m| m == MaterialId(0)));
+    }
+
+    /// FR-PHENO-VOXEL-SPRITEVOX-012 — out-of-bounds inputs (width/height/depth > CHUNK_EDGE)
+    /// are clamped without panicking.
+    #[test]
+    fn chunk_out_of_bounds_clamped_no_panic() {
+        let oversized_dim = (CHUNK_EDGE as u32) * 2;
+        let pixel_count = oversized_dim * oversized_dim;
+        let pixels = vec![red_pixel(); pixel_count as usize];
+        // Should not panic; excess pixels/depth are clamped.
+        let chunk = voxelize_to_chunk(&pixels, oversized_dim, oversized_dim, oversized_dim, identity_palette);
+        // All voxels are within the valid chunk range.
+        assert_eq!(chunk.voxels.len(), CHUNK_EDGE * CHUNK_EDGE * CHUNK_EDGE);
     }
 }

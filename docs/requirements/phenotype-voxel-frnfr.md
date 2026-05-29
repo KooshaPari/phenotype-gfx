@@ -308,7 +308,7 @@ surrounded → 0 faces), `FR-PHENO-VOXEL-CUBIC-008` (outward normals),
 caused by prose comment blocks (not executable code) are excluded. CI enforces
 `cargo test --lib` on PR merge.
 
-**Evidence:** `cargo test --lib` output: `94 passed; 0 failed` (2026-05-29).
+**Evidence:** `cargo test --lib` output: `100 passed; 0 failed` (2026-05-29).
 
 ---
 
@@ -341,6 +341,32 @@ real values (previously hardcoded to 3).
 
 ---
 
+### FR-VOXEL-013 — Sprite Voxelizer: Chunk Output with Palette Mapping (SHIPPED)
+
+**Title:** Convert a 2D pixel grid into a `Chunk<MaterialId>` via Z-extrusion and palette closure.
+
+**Description:** `voxelize_to_chunk(pixels, width, height, depth, pixel_to_material)` extrudes
+each opaque pixel (alpha > `ALPHA_THRESHOLD = 16`) into a column of `depth` solid voxels along
+Z, mapping RGBA8 color to `MaterialId` via a caller-supplied closure. Transparent pixels remain
+`MaterialId(0)` (air). Width, height, and depth are clamped to `CHUNK_EDGE = 16` to prevent
+out-of-bounds panics. Returns a `Chunk<MaterialId>` of size `CHUNK_EDGE³`. The function is
+pure and engine-agnostic.
+
+**Acceptance criteria:**
+- 2×2 fully-opaque sprite with depth D → exactly 4 * D solid voxels in the chunk.
+- Transparent pixels produce no solid voxels.
+- Palette closure correctly maps RGBA color → `MaterialId`.
+- Extrusion depth respected: voxels span z ∈ [0, depth); z ≥ depth is air.
+- Empty sprite (0-pixel or all-transparent) → all-air chunk.
+- Oversized inputs (width/height/depth > `CHUNK_EDGE`) are clamped; no panics.
+
+**Traceability:**
+- Former PLANNED item: `PLAN-VOXEL-005`
+- PR feat/sprite-voxelizer
+- In-code: `FR-PHENO-VOXEL-SPRITEVOX-007..012` (`src/sprite_voxelizer.rs`)
+
+---
+
 ### NFR-VOXEL-006 — Extended Performance Benchmark Suite (SHIPPED)
 
 **Title:** Criterion benchmarks + regression guards for all perf-critical paths beyond mesher_compare.
@@ -362,7 +388,7 @@ without absolute wall-clock thresholds, making them flap-free on any CI hardware
 
 **Acceptance criteria:**
 - `cargo bench --no-run` compiles cleanly.
-- `cargo test --lib --tests` remains green (94 lib + 4 triangle-regression + 11 perf-regression = 109 total).
+- `cargo test --lib --tests` remains green (100 lib + 4 triangle-regression + 11 perf-regression = 115 total).
 - All 11 NFR regression guards pass on every CI run.
 
 **Traceability:**
@@ -391,7 +417,8 @@ without absolute wall-clock thresholds, making them flap-free on any CI hardware
 | `FR-PHENO-VOXEL-MATERIAL-000` | (palette, underpins FR-VOXEL-004/005) |
 | `FR-PHENO-VOXEL-GREEDY-AO-001..003` | FR-VOXEL-011 |
 | `FR-PHENO-VOXEL-SHAPEHINT-001..009` | (shape-hint registry, not yet in catalog — see PLANNED; formalize as FR-VOXEL-012) |
-| `FR-PHENO-VOXEL-SPRITEVOX-001..006` | (sprite voxelizer, not yet in catalog — see PLANNED; formalize as FR-VOXEL-013) |
+| `FR-PHENO-VOXEL-SPRITEVOX-001..006` | FR-VOXEL-013 (sprite voxelizer Vec output, existing) |
+| `FR-PHENO-VOXEL-SPRITEVOX-007..012` | FR-VOXEL-013 (sprite voxelizer Chunk output — SHIPPED) |
 
 ---
 
@@ -402,6 +429,6 @@ without absolute wall-clock thresholds, making them flap-free on any CI hardware
 | ~~PLAN-VOXEL-001~~ | ~~Greedy-mesher per-vertex AO~~ | **SHIPPED** as FR-VOXEL-011 — AO-aware mask key in `src/greedy_mesher.rs`; 3 new tests `FR-PHENO-VOXEL-GREEDY-AO-001..003` |
 | ~~PLAN-VOXEL-003~~ | ~~Performance under load~~ | **SHIPPED** as NFR-VOXEL-006 — see `benches/perf_suite.rs` + `tests/perf_regression_guards.rs` |
 | PLAN-VOXEL-004 | Shape-hint registry FR | `FR-PHENO-VOXEL-SHAPEHINT-*` tests exist but no catalog entry; formalize as FR-VOXEL-011 |
-| PLAN-VOXEL-005 | Sprite voxelizer FR | `FR-PHENO-VOXEL-SPRITEVOX-*` tests exist but no catalog entry; formalize as FR-VOXEL-012 |
+| ~~PLAN-VOXEL-005~~ | ~~Sprite voxelizer FR~~ | **SHIPPED** as FR-VOXEL-013 — `voxelize_to_chunk` in `src/sprite_voxelizer.rs`; 6 new tests `FR-PHENO-VOXEL-SPRITEVOX-007..012` |
 | PLAN-VOXEL-006 | Full recursive SVO subdivision | `octree.rs` notes "8-way branches reserved for follow-up PR"; current model is flat `BTreeMap` |
 | PLAN-VOXEL-007 | Doctest hygiene | 1 doctest fails on Windows (prose comment mistaken for code block in `cubic_mesher.rs`); fix or mark `ignore` |
