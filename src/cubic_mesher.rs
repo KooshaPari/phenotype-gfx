@@ -176,7 +176,7 @@ fn vertex_ao(side1: bool, side2: bool, corner: bool) -> u8 {
 /// and **displaced ±1 along each tangent axis**.
 ///
 /// Vertex ordering per face (matches `emit_face`):
-/// ```
+/// ```text
 ///   face 0 (+x): v0=(y-,z-), v1=(y+,z-), v2=(y+,z+), v3=(y-,z+)
 ///   face 1 (-x): v0=(y-,z+), v1=(y+,z+), v2=(y+,z-), v3=(y-,z-)
 ///   face 2 (+y): v0=(z-,x-), v1=(z+,x-), v2=(z+,x+), v3=(z-,x+)
@@ -184,7 +184,7 @@ fn vertex_ao(side1: bool, side2: bool, corner: bool) -> u8 {
 ///   face 4 (+z): v0=(x-,y-), v1=(x+,y-), v2=(x+,y+), v3=(x-,y+)
 ///   face 5 (-z): v0=(x+,y-), v1=(x-,y-), v2=(x-,y+), v3=(x+,y+)
 /// ```
-fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face: u8) -> [u8; 4] {
+pub(crate) fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face: u8) -> [u8; 4] {
     // For each face encode:
     //   nox,noy,noz  — one step in the face-normal direction
     //   ux,uy,uz     — unit tangent axis U
@@ -205,7 +205,7 @@ fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face: u8) -> [u8
     // so the math is uniform.
 
     // (nox, noy, noz, ux, uy, uz, vx, vy, vz)
-    let (nox, noy, noz, ux, uy, uz, vx, vy, vz): (i32,i32,i32,i32,i32,i32,i32,i32,i32)
+    let (_nox, _noy, _noz, ux, uy, uz, vx, vy, vz): (i32,i32,i32,i32,i32,i32,i32,i32,i32)
         = match face {
             0 => ( 1, 0, 0,  0, 1, 0,  0, 0, 1), // +x face; u=+y, v=+z
             1 => (-1, 0, 0,  0, 1, 0,  0, 0,-1), // -x face; u=+y, v=-z (reversed z keeps CCW)
