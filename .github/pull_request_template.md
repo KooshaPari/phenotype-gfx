@@ -1,3 +1,5 @@
+> 📋 Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) and [`AGENTS.md`](./AGENTS.md) before opening this PR. Non-trivial features require a linked AgilePlus spec. Touches to the unsafe path (`<AllowUnsafeBlocks>true</AllowUnsafeBlocks>`) must come with a test under `tests/`.
+
 ## Summary
 
 <!-- What does this PR do? -->
