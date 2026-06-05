@@ -27,6 +27,27 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      # The library and test project both reference UnityEngine.CoreModule.dll
+      # with a hardcoded absolute Windows path
+      # (C:\Program Files (x86)\Steam\steamapps\common\worldbox\worldbox_Data\Managed\...).
+      # On a Linux runner that path is invalid, so without a stub the build
+      # would fail with a confusing "Could not resolve this reference" error
+      # buried in MSBuild output. The right long-term fix is to make the
+      # HintPath portable (e.g. `$(WorldBoxManaged)/UnityEngine.CoreModule.dll`
+      # like phenotype-terrain already does) and add a Directory.Build.targets
+      # that substitutes the variable, but that's a substantive contract
+      # change that needs sign-off from the package owner. Until then, this
+      # step fails fast with an actionable message instead of a noisy MSBuild
+      # trace.
+      - name: Check for Unity reference resolution
+        run: |
+          if [ -z "${WORLDBOXMANAGED:-}" ]; then
+            echo "::error::phenotype-water CI requires UnityEngine.CoreModule.dll."
+            echo "::error::The .csproj HintPath is hardcoded to a Windows path that does not exist on a Linux runner."
+            echo "::error::Either (a) set the WorldBoxManaged env var to a directory containing UnityEngine.CoreModule.dll, or (b) refactor the .csproj to use \$(WorldBoxManaged)/UnityEngine.CoreModule.dll and add a Directory.Build.targets that substitutes the variable when it's set."
+            exit 1
+          fi
+
       - name: Restore
         run: dotnet restore phenotype-water.slnx
 
