@@ -21,3 +21,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docs: tighten `README.md` license claim from "Apache-2.0 OR MIT" to MIT-only (org `LICENSE` is MIT).
 - Docs: fix `CLAUDE.md` "Key Files" entry that listed `src/LodManager.cs` — the actual file in `src/` is `src/TerrainLod.cs`.
 - Foundation: `CODE_OF_CONDUCT.md` (full Contributor Covenant v2.1 mirroring the org root; the org's "Reporting" section points to KooshaPari on GitHub).
+- Foundation: `.github/ISSUE_TEMPLATE/config.yml` (disables blank issues, adds contact links for Security advisories, AgilePlus specs, and the Phenotype org so the private disclosure path is discoverable from the new-issue chooser).
