@@ -15,7 +15,7 @@ Shared Unity water package for Phenotype-org mods targeting Unity / WorldBox. Pr
 
 ```bash
 dotnet build phenotype-water.slnx
-dotnet test    # when tests exist
+dotnet test    # runs the xunit tests under tests/
 ```
 
 Unity consumers add the project as a sibling project reference; rebuild after public surface changes.
