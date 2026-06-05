@@ -42,5 +42,9 @@ intended to be taken as a dependency by consumers.
 
 ## License
 
-MIT, consistent with the Phenotype org default. See [`LICENSE`](./LICENSE) —
-the file is in the repository root.
+MIT, consistent with the Phenotype org default. A `LICENSE` file has not
+been committed to this repository yet — until one lands here, the
+package is "All rights reserved" by default under copyright law. The
+package owner should commit an MIT `LICENSE` file at the repo root
+before the first public release, and consumers should treat the
+absence of the file as a red flag.
