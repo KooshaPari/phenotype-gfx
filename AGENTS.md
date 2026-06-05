@@ -10,7 +10,7 @@ Do not apply parent shelf instructions (e.g. `/Users/kooshapari/CodeProjects/Phe
 
 ## Quick Links
 
-- **Local CLAUDE.md:** Not present; this AGENTS.md is the source of truth for agent behavior in this repo.
+- **Local CLAUDE.md:** Present (`./CLAUDE.md`); this AGENTS.md is the source of truth for cross-cutting rules, CLAUDE.md is the Claude-specific entry point mirroring the McpKit stack template.
 - **Phenotype org governance:** `/Users/kooshapari/CodeProjects/Phenotype/repos/CLAUDE.md` (consult when touching cross-repo contracts).
 - **Global agent guidance:** `~/.claude/AGENTS.md` (consult for global defaults).
 - **AgilePlus work tracking:** `cd /repos/AgilePlus && agileplus <command>` — required for non-trivial work per the CONTRIBUTING mandate.
