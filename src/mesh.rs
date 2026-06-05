@@ -192,7 +192,11 @@ mod tests {
             .collect();
         let indices: Vec<u32> = (0..(n_tris * 3) as u32).collect();
         let ao = vec![3u8; n_verts];
-        MeshBuffer { vertices, indices, ao }
+        MeshBuffer {
+            vertices,
+            indices,
+            ao,
+        }
     }
 
     /// FR-PHENO-VOXEL-MESH-EXPORT-000 — `is_empty` matches vertex count.

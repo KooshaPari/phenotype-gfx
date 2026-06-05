@@ -26,7 +26,9 @@ use phenotype_voxel::{
 // --- MaterialId chunks (for mesher / AO / world benches) ---
 
 fn dense_solid_mat_chunk() -> Chunk<MaterialId> {
-    Chunk { voxels: vec![MaterialId(1); CHUNK_VOXELS] }
+    Chunk {
+        voxels: vec![MaterialId(1); CHUNK_VOXELS],
+    }
 }
 
 fn checkerboard_mat_chunk() -> Chunk<MaterialId> {
@@ -127,7 +129,10 @@ fn bench_serial_load(c: &mut Criterion) {
         ("empty", serialize_u8_to_vec(&empty_u8_chunk())),
         ("sparse", serialize_u8_to_vec(&sparse_u8_chunk())),
         ("dense_solid", serialize_u8_to_vec(&dense_u8_chunk())),
-        ("checkerboard", serialize_u8_to_vec(&checkerboard_u8_chunk())),
+        (
+            "checkerboard",
+            serialize_u8_to_vec(&checkerboard_u8_chunk()),
+        ),
     ];
 
     let mut group = c.benchmark_group("serial_load");
@@ -136,8 +141,7 @@ fn bench_serial_load(c: &mut Criterion) {
     for (name, bytes) in shapes {
         group.bench_with_input(BenchmarkId::from_parameter(name), name, |b, _| {
             b.iter(|| {
-                let result: Chunk<u8> =
-                    load_chunk(&mut black_box(bytes.as_slice())).unwrap();
+                let result: Chunk<u8> = load_chunk(&mut black_box(bytes.as_slice())).unwrap();
                 black_box(result)
             })
         });
@@ -164,7 +168,11 @@ fn uniform_octree(n_leaves: usize) -> VoxelOctree<MaterialId> {
         let gy = ((g / 4) % 4) * 4;
         let gz = (g / 16) * 4;
         tree.insert_uniform(
-            ChunkCoord { cx: cx + gx, cy: cy + gy, cz: cz + gz },
+            ChunkCoord {
+                cx: cx + gx,
+                cy: cy + gy,
+                cz: cz + gz,
+            },
             MaterialId(1),
         );
     }
@@ -210,7 +218,10 @@ fn bench_cubic_ao(c: &mut Criterion) {
     // "with_ao" — the standard path that populates MeshBuffer.ao.
     group.bench_function("dense_solid_with_ao", |b| {
         b.iter(|| {
-            let view = ChunkView { id: ChunkId(0), voxels: black_box(&dense.voxels) };
+            let view = ChunkView {
+                id: ChunkId(0),
+                voxels: black_box(&dense.voxels),
+            };
             black_box(CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)))
         })
     });
@@ -220,7 +231,10 @@ fn bench_cubic_ao(c: &mut Criterion) {
     let checker = checkerboard_mat_chunk();
     group.bench_function("checkerboard_with_ao", |b| {
         b.iter(|| {
-            let view = ChunkView { id: ChunkId(0), voxels: black_box(&checker.voxels) };
+            let view = ChunkView {
+                id: ChunkId(0),
+                voxels: black_box(&checker.voxels),
+            };
             black_box(CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)))
         })
     });
@@ -246,7 +260,11 @@ fn bench_world_fill_and_drain(c: &mut Criterion) {
                 for y in 0..CHUNK_EDGE as i64 {
                     for x in 0..CHUNK_EDGE as i64 {
                         world.write(
-                            WorldCoord { x: x * span, y: y * span, z: z * span },
+                            WorldCoord {
+                                x: x * span,
+                                y: y * span,
+                                z: z * span,
+                            },
                             MaterialId(1),
                         );
                     }

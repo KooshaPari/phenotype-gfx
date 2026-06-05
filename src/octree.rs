@@ -235,7 +235,14 @@ mod tests {
         for dz in 0..2i32 {
             for dy in 0..2i32 {
                 for dx in 0..2i32 {
-                    o.insert_uniform(ChunkCoord { cx: dx, cy: dy, cz: dz }, 42);
+                    o.insert_uniform(
+                        ChunkCoord {
+                            cx: dx,
+                            cy: dy,
+                            cz: dz,
+                        },
+                        42,
+                    );
                 }
             }
         }
@@ -245,7 +252,11 @@ mod tests {
         // Must now hold exactly 1 node at the parent coord (0,0,0).
         assert_eq!(o.nodes.len(), 1);
         assert_eq!(
-            o.uniform_value(ChunkCoord { cx: 0, cy: 0, cz: 0 }),
+            o.uniform_value(ChunkCoord {
+                cx: 0,
+                cy: 0,
+                cz: 0
+            }),
             Some(42)
         );
     }
@@ -260,13 +271,27 @@ mod tests {
         for dz in 0..2i32 {
             for dy in 0..2i32 {
                 for dx in 0..2i32 {
-                    o.insert_uniform(ChunkCoord { cx: dx, cy: dy, cz: dz }, val);
+                    o.insert_uniform(
+                        ChunkCoord {
+                            cx: dx,
+                            cy: dy,
+                            cz: dz,
+                        },
+                        val,
+                    );
                     val = 1; // keep 1 for all but the first
                 }
             }
         }
         // Override the very first child with a different value.
-        o.insert_uniform(ChunkCoord { cx: 0, cy: 0, cz: 0 }, 2);
+        o.insert_uniform(
+            ChunkCoord {
+                cx: 0,
+                cy: 0,
+                cz: 0,
+            },
+            2,
+        );
 
         let before = o.nodes.len();
         let collapsed = o.compact();
@@ -282,7 +307,14 @@ mod tests {
         for dz in 0..2i32 {
             for dy in 0..2i32 {
                 for dx in 0..2i32 {
-                    o.insert_uniform(ChunkCoord { cx: dx, cy: dy, cz: dz }, 7);
+                    o.insert_uniform(
+                        ChunkCoord {
+                            cx: dx,
+                            cy: dy,
+                            cz: dz,
+                        },
+                        7,
+                    );
                 }
             }
         }
@@ -300,7 +332,15 @@ mod tests {
     fn compact_preserves_query_semantics() {
         let mut o: VoxelOctree<u8> = VoxelOctree::default();
         let coords: Vec<ChunkCoord> = (0..2i32)
-            .flat_map(|dz| (0..2i32).flat_map(move |dy| (0..2i32).map(move |dx| ChunkCoord { cx: dx, cy: dy, cz: dz })))
+            .flat_map(|dz| {
+                (0..2i32).flat_map(move |dy| {
+                    (0..2i32).map(move |dx| ChunkCoord {
+                        cx: dx,
+                        cy: dy,
+                        cz: dz,
+                    })
+                })
+            })
             .collect();
 
         for &c in &coords {
@@ -319,7 +359,11 @@ mod tests {
         // a *different* value (it may return None — the parent is the
         // authoritative representation post-compaction).
         assert_eq!(
-            o.uniform_value(ChunkCoord { cx: 0, cy: 0, cz: 0 }),
+            o.uniform_value(ChunkCoord {
+                cx: 0,
+                cy: 0,
+                cz: 0
+            }),
             Some(99),
             "parent node must carry the merged material"
         );
@@ -341,7 +385,14 @@ mod tests {
         for dz in 0..4i32 {
             for dy in 0..4i32 {
                 for dx in 0..4i32 {
-                    o.insert_uniform(ChunkCoord { cx: dx, cy: dy, cz: dz }, 5);
+                    o.insert_uniform(
+                        ChunkCoord {
+                            cx: dx,
+                            cy: dy,
+                            cz: dz,
+                        },
+                        5,
+                    );
                 }
             }
         }
@@ -354,7 +405,11 @@ mod tests {
         assert_eq!(collapsed, 72, "full pyramid must collapse to a single root");
         assert_eq!(o.nodes.len(), 1);
         assert_eq!(
-            o.uniform_value(ChunkCoord { cx: 0, cy: 0, cz: 0 }),
+            o.uniform_value(ChunkCoord {
+                cx: 0,
+                cy: 0,
+                cz: 0
+            }),
             Some(5)
         );
     }
@@ -370,7 +425,14 @@ mod tests {
             for dy in 0..2i32 {
                 for dx in 0..2i32 {
                     if (dx, dy, dz) != (1, 1, 1) {
-                        o.insert_uniform(ChunkCoord { cx: dx, cy: dy, cz: dz }, 3);
+                        o.insert_uniform(
+                            ChunkCoord {
+                                cx: dx,
+                                cy: dy,
+                                cz: dz,
+                            },
+                            3,
+                        );
                     }
                 }
             }

@@ -68,8 +68,8 @@ where
     // Collect runs into a buffer so we can write the count first.
     let runs = rle_encode(&chunk.voxels);
 
-    let run_count =
-        u32::try_from(runs.len()).map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "too many RLE runs"))?;
+    let run_count = u32::try_from(runs.len())
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "too many RLE runs"))?;
     w.write_all(&u32::to_le_bytes(run_count))?;
 
     for (length, value) in &runs {
@@ -130,9 +130,8 @@ where
         r.read_exact(&mut raw)?;
         // SAFETY: bytemuck::from_slice panics if alignment is wrong, but Pod
         // guarantees any alignment; we use try_from_bytes for a clean error.
-        let value: &T = bytemuck::try_from_bytes(&raw).map_err(|e| {
-            io::Error::new(io::ErrorKind::InvalidData, format!("bytemuck: {e}"))
-        })?;
+        let value: &T = bytemuck::try_from_bytes(&raw)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("bytemuck: {e}")))?;
         for _ in 0..length {
             voxels.push(*value);
         }
@@ -221,8 +220,12 @@ mod tests {
         // = 16 bytes for u8.
         assert_eq!(buf.len(), 4 + 1 + 4 + 4 + 3, "expected single-run encoding");
 
-        let recovered: Chunk<u8> = load_chunk(&mut buf.as_slice()).expect("load_chunk must not fail");
-        assert_eq!(recovered.voxels, original.voxels, "roundtrip must be lossless");
+        let recovered: Chunk<u8> =
+            load_chunk(&mut buf.as_slice()).expect("load_chunk must not fail");
+        assert_eq!(
+            recovered.voxels, original.voxels,
+            "roundtrip must be lossless"
+        );
     }
 
     /// FR-PHENO-VOXEL-SERIAL-001 — dense (all-distinct) chunk roundtrips losslessly.
@@ -241,8 +244,12 @@ mod tests {
         let mut buf = Vec::<u8>::new();
         save_chunk(&original, &mut buf).expect("save_chunk must not fail");
 
-        let recovered: Chunk<u8> = load_chunk(&mut buf.as_slice()).expect("load_chunk must not fail");
-        assert_eq!(recovered.voxels, original.voxels, "roundtrip must be lossless");
+        let recovered: Chunk<u8> =
+            load_chunk(&mut buf.as_slice()).expect("load_chunk must not fail");
+        assert_eq!(
+            recovered.voxels, original.voxels,
+            "roundtrip must be lossless"
+        );
     }
 
     /// FR-PHENO-VOXEL-SERIAL-002 — bad magic is rejected with InvalidData.

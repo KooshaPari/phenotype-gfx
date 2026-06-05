@@ -521,8 +521,8 @@ mod tests {
         let chunk = voxelize_to_chunk(&pixels, 1, 2, 1, |px| MaterialId(px[0] as u16));
         // y=0 → red_pixel → MaterialId(255)
         let voxel_y0 = chunk.voxels[0]; // x=0, y=0, z=0
-        // y=1 → blue_pixel → MaterialId(0) (R=0) — but 0 is "air"; use a different mapping
-        // Actually R=0 means MaterialId(0) which is air. Let's verify the red one.
+                                        // y=1 → blue_pixel → MaterialId(0) (R=0) — but 0 is "air"; use a different mapping
+                                        // Actually R=0 means MaterialId(0) which is air. Let's verify the red one.
         assert_eq!(voxel_y0, MaterialId(255));
         // blue pixel has R=0 → MaterialId(0), so it's indistinguishable from air.
         // Use a different mapping: use B channel for blue pixel.
@@ -539,11 +539,19 @@ mod tests {
         let pixels = vec![red_pixel()];
         let chunk = voxelize_to_chunk(&pixels, 1, 1, depth, identity_palette);
         for z in 0..depth as usize {
-            assert_ne!(chunk.voxels[z * CHUNK_EDGE * CHUNK_EDGE], MaterialId(0), "z={z} should be solid");
+            assert_ne!(
+                chunk.voxels[z * CHUNK_EDGE * CHUNK_EDGE],
+                MaterialId(0),
+                "z={z} should be solid"
+            );
         }
         // z >= depth should be empty (up to CHUNK_EDGE)
         for z in depth as usize..CHUNK_EDGE {
-            assert_eq!(chunk.voxels[z * CHUNK_EDGE * CHUNK_EDGE], MaterialId(0), "z={z} should be air");
+            assert_eq!(
+                chunk.voxels[z * CHUNK_EDGE * CHUNK_EDGE],
+                MaterialId(0),
+                "z={z} should be air"
+            );
         }
     }
 
@@ -567,7 +575,13 @@ mod tests {
         let pixel_count = oversized_dim * oversized_dim;
         let pixels = vec![red_pixel(); pixel_count as usize];
         // Should not panic; excess pixels/depth are clamped.
-        let chunk = voxelize_to_chunk(&pixels, oversized_dim, oversized_dim, oversized_dim, identity_palette);
+        let chunk = voxelize_to_chunk(
+            &pixels,
+            oversized_dim,
+            oversized_dim,
+            oversized_dim,
+            identity_palette,
+        );
         // All voxels are within the valid chunk range.
         assert_eq!(chunk.voxels.len(), CHUNK_EDGE * CHUNK_EDGE * CHUNK_EDGE);
     }

@@ -54,7 +54,9 @@ fn empty_mat_chunk() -> Chunk<MaterialId> {
 }
 
 fn dense_solid_mat_chunk() -> Chunk<MaterialId> {
-    Chunk { voxels: vec![MaterialId(1); CHUNK_VOXELS] }
+    Chunk {
+        voxels: vec![MaterialId(1); CHUNK_VOXELS],
+    }
 }
 
 fn checkerboard_mat_chunk() -> Chunk<MaterialId> {
@@ -149,11 +151,18 @@ fn svo_compact_8_siblings_exact() {
 
     let removed = tree.compact();
     assert_eq!(removed, 8, "compact must report 8 nodes removed");
-    assert_eq!(tree.nodes.len(), 1, "post-compact: exactly 1 parent node must remain");
+    assert_eq!(
+        tree.nodes.len(),
+        1,
+        "post-compact: exactly 1 parent node must remain"
+    );
 
     // Idempotent.
     let removed2 = tree.compact();
-    assert_eq!(removed2, 0, "second compact on already-compacted tree must return 0");
+    assert_eq!(
+        removed2, 0,
+        "second compact on already-compacted tree must return 0"
+    );
 }
 
 /// NFR-VOXEL-006-SVO-002 — compacting 64 uniform leaves (two-level pyramid)
@@ -171,7 +180,11 @@ fn svo_compact_64_leaf_pyramid_removes_72() {
             for cy in [0i32, 1] {
                 for cz in [0i32, 1] {
                     tree.insert_uniform(
-                        ChunkCoord { cx: gx + cx, cy: gy + cy, cz: gz + cz },
+                        ChunkCoord {
+                            cx: gx + cx,
+                            cy: gy + cy,
+                            cz: gz + cz,
+                        },
                         MaterialId(1),
                     );
                 }
@@ -188,7 +201,10 @@ fn svo_compact_64_leaf_pyramid_removes_72() {
         removed >= 56,
         "REGRESSION: 64-leaf pyramid compact should remove >= 56 nodes (got {removed})"
     );
-    assert!(tree.nodes.len() <= 8, "post-compact: at most 8 first-level nodes should remain");
+    assert!(
+        tree.nodes.len() <= 8,
+        "post-compact: at most 8 first-level nodes should remain"
+    );
 }
 
 /// NFR-VOXEL-006-SVO-003 — compaction of mixed-value group removes 0 nodes.
@@ -226,7 +242,10 @@ fn ao_len_equals_vertex_len_all_shapes() {
     ];
 
     for (name, chunk) in shapes {
-        let view = ChunkView { id: ChunkId(0), voxels: &chunk.voxels };
+        let view = ChunkView {
+            id: ChunkId(0),
+            voxels: &chunk.voxels,
+        };
         let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0))
             .unwrap_or_else(|e| panic!("mesh_cubic({name}) failed: {e}"));
         assert_eq!(
@@ -244,7 +263,10 @@ fn ao_len_equals_vertex_len_all_shapes() {
 fn ao_single_exposed_voxel_all_lit() {
     let mut chunk = empty_mat_chunk();
     chunk.voxels[0] = MaterialId(1); // corner voxel, fully exposed
-    let view = ChunkView { id: ChunkId(0), voxels: &chunk.voxels };
+    let view = ChunkView {
+        id: ChunkId(0),
+        voxels: &chunk.voxels,
+    };
     let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).unwrap();
     assert!(
         mesh.ao.iter().all(|&v| v == 3),
@@ -266,15 +288,30 @@ fn dirty_tracking_event_count_exact() {
 
     // Write 4 distinct positions → should emit 4 events.
     for i in 0..4i64 {
-        world.write(WorldCoord { x: i * FIXED_SCALE, y: 0, z: 0 }, MaterialId(1));
+        world.write(
+            WorldCoord {
+                x: i * FIXED_SCALE,
+                y: 0,
+                z: 0,
+            },
+            MaterialId(1),
+        );
     }
     let events = world.drain_dirty();
-    assert_eq!(events.len(), 4, "4 distinct writes must produce 4 dirty events");
+    assert_eq!(
+        events.len(),
+        4,
+        "4 distinct writes must produce 4 dirty events"
+    );
 
     // Idempotent write at position (0,0,0) — value already MaterialId(1).
     world.write(WorldCoord { x: 0, y: 0, z: 0 }, MaterialId(1));
     let events2 = world.drain_dirty();
-    assert_eq!(events2.len(), 0, "REGRESSION: idempotent write must emit 0 events");
+    assert_eq!(
+        events2.len(),
+        0,
+        "REGRESSION: idempotent write must emit 0 events"
+    );
 }
 
 /// NFR-VOXEL-006-DIRTY-002 — cost ordering: filling an entire chunk (4096 writes)
@@ -292,7 +329,11 @@ fn dirty_fill_one_chunk_under_1s() {
         for y in 0..CHUNK_EDGE as i64 {
             for x in 0..CHUNK_EDGE as i64 {
                 world.write(
-                    WorldCoord { x: x * span, y: y * span, z: z * span },
+                    WorldCoord {
+                        x: x * span,
+                        y: y * span,
+                        z: z * span,
+                    },
                     MaterialId(1),
                 );
             }
@@ -301,7 +342,11 @@ fn dirty_fill_one_chunk_under_1s() {
     let events = world.drain_dirty();
     let elapsed = t0.elapsed();
 
-    assert_eq!(events.len(), CHUNK_VOXELS, "expected {CHUNK_VOXELS} dirty events");
+    assert_eq!(
+        events.len(),
+        CHUNK_VOXELS,
+        "expected {CHUNK_VOXELS} dirty events"
+    );
     assert!(
         elapsed.as_secs() < 1,
         "REGRESSION: filling one chunk ({CHUNK_VOXELS} writes) took {}ms (limit: 1000ms)",
@@ -323,7 +368,11 @@ fn dirty_event_count_scales_with_writes() {
                 for y in 0..CHUNK_EDGE as i64 {
                     for x in 0..CHUNK_EDGE as i64 {
                         world.write(
-                            WorldCoord { x: cx_offset + x * span, y: y * span, z: z * span },
+                            WorldCoord {
+                                x: cx_offset + x * span,
+                                y: y * span,
+                                z: z * span,
+                            },
                             MaterialId(1),
                         );
                     }

@@ -21,7 +21,10 @@ use phenotype_voxel::{
 // ---------------------------------------------------------------------------
 
 fn make_view(chunk: &Chunk<MaterialId>) -> ChunkView<'_, MaterialId> {
-    ChunkView { id: ChunkId(0), voxels: &chunk.voxels }
+    ChunkView {
+        id: ChunkId(0),
+        voxels: &chunk.voxels,
+    }
 }
 
 fn cubic_tris(chunk: &Chunk<MaterialId>) -> usize {

@@ -11,11 +11,8 @@ use bevy::mesh::{Indices, Mesh, MeshVertexAttribute, PrimitiveTopology, VertexFo
 
 /// Custom per-vertex ambient-occlusion attribute stored alongside Bevy's built-in
 /// position / normal / UV attributes.
-pub const ATTRIBUTE_AO: MeshVertexAttribute = MeshVertexAttribute::new(
-    "VoxelAO",
-    0x564F_5845_4C5F_414F,
-    VertexFormat::Float32,
-);
+pub const ATTRIBUTE_AO: MeshVertexAttribute =
+    MeshVertexAttribute::new("VoxelAO", 0x564F_5845_4C5F_414F, VertexFormat::Float32);
 
 /// Convert an engine-neutral [`MeshBuffer`] into a Bevy [`Mesh`].
 pub fn to_bevy_mesh(buffer: &MeshBuffer) -> Mesh {
@@ -79,7 +76,10 @@ mod tests {
         let mesh = to_bevy_mesh(&buffer);
 
         assert_eq!(mesh.count_vertices(), buffer.vertex_count());
-        assert_eq!(mesh.indices().map(|indices| indices.len()), Some(buffer.index_count()));
+        assert_eq!(
+            mesh.indices().map(|indices| indices.len()),
+            Some(buffer.index_count())
+        );
         assert!(mesh.contains_attribute(Mesh::ATTRIBUTE_POSITION));
         assert!(mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL));
         assert!(mesh.contains_attribute(Mesh::ATTRIBUTE_UV_0));

@@ -82,11 +82,7 @@ impl<V: CubicVoxel> Mesher for GreedyMesher<V> {
     type VoxelKind = V;
     type Mesh = MeshBuffer;
 
-    fn mesh_chunk(
-        &self,
-        chunk: ChunkView<'_, V>,
-        lod: LodLevel,
-    ) -> MeshResult<Self::Mesh> {
+    fn mesh_chunk(&self, chunk: ChunkView<'_, V>, lod: LodLevel) -> MeshResult<Self::Mesh> {
         Self::mesh_greedy(chunk, lod)
     }
 }
@@ -102,10 +98,7 @@ impl<V: CubicVoxel> GreedyMesher<V> {
     /// Faces are merged only when both the material **and** the AO signature
     /// are identical, preserving per-vertex AO detail at occlusion boundaries
     /// while still collapsing large flat unoccluded regions into single quads.
-    pub fn mesh_greedy(
-        chunk: ChunkView<'_, V>,
-        _lod: LodLevel,
-    ) -> MeshResult<MeshBuffer> {
+    pub fn mesh_greedy(chunk: ChunkView<'_, V>, _lod: LodLevel) -> MeshResult<MeshBuffer> {
         let n = CHUNK_EDGE;
         let expected = n * n * n;
         if chunk.voxels.len() != expected {
@@ -124,9 +117,7 @@ impl<V: CubicVoxel> GreedyMesher<V> {
             if x < 0 || y < 0 || z < 0 || x >= ni || y >= ni || z >= ni {
                 return None;
             }
-            Some(&chunk.voxels[
-                x as usize + y as usize * n + z as usize * n * n
-            ])
+            Some(&chunk.voxels[x as usize + y as usize * n + z as usize * n * n])
         };
 
         // We iterate over 6 face directions.  For each direction we define:
@@ -156,11 +147,11 @@ impl<V: CubicVoxel> GreedyMesher<V> {
                 // CubicMesher face encoding: 0=+x,1=-x,2=+y,3=-y,4=+z,5=-z.
                 let face_id: u8 = match (axis, neg) {
                     (0, false) => 0,
-                    (0, true)  => 1,
+                    (0, true) => 1,
                     (1, false) => 2,
-                    (1, true)  => 3,
+                    (1, true) => 3,
                     (2, false) => 4,
-                    _          => 5,
+                    _ => 5,
                 };
 
                 // Mask: indexed by [u + v * size_u].  `None` = air / already used.
@@ -202,11 +193,7 @@ impl<V: CubicVoxel> GreedyMesher<V> {
                                 // Compute 4-corner AO using CubicMesher's helper.
                                 // face_ao expects the voxel (x,y,z) coordinates and
                                 // the face_id matching cubic's face encoding.
-                                let ao = face_ao(
-                                    chunk.voxels,
-                                    pos[0], pos[1], pos[2],
-                                    face_id,
-                                );
+                                let ao = face_ao(chunk.voxels, pos[0], pos[1], pos[2], face_id);
                                 Some(MaskCell { material, ao })
                             } else {
                                 None
@@ -248,10 +235,16 @@ impl<V: CubicVoxel> GreedyMesher<V> {
                             // at slice d, carrying the uniform AO signature.
                             emit_quad(
                                 &mut buf,
-                                axis, u_axis, v_axis,
-                                d, mu, mv,
-                                width, height,
-                                neg, normal,
+                                axis,
+                                u_axis,
+                                v_axis,
+                                d,
+                                mu,
+                                mv,
+                                width,
+                                height,
+                                neg,
+                                normal,
                                 key.material,
                                 key.ao,
                             );
@@ -378,12 +371,18 @@ mod tests {
     fn single_voxel_produces_six_quads() {
         let mut c = Chunk::<MaterialId>::default();
         c.voxels[idx(0, 0, 0)] = MaterialId(1);
-        let view = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0))
-            .expect("greedy mesh");
+        let view = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0)).expect("greedy mesh");
 
         // 6 quads × 4 vertices × 6 indices.
-        assert_eq!(mesh.vertices.len(), 24, "single voxel must produce 6 quads (24 verts)");
+        assert_eq!(
+            mesh.vertices.len(),
+            24,
+            "single voxel must produce 6 quads (24 verts)"
+        );
         assert_eq!(mesh.indices.len(), 36);
     }
 
@@ -410,13 +409,18 @@ mod tests {
             }
         }
 
-        let view_g = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let greedy = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0))
-            .expect("greedy mesh");
+        let view_g = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let greedy =
+            GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0)).expect("greedy mesh");
 
-        let view_c = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0))
-            .expect("cubic mesh");
+        let view_c = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0)).expect("cubic mesh");
 
         // Watertight: same surface area.
         let greedy_area = total_triangle_area(&greedy);
@@ -435,7 +439,11 @@ mod tests {
         );
 
         // AO invariant.
-        assert_eq!(greedy.ao.len(), greedy.vertices.len(), "ao.len() must equal vertices.len()");
+        assert_eq!(
+            greedy.ao.len(),
+            greedy.vertices.len(),
+            "ao.len() must equal vertices.len()"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -456,13 +464,18 @@ mod tests {
             }
         }
 
-        let view_g = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let greedy = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0))
-            .expect("greedy mesh");
+        let view_g = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let greedy =
+            GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0)).expect("greedy mesh");
 
-        let view_c = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0))
-            .expect("cubic mesh");
+        let view_c = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0)).expect("cubic mesh");
 
         let greedy_area = total_triangle_area(&greedy);
         let cubic_area = total_triangle_area(&cubic);
@@ -482,7 +495,11 @@ mod tests {
         );
 
         // AO invariant.
-        assert_eq!(greedy.ao.len(), greedy.vertices.len(), "ao.len() must equal vertices.len()");
+        assert_eq!(
+            greedy.ao.len(),
+            greedy.vertices.len(),
+            "ao.len() must equal vertices.len()"
+        );
 
         let greedy_tri = greedy.indices.len() / 3;
         let cubic_tri = cubic.indices.len() / 3;
@@ -506,8 +523,14 @@ mod tests {
         c.voxels[idx(2, 1, 3)] = MaterialId(2);
         c.voxels[idx(5, 5, 5)] = MaterialId(1);
 
-        let view1 = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let view2 = ChunkView { id: ChunkId(0), voxels: &c.voxels };
+        let view1 = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let view2 = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
         let m1 = GreedyMesher::<MaterialId>::mesh_greedy(view1, LodLevel(0)).expect("m1");
         let m2 = GreedyMesher::<MaterialId>::mesh_greedy(view2, LodLevel(0)).expect("m2");
         assert_eq!(m1, m2, "greedy meshing must be deterministic");
@@ -520,9 +543,11 @@ mod tests {
     #[test]
     fn empty_chunk_produces_empty_mesh() {
         let c = Chunk::<MaterialId>::default();
-        let view = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0))
-            .expect("greedy mesh");
+        let view = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0)).expect("greedy mesh");
         assert!(mesh.vertices.is_empty());
         assert!(mesh.indices.is_empty());
     }
@@ -536,13 +561,19 @@ mod tests {
         let mut c = Chunk::<MaterialId>::default();
         c.voxels[idx(1, 1, 1)] = MaterialId(3);
 
-        let view_a = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let view_b = ChunkView { id: ChunkId(0), voxels: &c.voxels };
+        let view_a = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let view_b = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
 
         let mesher = GreedyMesher::<MaterialId>::new();
         let via_trait = mesher.mesh_chunk(view_a, LodLevel(0)).expect("via trait");
-        let via_direct = GreedyMesher::<MaterialId>::mesh_greedy(view_b, LodLevel(0))
-            .expect("direct");
+        let via_direct =
+            GreedyMesher::<MaterialId>::mesh_greedy(view_b, LodLevel(0)).expect("direct");
         assert_eq!(via_trait, via_direct);
     }
 
@@ -561,13 +592,17 @@ mod tests {
             }
         }
 
-        let view_g = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let greedy = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0))
-            .expect("greedy");
+        let view_g = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let greedy = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0)).expect("greedy");
 
-        let view_c = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0))
-            .expect("cubic");
+        let view_c = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0)).expect("cubic");
 
         let greedy_area = total_triangle_area(&greedy);
         let cubic_area = total_triangle_area(&cubic);
@@ -604,16 +639,23 @@ mod tests {
         // Part A: isolated voxel — all faces all-3, greedy == cubic in quad count.
         let mut c = Chunk::<MaterialId>::default();
         c.voxels[idx(8, 8, 8)] = MaterialId(1);
-        let view = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0))
-            .expect("greedy mesh");
+        let view = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0)).expect("greedy mesh");
         assert!(
             mesh.ao.iter().all(|&a| a == 3),
-            "isolated voxel: all AO must be 3; got {:?}", mesh.ao
+            "isolated voxel: all AO must be 3; got {:?}",
+            mesh.ao
         );
         assert_eq!(mesh.ao.len(), mesh.vertices.len());
         // 6 faces × 4 verts = 24 verts, 6 faces × 6 indices = 36 indices.
-        assert_eq!(mesh.vertices.len(), 24, "isolated voxel must produce 6 quads");
+        assert_eq!(
+            mesh.vertices.len(),
+            24,
+            "isolated voxel must produce 6 quads"
+        );
         assert_eq!(mesh.indices.len(), 36);
 
         // Part B: 4×4 slab — triangle count ≤ cubic (win preserved despite AO splits
@@ -624,17 +666,28 @@ mod tests {
                 c2.voxels[idx(x, 0, z)] = MaterialId(1);
             }
         }
-        let view_g = ChunkView { id: ChunkId(0), voxels: &c2.voxels };
-        let greedy = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0))
-            .expect("greedy mesh");
-        let view_c = ChunkView { id: ChunkId(0), voxels: &c2.voxels };
+        let view_g = ChunkView {
+            id: ChunkId(0),
+            voxels: &c2.voxels,
+        };
+        let greedy =
+            GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0)).expect("greedy mesh");
+        let view_c = ChunkView {
+            id: ChunkId(0),
+            voxels: &c2.voxels,
+        };
         let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0)).expect("cubic");
         assert!(
             greedy.indices.len() <= cubic.indices.len(),
             "4×4 slab: greedy ({} idx) must be ≤ cubic ({} idx)",
-            greedy.indices.len(), cubic.indices.len()
+            greedy.indices.len(),
+            cubic.indices.len()
         );
-        assert_eq!(greedy.ao.len(), greedy.vertices.len(), "ao.len() must equal vertices.len()");
+        assert_eq!(
+            greedy.ao.len(),
+            greedy.vertices.len(),
+            "ao.len() must equal vertices.len()"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -657,13 +710,16 @@ mod tests {
         c.voxels[idx(0, 1, 0)] = MaterialId(1); // unoccluded
         c.voxels[idx(1, 1, 0)] = MaterialId(1); // has occluder below
         c.voxels[idx(2, 1, 0)] = MaterialId(1); // unoccluded
-        // Occluder under the middle voxel (creates AO on the +y face of voxel 1).
+                                                // Occluder under the middle voxel (creates AO on the +y face of voxel 1).
         c.voxels[idx(0, 0, 0)] = MaterialId(1); // occluder for (1,1,0) -x bottom corner
         c.voxels[idx(1, 0, 0)] = MaterialId(1); // directly below (1,1,0) — suppresses -y face
 
-        let view_g = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let mesh = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0))
-            .expect("greedy mesh");
+        let view_g = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let mesh =
+            GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0)).expect("greedy mesh");
 
         // The +y face of (1,1,0) is exposed (its +y neighbour is air).
         // The occluder at (0,0,0) occludes the -x corner of (1,1,0)'s +y face.
@@ -688,26 +744,41 @@ mod tests {
         let mut c = Chunk::<MaterialId>::default();
         c.voxels[idx(4, 4, 4)] = MaterialId(1);
 
-        let view_g = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let greedy = GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0))
-            .expect("greedy mesh");
+        let view_g = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let greedy =
+            GreedyMesher::<MaterialId>::mesh_greedy(view_g, LodLevel(0)).expect("greedy mesh");
 
-        let view_c = ChunkView { id: ChunkId(0), voxels: &c.voxels };
-        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0))
-            .expect("cubic mesh");
+        let view_c = ChunkView {
+            id: ChunkId(0),
+            voxels: &c.voxels,
+        };
+        let cubic = CubicMesher::<MaterialId>::mesh_cubic(view_c, LodLevel(0)).expect("cubic mesh");
 
         // Both meshers produce 6 faces × 4 verts = 24 vertices.
-        assert_eq!(greedy.ao.len(), 24, "greedy: 6 faces × 4 verts = 24 ao values");
-        assert_eq!(cubic.ao.len(), 24, "cubic: 6 faces × 4 verts = 24 ao values");
+        assert_eq!(
+            greedy.ao.len(),
+            24,
+            "greedy: 6 faces × 4 verts = 24 ao values"
+        );
+        assert_eq!(
+            cubic.ao.len(),
+            24,
+            "cubic: 6 faces × 4 verts = 24 ao values"
+        );
 
         // All AO values must be 3 for an isolated voxel (no neighbours to occlude).
         assert!(
             greedy.ao.iter().all(|&a| a == 3),
-            "greedy: isolated voxel must have all AO=3; got {:?}", greedy.ao
+            "greedy: isolated voxel must have all AO=3; got {:?}",
+            greedy.ao
         );
         assert!(
             cubic.ao.iter().all(|&a| a == 3),
-            "cubic: isolated voxel must have all AO=3; got {:?}", cubic.ao
+            "cubic: isolated voxel must have all AO=3; got {:?}",
+            cubic.ao
         );
 
         // Also compare sorted AO histograms to confirm parity.
@@ -715,7 +786,10 @@ mod tests {
         let mut cao = cubic.ao.clone();
         gao.sort_unstable();
         cao.sort_unstable();
-        assert_eq!(gao, cao, "greedy and cubic AO histograms must match for isolated voxel");
+        assert_eq!(
+            gao, cao,
+            "greedy and cubic AO histograms must match for isolated voxel"
+        );
     }
 
     // -----------------------------------------------------------------------

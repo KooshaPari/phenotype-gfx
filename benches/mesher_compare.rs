@@ -34,7 +34,8 @@ fn sparse_chunk() -> Chunk<MaterialId> {
     'outer: for z in (0..CHUNK_EDGE as i32).step_by(step) {
         for y in (0..CHUNK_EDGE as i32).step_by(step) {
             for x in (0..CHUNK_EDGE as i32).step_by(step) {
-                c.voxels[x as usize + y as usize * CHUNK_EDGE + z as usize * CHUNK_EDGE * CHUNK_EDGE] =
+                c.voxels
+                    [x as usize + y as usize * CHUNK_EDGE + z as usize * CHUNK_EDGE * CHUNK_EDGE] =
                     MaterialId(1);
                 count += 1;
                 if count >= 64 {
@@ -86,7 +87,10 @@ fn bench_cubic(c: &mut Criterion) {
     for (name, chunk) in shapes {
         group.bench_with_input(BenchmarkId::from_parameter(name), name, |b, _| {
             b.iter(|| {
-                let view = ChunkView { id: ChunkId(0), voxels: black_box(&chunk.voxels) };
+                let view = ChunkView {
+                    id: ChunkId(0),
+                    voxels: black_box(&chunk.voxels),
+                };
                 black_box(CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)))
             })
         });
@@ -108,7 +112,10 @@ fn bench_greedy(c: &mut Criterion) {
     for (name, chunk) in shapes {
         group.bench_with_input(BenchmarkId::from_parameter(name), name, |b, _| {
             b.iter(|| {
-                let view = ChunkView { id: ChunkId(0), voxels: black_box(&chunk.voxels) };
+                let view = ChunkView {
+                    id: ChunkId(0),
+                    voxels: black_box(&chunk.voxels),
+                };
                 black_box(GreedyMesher::<MaterialId>::mesh_greedy(view, LodLevel(0)))
             })
         });

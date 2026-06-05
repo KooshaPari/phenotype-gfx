@@ -56,11 +56,7 @@ impl<V: CubicVoxel> Mesher for CubicMesher<V> {
 
     /// Delegates directly to [`CubicMesher::mesh_cubic`] so all meshing logic
     /// lives in one place and the trait boundary is fully enforced at compile time.
-    fn mesh_chunk(
-        &self,
-        chunk: ChunkView<'_, V>,
-        lod: LodLevel,
-    ) -> MeshResult<Self::Mesh> {
+    fn mesh_chunk(&self, chunk: ChunkView<'_, V>, lod: LodLevel) -> MeshResult<Self::Mesh> {
         Self::mesh_cubic(chunk, lod)
     }
 }
@@ -72,10 +68,7 @@ impl<V: CubicVoxel> CubicMesher<V> {
     /// LOD currently affects nothing for the cubic mesher (every level emits the
     /// same geometry). Future LOD-aware meshers will collapse far chunks into
     /// merged-face geometry.
-    pub fn mesh_cubic(
-        chunk: ChunkView<'_, V>,
-        _lod: LodLevel,
-    ) -> MeshResult<MeshBuffer> {
+    pub fn mesh_cubic(chunk: ChunkView<'_, V>, _lod: LodLevel) -> MeshResult<MeshBuffer> {
         let expected = CHUNK_EDGE * CHUNK_EDGE * CHUNK_EDGE;
         if chunk.voxels.len() != expected {
             return Err(MeshError::BadChunkSize {
@@ -205,14 +198,14 @@ pub(crate) fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face:
     // so the math is uniform.
 
     // (nox, noy, noz, ux, uy, uz, vx, vy, vz)
-    let (_nox, _noy, _noz, ux, uy, uz, vx, vy, vz): (i32,i32,i32,i32,i32,i32,i32,i32,i32)
-        = match face {
-            0 => ( 1, 0, 0,  0, 1, 0,  0, 0, 1), // +x face; u=+y, v=+z
-            1 => (-1, 0, 0,  0, 1, 0,  0, 0,-1), // -x face; u=+y, v=-z (reversed z keeps CCW)
-            2 => ( 0, 1, 0,  0, 0, 1,  1, 0, 0), // +y face; u=+z, v=+x
-            3 => ( 0,-1, 0,  0, 0,-1,  1, 0, 0), // -y face; u=-z, v=+x
-            4 => ( 0, 0, 1,  1, 0, 0,  0, 1, 0), // +z face; u=+x, v=+y
-            _ => ( 0, 0,-1, -1, 0, 0,  0, 1, 0), // -z face; u=-x, v=+y
+    let (_nox, _noy, _noz, ux, uy, uz, vx, vy, vz): (i32, i32, i32, i32, i32, i32, i32, i32, i32) =
+        match face {
+            0 => (1, 0, 0, 0, 1, 0, 0, 0, 1),   // +x face; u=+y, v=+z
+            1 => (-1, 0, 0, 0, 1, 0, 0, 0, -1), // -x face; u=+y, v=-z (reversed z keeps CCW)
+            2 => (0, 1, 0, 0, 0, 1, 1, 0, 0),   // +y face; u=+z, v=+x
+            3 => (0, -1, 0, 0, 0, -1, 1, 0, 0), // -y face; u=-z, v=+x
+            4 => (0, 0, 1, 1, 0, 0, 0, 1, 0),   // +z face; u=+x, v=+y
+            _ => (0, 0, -1, -1, 0, 0, 0, 1, 0), // -z face; u=-x, v=+y
         };
 
     // Classic voxel-AO neighbourhood:
@@ -233,17 +226,10 @@ pub(crate) fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face:
     let corners: [(i32, i32); 4] = [(-1, -1), (1, -1), (1, 1), (-1, 1)];
 
     let ao_for_corner = |(us, vs): (i32, i32)| -> u8 {
-        let s1 = solid_at(voxels,
-            x + us * ux,
-            y + us * uy,
-            z + us * uz,
-        );
-        let s2 = solid_at(voxels,
-            x + vs * vx,
-            y + vs * vy,
-            z + vs * vz,
-        );
-        let co = solid_at(voxels,
+        let s1 = solid_at(voxels, x + us * ux, y + us * uy, z + us * uz);
+        let s2 = solid_at(voxels, x + vs * vx, y + vs * vy, z + vs * vz);
+        let co = solid_at(
+            voxels,
             x + us * ux + vs * vx,
             y + us * uy + vs * vy,
             z + us * uz + vs * vz,
@@ -270,7 +256,15 @@ pub(crate) fn face_ao<V: CubicVoxel>(voxels: &[V], x: i32, y: i32, z: i32, face:
 ///
 /// `ao` contains one AO value (0..=3) for each of the four quad corners,
 /// already computed by [`face_ao`].
-fn emit_face<V: CubicVoxel>(buf: &mut MeshBuffer, voxels: &[V], x: i32, y: i32, z: i32, face: u8, material: MaterialId) {
+fn emit_face<V: CubicVoxel>(
+    buf: &mut MeshBuffer,
+    voxels: &[V],
+    x: i32,
+    y: i32,
+    z: i32,
+    face: u8,
+    material: MaterialId,
+) {
     let fx = x as f32;
     let fy = y as f32;
     let fz = z as f32;
@@ -381,9 +375,15 @@ mod tests {
             voxels: &c.voxels,
         };
         let mesher = CubicMesher::<MaterialId>::new();
-        let via_trait = mesher.mesh_chunk(view_a, LodLevel(0)).expect("mesh via trait");
-        let via_direct = CubicMesher::<MaterialId>::mesh_cubic(view_b, LodLevel(0)).expect("mesh direct");
-        assert_eq!(via_trait, via_direct, "mesh_chunk must delegate to mesh_cubic identically");
+        let via_trait = mesher
+            .mesh_chunk(view_a, LodLevel(0))
+            .expect("mesh via trait");
+        let via_direct =
+            CubicMesher::<MaterialId>::mesh_cubic(view_b, LodLevel(0)).expect("mesh direct");
+        assert_eq!(
+            via_trait, via_direct,
+            "mesh_chunk must delegate to mesh_cubic identically"
+        );
     }
 
     /// FR-PHENO-VOXEL-CUBIC-001 — a single solid voxel in an otherwise empty
@@ -638,8 +638,8 @@ mod tests {
         // Two solid neighbours that form a crevice at the -x/-y corner.
         c.voxels[idx(1, 2, 2)] = MaterialId(1); // -x side
         c.voxels[idx(2, 1, 2)] = MaterialId(1); // -y side
-        // Also fill the diagonal corner so the "both sides" rule has maximum effect
-        // on one vertex of the -z face viewed from below.
+                                                // Also fill the diagonal corner so the "both sides" rule has maximum effect
+                                                // on one vertex of the -z face viewed from below.
         c.voxels[idx(1, 1, 2)] = MaterialId(1); // -x/-y corner
 
         let view = ChunkView {
@@ -666,6 +666,9 @@ mod tests {
             voxels: &c.voxels,
         };
         let mesh = CubicMesher::<MaterialId>::mesh_cubic(view, LodLevel(0)).expect("mesh");
-        assert!(mesh.ao.is_empty(), "empty chunk must produce empty ao buffer");
+        assert!(
+            mesh.ao.is_empty(),
+            "empty chunk must produce empty ao buffer"
+        );
     }
 }
