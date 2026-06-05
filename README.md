@@ -5,7 +5,9 @@ Shared terrain mesh infrastructure for Phenotype-org mods targeting Unity/WorldB
 This package extracts reusable terrain concerns — height-field storage, chunk mesh
 generation, and LOD management — out of individual mod codebases so they can be
 consumed as a sibling project reference. It follows the same hexagonal polyrepo
-pattern as [phenotype-voxel](https://github.com/Phenotype-org/phenotype-voxel).
+pattern as the other `phenotype-*` packages under the Phenotype org (e.g. the
+in-repo sibling `phenotype-water` shares the same Unity/`net48`/`$(WorldBoxManaged)`
+contract layout).
 
 ## Structure
 

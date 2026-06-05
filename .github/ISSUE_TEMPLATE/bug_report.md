@@ -22,7 +22,7 @@ A clear description of what you expected to happen.
  - WorldBox install path: [used to resolve `$(WorldBoxManaged)`]
  - dotnet SDK version (`dotnet --info`): [e.g. 8.0.100]
  - Target framework: net48
- - Consumer project: [e.g. phenotype-voxel, an end-user mod]
+ - Consumer project: [e.g. `phenotype-water` (in-repo sibling), or an end-user Unity mod]
 
 **Screenshots / logs**
 If applicable, add Unity console output, screenshots, or stack traces.

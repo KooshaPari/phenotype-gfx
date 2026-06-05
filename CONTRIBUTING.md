@@ -48,7 +48,7 @@ If a `commitlint.config.*` exists in the repo, it is enforced; otherwise the con
 ## Pull request expectations
 
 - Keep PRs focused and small; split unrelated changes.
-- **Public API changes must be backward-compatible.** Add new methods/overloads rather than mutating signatures; deprecate before removing. Consumers include `phenotype-voxel`, `phenotype-water`, and end-user Phenotype mods.
+- **Public API changes must be backward-compatible.** Add new methods/overloads rather than mutating signatures; deprecate before removing. The in-repo consumer is `phenotype-water`; downstream consumers are end-user Phenotype Unity mods.
 - Ensure `dotnet build` (and consumer recompile) is green before pushing.
 - Describe **what** changed and **why**. Link the AgilePlus spec, issue, or ADR.
 - Touched Unity surfaces: refresh screenshots in `README.md` and verify the test scene renders without warnings.

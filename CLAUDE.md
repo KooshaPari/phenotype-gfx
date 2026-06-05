@@ -1,6 +1,6 @@
 # phenotype-terrain
 
-Shared Unity terrain mesh infrastructure for Phenotype-org mods targeting Unity / WorldBox. Provides height-field storage, chunk mesh generation, and LOD management, consumed by sibling Phenotype packages (`phenotype-voxel`, `phenotype-water`).
+Shared Unity terrain mesh infrastructure for Phenotype-org mods targeting Unity / WorldBox. Provides height-field storage, chunk mesh generation, and LOD management. The in-repo sibling that consumes this package is `phenotype-water`; downstream consumers are end-user Phenotype Unity mods.
 
 ## Stack
 
@@ -37,4 +37,4 @@ Unity consumers add the project as a sibling project reference; rebuild after pu
 - **Local source of truth for agent behavior:** `AGENTS.md`
 - **Global Phenotype rules:** `~/.claude/CLAUDE.md` or `/Users/kooshapari/CodeProjects/Phenotype/repos/CLAUDE.md`
 - **AgilePlus work tracking:** `cd /repos/AgilePlus && agileplus <command>` (required for non-trivial work per the CONTRIBUTING mandate)
-- **Sibling shared packages:** `phenotype-voxel`, `phenotype-water` (consumers of this package's interfaces)
+- **Sibling shared packages:** `phenotype-water` is the only in-repo sibling that consumes this package; downstream consumers are end-user Unity mods.

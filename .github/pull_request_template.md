@@ -24,7 +24,7 @@
 ## Testing
 
 - [ ] `dotnet build phenotype-terrain.csproj -c Release`
-- [ ] Consumer (e.g. `phenotype-voxel`) recompiles cleanly
+- [ ] In-repo consumer `phenotype-water` recompiles cleanly
 - [ ] Unity test scene renders without warnings (if applicable)
 
 ## Spec / Traceability
