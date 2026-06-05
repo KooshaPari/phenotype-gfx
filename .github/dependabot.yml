@@ -5,10 +5,17 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-  # Note: the `nuget` ecosystem is intentionally NOT enabled. The
-  # `phenotype-water.csproj` declares zero `<PackageReference>` items
-  # (it only references the local `UnityEngine.CoreModule.dll` via
-  # `<Reference>`), so there are no NuGet dependencies for dependabot
-  # to surface. `.gitignore` excludes `bin/` and `obj/`, so
-  # `obj/project.assets.json` is not committed either. Re-enable here
-  # once a NuGet dependency is added.
+  - package-ecosystem: "nuget"
+    # Scoped to `tests/` because `phenotype-water.csproj` declares zero
+    # `<PackageReference>` items (it only references the local
+    # `UnityEngine.CoreModule.dll` via `<Reference>`); the only NuGet
+    # dependencies in the repo are xunit + the dotnet test SDK in the
+    # test project. As long as the library has no consumer-facing
+    # NuGet deps, `tests/` is the right scope. If a NuGet dep is added
+    # to the library later, add a second `nuget` block here with
+    # `directory: "/"` and a larger PR limit so library and test
+    # updates can flow independently.
+    directory: "/tests"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
