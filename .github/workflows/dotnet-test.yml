@@ -4,7 +4,7 @@ on:
   push:
     branches: [master, main, chore/**, feat/**, fix/**, refactor/**]
   pull_request:
-    branches: [master, main]
+    branches: [master, main, chore/**, feat/**, fix/**, refactor/**]
   workflow_dispatch:
 
 permissions:
