@@ -27,6 +27,7 @@
 
 #[cfg(feature = "bevy")]
 pub mod bevy_adapter;
+pub mod adapters;
 pub mod chunk;
 pub mod coord;
 pub mod cubic_mesher;
@@ -36,11 +37,13 @@ pub mod lod;
 pub mod material;
 pub mod mesh;
 pub mod octree;
+pub mod ports;
 pub mod serial;
 pub mod shape_hints;
 pub mod sprite_voxelizer;
 pub mod world;
 
+pub use adapters::{DenseChunkStore, MeshAdapter, OctreeAdapter};
 #[cfg(feature = "bevy")]
 pub use bevy_adapter::to_bevy_mesh;
 pub use chunk::{Chunk, ChunkId, ChunkView};
@@ -52,6 +55,7 @@ pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
 pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
+pub use ports::{Chunkable, OctreeQueryable, OctreeStorage};
 pub use serial::{load_chunk, save_chunk};
 pub use shape_hints::{ShapeHint, ShapeHintRegistry};
 pub use sprite_voxelizer::{
