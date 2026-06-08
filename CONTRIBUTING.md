@@ -1,6 +1,6 @@
 # Contributing to phenotype-water
 
-Thanks for your interest in contributing to **phenotype-water**, part of the [Phenotype](https://github.com/KooshaPari) ecosystem.
+Thanks for your interest in contributing to **phenotype-water**, part of the [Phenotype](https://github.com/KooshaPari) ecosystem of shared packages for Unity/WorldBox mods.
 
 ## AgilePlus spec mandate
 
@@ -54,12 +54,12 @@ If a `commitlint.config.*` exists in the repo, it is enforced; otherwise the con
 - Ensure `dotnet build` and `dotnet test` are green before pushing.
 - Describe **what** changed and **why**. Link the AgilePlus spec, issue, or ADR.
 - Touched Unity surfaces: refresh screenshots in `README.md` and verify the test scene renders without warnings.
-- Expect review from a maintainer; be responsive to feedback.
+- Expect review from `@KooshaPari` per `CODEOWNERS`; be responsive to feedback.
 - Squash-merge is the default; the PR title becomes the commit subject.
 
 ## Quality gates
 
-This repo participates in the Phenotype quality regime: zero new lint suppressions without justification, traceability to FR IDs where applicable, and 0-error CI on Linux runners. See `AGENTS.md` for repo-specific governance.
+This repo participates in the Phenotype quality regime: zero new lint suppressions without justification, traceability to FR IDs where applicable, and 0-error CI on Linux runners. See `CLAUDE.md` / `AGENTS.md` if present for repo-specific governance.
 
 ## Reporting issues
 
