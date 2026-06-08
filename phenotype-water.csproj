@@ -9,8 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Exclude the tests subfolder from the library's compile glob -->
     <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\phenotype-terrain\phenotype-terrain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
