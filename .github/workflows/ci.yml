@@ -36,3 +36,13 @@ jobs:
 
       - name: test
         run: cargo test
+
+      - name: cargo-deny
+        run: |
+          cargo install cargo-deny
+          cargo deny check
+
+      - name: cargo-outdated
+        run: |
+          cargo install cargo-outdated
+          cargo outdated
