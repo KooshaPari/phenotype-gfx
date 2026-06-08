@@ -28,26 +28,45 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      # The library and test project both reference UnityEngine.CoreModule.dll
-      # with a hardcoded absolute Windows path
-      # (C:\Program Files (x86)\Steam\steamapps\common\worldbox\worldbox_Data\Managed\...).
-      # On a Linux runner that path is invalid, so without a stub the build
-      # would fail with a confusing "Could not resolve this reference" error
-      # buried in MSBuild output. The right long-term fix is to make the
-      # HintPath portable (e.g. `$(WorldBoxManaged)/UnityEngine.CoreModule.dll`
-      # like phenotype-terrain already does) and add a Directory.Build.targets
-      # that substitutes the variable, but that's a substantive contract
-      # change that needs sign-off from the package owner. Until then, this
-      # step fails fast with an actionable message instead of a noisy MSBuild
-      # trace.
-      - name: Check for Unity reference resolution
+      # The library references UnityEngine.CoreModule.dll under $(WorldBoxManaged);
+      # the variable is not set in CI, so we compile a minimal stub assembly that
+      # exposes just enough of the UnityEngine namespace for the project to compile.
+      # The stub is a real PE-format .NET 8.0 assembly.
+      - name: Stub UnityEngine.CoreModule
         run: |
-          if [ -z "${WORLDBOXMANAGED:-}" ]; then
-            echo "::error::phenotype-water CI requires UnityEngine.CoreModule.dll."
-            echo "::error::The .csproj HintPath is hardcoded to a Windows path that does not exist on a Linux runner."
-            echo "::error::Either (a) set the WorldBoxManaged env var to a directory containing UnityEngine.CoreModule.dll, or (b) refactor the .csproj to use \$(WorldBoxManaged)/UnityEngine.CoreModule.dll and add a Directory.Build.targets that substitutes the variable when it's set."
-            exit 1
-          fi
+          set -euo pipefail
+          mkdir -p _stub
+          cat > _stub/Stub.csproj <<'EOF'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>net8.0</TargetFramework>
+              <AssemblyName>UnityEngine.CoreModule</AssemblyName>
+              <RootNamespace>UnityEngine</RootNamespace>
+            </PropertyGroup>
+          </Project>
+          EOF
+          cat > _stub/Vector3.cs <<'EOF'
+          namespace UnityEngine
+          {
+              public struct Vector3
+              {
+                  public float x, y, z;
+                  public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
+              }
+          }
+          EOF
+          cat > _stub/Vector2.cs <<'EOF'
+          namespace UnityEngine
+          {
+              public struct Vector2
+              {
+                  public float x, y;
+                  public Vector2(float x, float y) { this.x = x; this.y = y; }
+              }
+          }
+          EOF
+          dotnet build _stub/Stub.csproj -c Release --nologo
+          echo "WorldBoxManaged=$(pwd)/_stub/bin/Release/net8.0" >> $GITHUB_ENV
 
       - name: Restore
         run: dotnet restore phenotype-water.slnx
@@ -57,3 +76,6 @@ jobs:
 
       - name: Test
         run: dotnet test tests/phenotype-water.tests.csproj -c Release --no-build --verbosity normal
+
+      - name: Format
+        run: dotnet format --verify-no-changes --verbosity diagnostic
