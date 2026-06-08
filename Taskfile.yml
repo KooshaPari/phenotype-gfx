@@ -1,0 +1,31 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List tasks
+    cmds: [task --list]
+
+  build:
+    desc: Build the .NET project
+    cmds:
+      - dotnet build phenotype-terrain.csproj -c Release
+
+  test:
+    desc: Run tests (requires Unity reference)
+    cmds:
+      - dotnet test tests/phenotype-terrain.tests.csproj -c Release
+
+  lint:
+    desc: Run dotnet format
+    cmds:
+      - dotnet format --verify-no-changes
+
+  fmt:
+    desc: Format code
+    cmds:
+      - dotnet format
+
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - rm -rf bin/ obj/
