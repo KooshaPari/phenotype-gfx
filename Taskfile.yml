@@ -1,0 +1,54 @@
+version: '3'
+
+env:
+  CARGO_TERM_COLOR: always
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build all crates
+    cmds:
+      - cargo build --workspace --all-features
+
+  test:
+    desc: Run tests
+    cmds:
+      - cargo test --workspace --all-features
+
+  fmt:
+    desc: Format code
+    cmds:
+      - cargo fmt --all
+
+  lint:
+    desc: Lint with clippy
+    cmds:
+      - cargo clippy --workspace --all-features --all-targets -- -D warnings
+
+  audit:
+    desc: Security advisory check
+    cmds:
+      - cargo audit || true
+
+  deny:
+    desc: Check dependency licenses and security advisories
+    cmds:
+      - cargo deny check || true
+
+  quality:
+    desc: Full quality gate
+    deps: [fmt, lint, test, deny]
+
+  bench:
+    desc: Run benchmarks
+    cmds:
+      - cargo bench --workspace
+
+  docs:
+    desc: Build documentation
+    cmds:
+      - cargo doc --workspace --no-deps
