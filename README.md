@@ -1,5 +1,11 @@
 # phenotype-voxel
 
+## State
+
+Progress: `[██░░░░░░░░] 20%` — adaptive voxel substrate (pre-MVP scaffold).
+
+_Updated 2026-06-08 — audit pass._
+
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
 **Adaptive voxel substrate for Phenotype-org games.**
@@ -53,3 +59,19 @@ Dual-licensed at the consumer's option:
 
 - MIT — `LICENSE-MIT`
 - Apache 2.0 — `LICENSE-APACHE`
+
+## Description
+
+Adaptive voxel substrate for Phenotype-org games — sparse voxel octree (SVO) for coarse / far space plus dense 16³ leaf chunks for near space. Deterministic `DirtyChunkEvent` ordering keeps consumers (Civis, WorldSphereMod3D, …) replay-safe.
+
+## Install
+
+Reference from another Rust crate: `phenotype-voxel = { path = "../phenotype-voxel" }`. Unity / C# consumers wire via the C ABI generated through `ffi-core` / `cbindgen` (lands in a follow-up PR).
+
+## Usage
+
+World coordinates are fixed-point `i64` at `10^6` scale — `coord::WorldFixed`. Writes go through `chunk::ChunkStore` and emit ordered `delta::DirtyChunkEvent`s. LOD composes with `VoxelScaleMultiplier` via `lod::select_lod`.
+
+## Contributing
+
+PRs welcome. See `CONTRIBUTING.md`. All public types must keep the determinism contract: no `f32`/`f64` crosses the API, dirty events ordered by `(chunk_id, write_seq)`, and no leaking of internal collection ordering.
