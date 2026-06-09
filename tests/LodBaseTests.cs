@@ -8,9 +8,9 @@ namespace Phenotype.Terrain.Tests
     {
         private class TestLodBase : LodBase
         {
-            public override float NearDistance { get; } = 10f;
-            public override float MidDistance { get; } = 50f;
-            public override float CullDistance { get; } = 100f;
+            public override float NearDistance { get; set; } = 10f;
+            public override float MidDistance { get; set; } = 50f;
+            public override float CullDistance { get; set; } = 100f;
         }
 
         [Fact]
@@ -75,16 +75,16 @@ namespace Phenotype.Terrain.Tests
 
         private class InvalidNearMidLodBase : LodBase
         {
-            public override float NearDistance { get; } = 50f;
-            public override float MidDistance { get; } = 50f;
-            public override float CullDistance { get; } = 100f;
+            public override float NearDistance { get; set; } = 50f;
+            public override float MidDistance { get; set; } = 50f;
+            public override float CullDistance { get; set; } = 100f;
         }
 
         private class InvalidMidCullLodBase : LodBase
         {
-            public override float NearDistance { get; } = 10f;
-            public override float MidDistance { get; } = 100f;
-            public override float CullDistance { get; } = 100f;
+            public override float NearDistance { get; set; } = 10f;
+            public override float MidDistance { get; set; } = 100f;
+            public override float CullDistance { get; set; } = 100f;
         }
     }
 }
