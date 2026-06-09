@@ -76,5 +76,8 @@ jobs:
       - name: Build
         run: dotnet build phenotype-terrain.csproj -c Release --no-restore
 
+      - name: Test
+        run: dotnet test tests/phenotype-terrain.tests.csproj -c Release --verbosity normal
+
       - name: Format
         run: dotnet format --verify-no-changes --verbosity diagnostic

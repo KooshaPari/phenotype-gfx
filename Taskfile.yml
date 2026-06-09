@@ -13,7 +13,7 @@ tasks:
   test:
     desc: "Run tests"
     cmds:
-      - echo "No tests yet — add tests/ project and uncomment this task"
+      - dotnet test tests/phenotype-terrain.tests.csproj --configuration Release
 
   format:
     desc: "Check C# formatting"
@@ -31,7 +31,8 @@ tasks:
       - task: format
 
   default:
-    desc: "Run the full quality gate (build, lint)"
+    desc: "Run the full quality gate (build, test, lint)"
     cmds:
       - task: build
+      - task: test
       - task: lint
