@@ -29,46 +29,11 @@ jobs:
           dotnet-version: 8.0.x
 
       # The library references UnityEngine.CoreModule.dll under $(WorldBoxManaged);
-      # the variable is not set in CI, so we compile a minimal stub assembly that
-      # exposes just enough of the UnityEngine namespace (Vector3, Vector2) for
-      # any future consumer to compile against. The stub is a real PE-format
-      # .NET 8.0 assembly, not a placeholder text file (the C# compiler will try
-      # to open it as assembly metadata and fail if it isn't a valid PE).
+      # the variable is not set in CI, so we generate a minimal stub assembly locally.
       - name: Stub UnityEngine.CoreModule
         run: |
           set -euo pipefail
-          mkdir -p _stub
-          cat > _stub/Stub.csproj <<'EOF'
-          <Project Sdk="Microsoft.NET.Sdk">
-            <PropertyGroup>
-              <TargetFramework>net8.0</TargetFramework>
-              <AssemblyName>UnityEngine.CoreModule</AssemblyName>
-              <RootNamespace>UnityEngine</RootNamespace>
-            </PropertyGroup>
-          </Project>
-          EOF
-          cat > _stub/Vector3.cs <<'EOF'
-          namespace UnityEngine
-          {
-              public struct Vector3
-              {
-                  public float x, y, z;
-                  public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
-              }
-          }
-          EOF
-          cat > _stub/Vector2.cs <<'EOF'
-          namespace UnityEngine
-          {
-              public struct Vector2
-              {
-                  public float x, y;
-                  public Vector2(float x, float y) { this.x = x; this.y = y; }
-              }
-          }
-          EOF
-          dotnet build _stub/Stub.csproj -c Release --nologo
-          echo "WorldBoxManaged=$(pwd)/_stub/bin/Release/net8.0" >> $GITHUB_ENV
+          bash scripts/generate-unity-stub.sh
 
       - name: Restore
         run: dotnet restore phenotype-terrain.csproj
