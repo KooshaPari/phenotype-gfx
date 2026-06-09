@@ -3,6 +3,7 @@ using System.Diagnostics;
 using UnityEngine;
 using Xunit;
 using Phenotype.Water;
+using Phenotype.Water.Rendering;
 
 namespace Phenotype.Water.Tests
 {

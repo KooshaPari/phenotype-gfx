@@ -51,7 +51,7 @@ namespace UnityEngine
     public class MonoBehaviour : Behaviour { }
     public struct RenderTexture { public int width, height; public RenderTextureDescriptor descriptor; }
     public struct RenderTextureDescriptor { public int width, height; public int depth; }
-    public class Material { public Material(Shader shader) { } public void SetFloat(int nameID, float value) { } public void SetVector(int nameID, Vector4 value) { } public void SetTexture(int nameID, Texture tex) { } public bool HasProperty(string name) => false; public void SetTexture(string name, Texture tex) { } public void SetVector(string name, Vector4 value) { } }
+    public class Material { public Material(Shader shader) { } public void SetFloat(int nameID, float value) { } public void SetVector(int nameID, Vector4 value) { } public void SetTexture(int nameID, Texture tex) { } public bool HasProperty(string name) => false; public void SetTexture(string name, Texture tex) { } public void SetVector(string name, Vector4 value) { } public void SetFloat(string name, float value) { } }
     public class Shader { public static Shader Find(string name) => null; }
     public class Texture { }
     public class Texture2D : Texture { }

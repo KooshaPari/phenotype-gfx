@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Phenotype.Water;
+using Phenotype.Water.Rendering;
 using Phenotype.Terrain;
 
 namespace Phenotype.Water.Tests

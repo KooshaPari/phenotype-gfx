@@ -1,7 +1,7 @@
 using System;
 using Phenotype.Terrain;
 
-namespace Phenotype.Water
+namespace Phenotype.Water.Rendering
 {
     /// <summary>
     /// Controls level-of-detail for the water surface mesh.

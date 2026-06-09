@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
+using Phenotype.Water;
 
-namespace Phenotype.Water
+namespace Phenotype.Water.Rendering
 {
     /// <summary>
     /// Snapshot of a generated water grid mesh at a single point in time.
