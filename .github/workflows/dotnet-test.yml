@@ -37,7 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           STUB_DIR=$(mktemp -d)
-          cat > "$STUB_DIR/Stub.csproj" <<'EOF'
+          cat > "$STUB_DIR/Stub.csproj" <<EOF
           <Project Sdk="Microsoft.NET.Sdk">
             <PropertyGroup>
               <TargetFramework>net48</TargetFramework>
