@@ -30,3 +30,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI: `.github/workflows/dotnet-test.yml` test job now has `timeout-minutes: 10` (was: default 360). Bounds the blast radius of a hang — e.g. an xunit test that infinite-loops, a `dotnet test` deadlock, or a flaky NuGet restore. Clean runs (which exercise several hundred assertions across `GerstnerWaveBank`, `WaterLod`, and `FluidMesh`) finish in well under a minute on a warm cache.
 - CI: `.github/workflows/dotnet-test.yml` test job now `runs-on: ubuntu-24.04` (was: `ubuntu-latest`). `ubuntu-latest` is a moving target — it resolves to a different Ubuntu LTS every ~2 years. A green build today is not a guarantee of a green build next year if a future LTS brings a behavior change (apt mirror policy, dotnet SDK version, TFM compatibility check). OmniRoute already pins `ubuntu-24.04`; this matches the org convention and gives reproducible CI.
 - CI: `.github/workflows/dotnet-test.yml` `pull_request.branches` now matches `push.branches` (master, main, chore/**, feat/**, fix/**, refactor/**). Previously, a PR opened directly against a feature branch (e.g. a follow-up review commit to `chore/editorconfig-and-gitattributes`) would not trigger CI via the pull_request event — the gap was masked for the common "commit on feature branch, then PR to master/main" flow, but any PR targeting a feature branch directly would have skipped CI.
+- Refactor: derive `WaterLod` from shared `LodBase`, removing 61 lines of duplicated LOD logic.
+- CI: replace the fail-fast `WorldBoxManaged` check with a `src/UnityEngineStubs.cs` stub compilation step so CI can build and test on Linux without a Unity installation; add `dotnet format --verify-no-changes` as a quality gate.
+- Tests: replace hardcoded Windows `WorldBoxManaged` path with portable `$(WorldBoxManaged)` HintPath in `.csproj`.
+- Docs: `STATUS.md` with build state, quality gates, and cross-references.
+- Build: `NuGet.config` for package source configuration.
+- Build: `UnityEngineStubs.cs` fallback for CI and cross-platform builds — compiles a minimal UnityEngine stub assembly when the real `UnityEngine.CoreModule.dll` is not available.
+- LOD: setters on `WaterLod` distance properties (previously read-only) and `Vector2.zero` stub for cross-platform compilation.
+- CI: update `dotnet-test` workflow to use `src/UnityEngineStubs.cs` for the Unity stub instead of an inline heredoc.
+- CI: fix heredoc in the Unity stub step to correctly expand the repository path.
+- CI: extract the inline UnityEngine.CoreModule stub from the workflow YAML into a shared `.github/scripts/stub-unity-engine.sh` script.
+- CI: switch runner to `ubuntu-latest` to fix runner provisioning issues, then re-pin to `ubuntu-24.04` for reproducible builds.
+- CI: standardize runner to `ubuntu-24.04` and pin third-party actions to immutable SHA hashes.
+- Tooling: `Taskfile.yml` with SSOT recipes for `build`, `lint`, `test`, and `validate`.
+- Tests: `GerstnerWaveBankTests` with xUnit `[Fact]` and `[Theory]` assertions for wave synthesis validation.
+- Tests: `FluidMeshStressTests` for high-density mesh stress validation.
+- CI: Dependabot configuration (`.github/dependabot.yml`) for cargo, nuget, and github-actions ecosystems with PR limit 5.
+- Refactor: move `WaterMesh` and `WaterLod` into the `Phenotype.Water.Rendering` namespace to separate the rendering pipeline from the wave simulation domain.
+- Refactor: extract the full water rendering pipeline into the `Phenotype.Water.Rendering` namespace; fix culled mesh return path; resolve UnityEngine stub conflicts in CI.
+- Tests: fix test project build for cross-platform compilation by resolving UnityEngine reference conflicts.
+- Docs: align `CONTRIBUTING.md` with the `phenotype-terrain` template for consistency across the org.
+- Docs: comprehensive XML API documentation comments for all public types (`GerstnerWaveBank`, `FluidMesh`, `WaterLod`, `WaterRenderer`, etc.).
