@@ -24,7 +24,7 @@
   <ItemGroup>
     <!-- Private=true so the runner can load it from the output folder at test time -->
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\worldbox\worldbox_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(WorldBoxManaged)/UnityEngine.CoreModule.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
