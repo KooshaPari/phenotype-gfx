@@ -1,3 +1,14 @@
+## Work State
+
+| Field | Value |
+|---|---|
+| Last commit | 2026-06-08 |
+| Open issues | 0 |
+| Open PRs | 3 |
+| Focus | Adaptive SVO + dense 16³ leaf voxel substrate for Phenotype-org games |
+
+Progress: ████████░░ 80%
+
 # phenotype-voxel
 
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
