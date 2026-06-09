@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
-use crate::ports::chunk::{ChunkId, ChunkView, Chunkable};
 use crate::chunk::Chunk;
+use crate::ports::chunk::{ChunkId, ChunkView, Chunkable};
 
 /// Dense chunk storage keyed by [`ChunkId`].
 #[derive(Debug, Clone)]
@@ -13,7 +13,9 @@ pub struct DenseChunkStore<T: Default + Clone> {
 
 impl<T: Default + Clone> Default for DenseChunkStore<T> {
     fn default() -> Self {
-        Self { chunks: HashMap::new() }
+        Self {
+            chunks: HashMap::new(),
+        }
     }
 }
 

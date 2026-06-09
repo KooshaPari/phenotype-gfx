@@ -25,9 +25,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod adapters;
 #[cfg(feature = "bevy")]
 pub mod bevy_adapter;
-pub mod adapters;
 pub mod chunk;
 pub mod coord;
 pub mod cubic_mesher;

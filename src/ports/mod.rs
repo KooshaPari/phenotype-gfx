@@ -8,5 +8,5 @@ pub mod mesh;
 pub mod octree;
 
 pub use chunk::{ChunkId, ChunkView, Chunkable};
-pub use mesh::{Mesher, MeshBuffer, MeshError, MeshResult, MeshVertex};
+pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeQueryable, OctreeStorage};

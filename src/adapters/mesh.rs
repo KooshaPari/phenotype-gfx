@@ -7,10 +7,10 @@
 pub use crate::cubic_mesher::{CubicMesher, CubicVoxel};
 pub use crate::greedy_mesher::GreedyMesher;
 
-use crate::mesh::Mesher;
-use crate::ports::mesh::{MeshBuffer, MeshResult};
-use crate::ports::chunk::ChunkView;
 use crate::lod::LodLevel;
+use crate::mesh::Mesher;
+use crate::ports::chunk::ChunkView;
+use crate::ports::mesh::{MeshBuffer, MeshResult};
 
 /// Convenience type alias for the engine-neutral mesh buffer.
 pub type NeutralMesh = MeshBuffer;
