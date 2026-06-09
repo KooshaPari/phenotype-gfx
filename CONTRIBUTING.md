@@ -8,7 +8,7 @@ All non-trivial work in this organization is tracked in **AgilePlus**. Before op
 
 1. Check the [AgilePlus](https://github.com/KooshaPari/AgilePlus) spec registry for an existing spec.
 2. If none exists, open one (`agileplus specify --title "<feature>" --description "<desc>"`) and link it from your PR description.
-3. Trivial fixes (typos, dependency bumps, doc tweaks, governance file additions) do not require a spec.
+3. Trivial fixes (typos, dependency bumps, doc tweaks) do not require a spec.
 
 ## Build & test
 
