@@ -20,7 +20,7 @@ use phenotype_voxel::{
     lod::LodLevel,
     material::MaterialId,
     octree::VoxelOctree,
-    serial::{load_chunk, save_chunk},
+    serial::save_chunk,
     world::VoxelWorld,
     WorldCoord, FIXED_SCALE,
 };

@@ -171,7 +171,7 @@ impl<V: CubicVoxel> GreedyMesher<V> {
                             let vox = voxel(pos[0], pos[1], pos[2]);
 
                             // Skip if the voxel on this side is not solid.
-                            let is_solid = vox.map_or(false, |v| v.is_solid());
+                            let is_solid = vox.is_some_and(|v| v.is_solid());
                             if !is_solid {
                                 mask[mu + mv * size_u] = None;
                                 continue;
@@ -185,7 +185,7 @@ impl<V: CubicVoxel> GreedyMesher<V> {
                                 npos[axis] += 1;
                             }
                             let neighbour_solid =
-                                voxel(npos[0], npos[1], npos[2]).map_or(false, |v| v.is_solid());
+                                voxel(npos[0], npos[1], npos[2]).is_some_and(|v| v.is_solid());
 
                             // Face is visible only when the outward neighbour is air.
                             mask[mu + mv * size_u] = if !neighbour_solid {
@@ -279,6 +279,7 @@ impl<V: CubicVoxel> GreedyMesher<V> {
 /// `neg` flips which side of the voxel the face sits on (and reverses winding).
 /// `ao` carries the four per-corner AO values computed by [`face_ao`]; they are
 /// emitted parallel to the vertex positions.
+#[allow(clippy::too_many_arguments)]
 fn emit_quad(
     buf: &mut MeshBuffer,
     axis: usize,

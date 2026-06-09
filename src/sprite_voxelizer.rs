@@ -527,7 +527,7 @@ mod tests {
         // blue pixel has R=0 → MaterialId(0), so it's indistinguishable from air.
         // Use a different mapping: use B channel for blue pixel.
         let chunk2 = voxelize_to_chunk(&pixels, 1, 2, 1, |px| MaterialId(px[2] as u16));
-        let voxel_y1 = chunk2.voxels[0 + 1 * CHUNK_EDGE]; // x=0, y=1, z=0
+        let voxel_y1 = chunk2.voxels[CHUNK_EDGE]; // x=0, y=1, z=0
         assert_eq!(voxel_y1, MaterialId(255)); // B=255 for blue pixel
     }
 
