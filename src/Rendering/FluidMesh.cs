@@ -9,21 +9,52 @@ namespace Phenotype.Water.Rendering
     /// All arrays are sized consistently: vertices[i] and normals[i] correspond
     /// to the same grid vertex, and indices form a list of CCW triangles.
     /// </summary>
+    /// <remarks>
+    /// <see cref="Indices"/> is a flat array where every three elements form one triangle.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var data = FluidMesh.Build(bank, resolution: 32, size: 100f, time: 1f);
+    /// mesh.vertices = data.Vertices;
+    /// mesh.normals = data.Normals;
+    /// mesh.uv = data.UVs;
+    /// mesh.triangles = data.Indices;
+    /// </code>
+    /// </example>
     public struct MeshData
     {
-        /// <summary>Displaced world-space vertex positions (length = (resolution+1)^2).</summary>
+        /// <summary>
+        /// Displaced world-space vertex positions (length = (resolution+1)^2).
+        /// </summary>
+        /// <value>
+        /// Flat array of vertices ordered by row-major grid traversal.
+        /// Index <c>i</c> corresponds to row <c>i / (resolution+1)</c> and column <c>i % (resolution+1)</c>.
+        /// </value>
         public Vector3[] Vertices;
 
-        /// <summary>Analytic unit normals per vertex.</summary>
+        /// <summary>
+        /// Analytic unit normals per vertex.
+        /// </summary>
+        /// <value>
+        /// One normal per vertex, aligned with the same indexing as <see cref="Vertices"/>.
+        /// </value>
         public Vector3[] Normals;
 
         /// <summary>
         /// Triangle index list (length = resolution^2 * 6).
-        /// Each triplet is one triangle in counter-clockwise winding order.
         /// </summary>
+        /// <value>
+        /// Each triplet is one triangle in counter-clockwise winding order.
+        /// There are <c>resolution^2 * 2</c> triangles total.
+        /// </value>
         public int[] Indices;
 
-        /// <summary>UV coordinates in [0,1] matching each vertex.</summary>
+        /// <summary>
+        /// UV coordinates in [0,1] matching each vertex.
+        /// </summary>
+        /// <value>
+        /// U increases along the X axis (columns), V increases along the Z axis (rows).
+        /// </value>
         public Vector2[] UVs;
     }
 
@@ -32,6 +63,19 @@ namespace Phenotype.Water.Rendering
     /// Handles vertex layout, UV tiling, and per-frame vertex displacement driven by
     /// <see cref="GerstnerWaveBank"/>.
     /// </summary>
+    /// <remarks>
+    /// The mesh is built as a square grid centred at the origin in the XZ plane.
+    /// Each vertex is displaced by the wave bank at the given time.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var bank = GerstnerWaveBank.CreateOceanPreset();
+    /// MeshData data = FluidMesh.Build(bank, resolution: 64, size: 200f, time: 2f);
+    /// mesh.vertices = data.Vertices;
+    /// mesh.normals = data.Normals;
+    /// mesh.triangles = data.Indices;
+    /// </code>
+    /// </example>
     public class FluidMesh
     {
         /// <summary>
@@ -47,6 +91,15 @@ namespace Phenotype.Water.Rendering
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="bank"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if resolution &lt; 1 or size &lt;= 0.</exception>
+        /// <remarks>
+        /// The grid is centred at the origin; vertices range from <c>-size/2</c> to <c>+size/2</c> in X and Z.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var bank = GerstnerWaveBank.CreateOceanPreset();
+        /// MeshData mesh = FluidMesh.Build(bank, resolution: 32, size: 100f, time: 1.5f);
+        /// </code>
+        /// </example>
         public static MeshData Build(GerstnerWaveBank bank, int resolution, float size, float time)
         {
             if (bank == null)

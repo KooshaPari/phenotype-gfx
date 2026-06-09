@@ -7,31 +7,61 @@ namespace Phenotype.Water
     /// <summary>
     /// A single Gerstner (trochoidal) wave definition.
     /// </summary>
+    /// <remarks>
+    /// Gerstner waves are a more realistic approximation of ocean waves than simple sine waves.
+    /// They produce sharp crests and broad troughs, and displace vertices horizontally as well as vertically.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var wave = new GerstnerWave(
+    ///     amplitude: 1.0f,
+    ///     wavelength: 20.0f,
+    ///     steepness: 0.5f,
+    ///     direction: new Vector2(1f, 0f),
+    ///     speed: 5.0f);
+    /// </code>
+    /// </example>
     public struct GerstnerWave
     {
         /// <summary>Crest amplitude in world units.</summary>
+        /// <value>Height from water level to crest. Must be positive for visible displacement.</value>
         public float Amplitude;
 
         /// <summary>Distance between successive crests in world units.</summary>
+        /// <value>Controls how tightly packed the wave peaks are. Smaller values = higher frequency.</value>
         public float Wavelength;
 
         /// <summary>
         /// Steepness (also called Q). Range [0, 1].
         /// 0 = sinusoidal; 1 = sharp trochoid with potential looping.
         /// </summary>
+        /// <value>Clamped to [0, 1] in the constructor.</value>
         public float Steepness;
 
         /// <summary>Normalised XZ propagation direction.</summary>
+        /// <value>
+        /// Automatically normalised in the constructor. If a zero-length vector is supplied,
+        /// falls back to <see cref="Vector2.right"/>.
+        /// </value>
         public Vector2 Direction;
 
         /// <summary>Phase speed in world units per second.</summary>
+        /// <value>How fast the wave crest moves across the surface.</value>
         public float Speed;
 
+        /// <summary>
+        /// Creates a new Gerstner wave with the specified parameters.
+        /// </summary>
         /// <param name="amplitude">Crest height in world units.</param>
         /// <param name="wavelength">Crest-to-crest distance in world units.</param>
-        /// <param name="steepness">Q in [0,1].</param>
+        /// <param name="steepness">Q in [0,1]. Clamped automatically.</param>
         /// <param name="direction">Propagation direction (will be normalised).</param>
         /// <param name="speed">Phase speed in world units/s.</param>
+        /// <example>
+        /// <code>
+        /// var wave = new GerstnerWave(0.5f, 10f, 0.3f, Vector2.right, 2f);
+        /// </code>
+        /// </example>
         public GerstnerWave(float amplitude, float wavelength, float steepness,
                             Vector2 direction, float speed)
         {
@@ -48,26 +78,66 @@ namespace Phenotype.Water
     /// Each wave is defined by amplitude, wavelength, steepness, and direction.
     /// The bank is evaluated per-vertex to produce displaced positions and normals.
     /// </summary>
+    /// <remarks>
+    /// The bank is immutable after creation; use <see cref="Add"/> or the constructor
+    /// that accepts an <see cref="IEnumerable{GerstnerWave}"/> to populate it.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var bank = GerstnerWaveBank.CreateOceanPreset();
+    /// Vector3 displacement = bank.SampleDisplacement(Vector2.zero, 1.5f);
+    /// Vector3 normal = bank.SampleNormal(Vector2.zero, 1.5f);
+    /// </code>
+    /// </example>
     public class GerstnerWaveBank
     {
         private readonly List<GerstnerWave> _waves;
 
         /// <summary>Read-only view of the current wave set.</summary>
+        /// <value>The ordered list of waves in this bank.</value>
         public IReadOnlyList<GerstnerWave> Waves => _waves;
 
         /// <summary>Creates an empty bank.</summary>
+        /// <example>
+        /// <code>
+        /// var bank = new GerstnerWaveBank();
+        /// bank.Add(new GerstnerWave(1f, 10f, 0.5f, Vector2.right, 2f));
+        /// </code>
+        /// </example>
         public GerstnerWaveBank()
         {
             _waves = new List<GerstnerWave>();
         }
 
-        /// <summary>Creates a bank pre-populated with <paramref name="waves"/>.</summary>
+        /// <summary>
+        /// Creates a bank pre-populated with <paramref name="waves"/>.
+        /// </summary>
+        /// <param name="waves">Initial wave collection.</param>
+        /// <example>
+        /// <code>
+        /// var bank = new GerstnerWaveBank(new[] {
+        ///     new GerstnerWave(0.5f, 20f, 0.4f, Vector2.right, 3f),
+        ///     new GerstnerWave(0.3f, 8f, 0.3f, Vector2.up, 2f)
+        /// });
+        /// </code>
+        /// </example>
         public GerstnerWaveBank(IEnumerable<GerstnerWave> waves)
         {
             _waves = new List<GerstnerWave>(waves);
         }
 
-        /// <summary>Adds a wave to the bank and returns <c>this</c> for chaining.</summary>
+        /// <summary>
+        /// Adds a wave to the bank and returns <c>this</c> for chaining.
+        /// </summary>
+        /// <param name="wave">The wave to add.</param>
+        /// <returns>The current bank instance for fluent chaining.</returns>
+        /// <example>
+        /// <code>
+        /// var bank = new GerstnerWaveBank()
+        ///     .Add(new GerstnerWave(0.5f, 20f, 0.4f, Vector2.right, 3f))
+        ///     .Add(new GerstnerWave(0.3f, 8f, 0.3f, Vector2.up, 2f));
+        /// </code>
+        /// </example>
         public GerstnerWaveBank Add(GerstnerWave wave)
         {
             _waves.Add(wave);
@@ -88,6 +158,17 @@ namespace Phenotype.Water
         /// World-space displacement vector. Add to the undisplaced position to get
         /// the final displaced position.
         /// </returns>
+        /// <remarks>
+        /// Waves with zero or negative amplitude or wavelength are skipped.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var bank = GerstnerWaveBank.CreateOceanPreset();
+        /// Vector2 position = new Vector2(10f, 5f);
+        /// Vector3 displacement = bank.SampleDisplacement(position, 2.5f);
+        /// Vector3 worldPos = new Vector3(position.x + displacement.x, displacement.y, position.y + displacement.z);
+        /// </code>
+        /// </example>
         public Vector3 SampleDisplacement(Vector2 worldXZ, float time)
         {
             float dx = 0f, dy = 0f, dz = 0f;
@@ -122,6 +203,21 @@ namespace Phenotype.Water
         /// Computed from first-order partial derivatives of the displacement — no
         /// finite-difference approximation.
         /// </summary>
+        /// <param name="worldXZ">Undisplaced surface position in XZ.</param>
+        /// <param name="time">Elapsed time in seconds.</param>
+        /// <returns>The unit normal vector at the specified position and time.</returns>
+        /// <remarks>
+        /// Waves with zero or negative amplitude or wavelength are skipped.
+        /// If the computed normal length is near zero, returns <see cref="Vector3.up"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var bank = GerstnerWaveBank.CreateOceanPreset();
+        /// Vector2 position = new Vector2(10f, 5f);
+        /// Vector3 normal = bank.SampleNormal(position, 2.5f);
+        /// // Use normal for lighting or buoyancy calculations
+        /// </code>
+        /// </example>
         public Vector3 SampleNormal(Vector2 worldXZ, float time)
         {
             // Tangents in X and Z: dP/dx and dP/dz of the Gerstner sum.
@@ -187,11 +283,18 @@ namespace Phenotype.Water
         /// Creates a default open-ocean preset with four varied waves covering
         /// a range of scales and directions.
         /// </summary>
+        /// <returns>A pre-configured <see cref="GerstnerWaveBank"/> suitable for ocean scenes.</returns>
         /// <remarks>
         /// Wave parameters are tuned for a world-unit = 1 m scale:
         /// long swell from the south-west, mid-frequency chop from south-east
         /// and north-west, plus a short high-frequency detail wave.
         /// </remarks>
+        /// <example>
+        /// <code>
+        /// var ocean = GerstnerWaveBank.CreateOceanPreset();
+        /// Vector3 displacement = ocean.SampleDisplacement(Vector2.zero, 1f);
+        /// </code>
+        /// </example>
         public static GerstnerWaveBank CreateOceanPreset()
         {
             return new GerstnerWaveBank(new[]
@@ -233,6 +336,13 @@ namespace Phenotype.Water
         /// <summary>
         /// Creates a calm lake preset with two gentle, low-steepness waves.
         /// </summary>
+        /// <returns>A pre-configured <see cref="GerstnerWaveBank"/> suitable for lake scenes.</returns>
+        /// <example>
+        /// <code>
+        /// var lake = GerstnerWaveBank.CreateLakePreset();
+        /// Vector3 displacement = lake.SampleDisplacement(Vector2.zero, 1f);
+        /// </code>
+        /// </example>
         public static GerstnerWaveBank CreateLakePreset()
         {
             return new GerstnerWaveBank(new[]
