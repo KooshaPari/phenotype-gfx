@@ -2,40 +2,6 @@ using System;
 
 namespace UnityEngine
 {
-    public struct Vector2
-    {
-        public float x, y;
-        public static readonly Vector2 right = new Vector2(1f, 0f);
-        public static readonly Vector2 one = new Vector2(1f, 1f);
-        public static readonly Vector2 zero = new Vector2(0f, 0f);
-        public float sqrMagnitude => x * x + y * y;
-        public float magnitude => (float)Math.Sqrt(sqrMagnitude);
-        public Vector2 normalized => magnitude > 1e-10f ? this / magnitude : right;
-        public Vector2(float x, float y) { this.x = x; this.y = y; }
-        public static Vector2 operator +(Vector2 a, Vector2 b) => new Vector2(a.x + b.x, a.y + b.y);
-        public static Vector2 operator -(Vector2 a, Vector2 b) => new Vector2(a.x - b.x, a.y - b.y);
-        public static Vector2 operator *(Vector2 a, float d) => new Vector2(a.x * d, a.y * d);
-        public static Vector2 operator /(Vector2 a, float d) => new Vector2(a.x / d, a.y / d);
-    }
-
-    public struct Vector3
-    {
-        public float x, y, z;
-        public static readonly Vector3 up = new Vector3(0f, 1f, 0f);
-        public float sqrMagnitude => x * x + y * y + z * z;
-        public float magnitude => (float)Math.Sqrt(sqrMagnitude);
-        public Vector3 normalized => magnitude > 1e-10f ? this / magnitude : up;
-        public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
-        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
-        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
-        public static Vector3 operator *(Vector3 a, float d) => new Vector3(a.x * d, a.y * d, a.z * d);
-        public static Vector3 operator /(Vector3 a, float d) => new Vector3(a.x / d, a.y / d, a.z / d);
-        public static Vector3 Cross(Vector3 a, Vector3 b) => new Vector3(
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x);
-    }
-
     public static class Mathf
     {
         public const float PI = (float)Math.PI;

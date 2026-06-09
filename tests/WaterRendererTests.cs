@@ -35,7 +35,7 @@ namespace Phenotype.Water.Tests
                 WaveBank = GerstnerWaveBank.CreateOceanPreset(),
             };
             var mesh = renderer.BuildMesh(0f, 500f);
-            Assert.Equal(0, mesh.Vertices.Length);
+            Assert.Empty(mesh.Vertices);
         }
 
         [Fact]

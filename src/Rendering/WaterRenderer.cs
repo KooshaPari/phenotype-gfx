@@ -45,7 +45,7 @@ namespace Phenotype.Water.Rendering
 
             int resolution = Lod.SelectResolution(distance);
             if (resolution <= 0)
-                return default;
+                return new MeshData { Vertices = Array.Empty<Vector3>(), Normals = Array.Empty<Vector3>(), UVs = Array.Empty<Vector2>(), Indices = Array.Empty<int>() };
 
             return FluidMesh.Build(WaveBank, resolution, PatchSize, time);
         }
