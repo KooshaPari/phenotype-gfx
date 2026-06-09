@@ -56,12 +56,12 @@ namespace Phenotype.Water
                 throw new ArgumentOutOfRangeException(nameof(size), "size must be > 0");
 
             int verts = (resolution + 1) * (resolution + 1);
-            int tris  = resolution * resolution * 6;
+            int tris = resolution * resolution * 6;
 
             var vertices = new Vector3[verts];
-            var normals  = new Vector3[verts];
-            var uvs      = new Vector2[verts];
-            var indices  = new int[tris];
+            var normals = new Vector3[verts];
+            var uvs = new Vector2[verts];
+            var indices = new int[tris];
 
             float step = size / resolution;
             float half = size * 0.5f;
@@ -81,8 +81,8 @@ namespace Phenotype.Water
                     var disp = bank.SampleDisplacement(xz, time);
 
                     vertices[idx] = new Vector3(x + disp.x, disp.y, z + disp.z);
-                    normals[idx]  = bank.SampleNormal(xz, time);
-                    uvs[idx]      = new Vector2((float)col / resolution, (float)row / resolution);
+                    normals[idx] = bank.SampleNormal(xz, time);
+                    uvs[idx] = new Vector2((float)col / resolution, (float)row / resolution);
                 }
             }
 
@@ -92,7 +92,7 @@ namespace Phenotype.Water
             {
                 for (int col = 0; col < resolution; col++)
                 {
-                    int bl = row       * (resolution + 1) + col;       // bottom-left
+                    int bl = row * (resolution + 1) + col;       // bottom-left
                     int br = bl + 1;                                     // bottom-right
                     int tl = (row + 1) * (resolution + 1) + col;       // top-left
                     int tr = tl + 1;                                     // top-right
@@ -112,9 +112,9 @@ namespace Phenotype.Water
             return new MeshData
             {
                 Vertices = vertices,
-                Normals  = normals,
-                UVs      = uvs,
-                Indices  = indices,
+                Normals = normals,
+                UVs = uvs,
+                Indices = indices,
             };
         }
     }

@@ -35,11 +35,11 @@ namespace Phenotype.Water
         public GerstnerWave(float amplitude, float wavelength, float steepness,
                             Vector2 direction, float speed)
         {
-            Amplitude   = amplitude;
-            Wavelength  = wavelength;
-            Steepness   = Mathf.Clamp01(steepness);
-            Direction   = direction.sqrMagnitude > 1e-10f ? direction.normalized : Vector2.right;
-            Speed       = speed;
+            Amplitude = amplitude;
+            Wavelength = wavelength;
+            Steepness = Mathf.Clamp01(steepness);
+            Direction = direction.sqrMagnitude > 1e-10f ? direction.normalized : Vector2.right;
+            Speed = speed;
         }
     }
 
@@ -96,7 +96,7 @@ namespace Phenotype.Water
             {
                 if (w.Amplitude <= 0f || w.Wavelength <= 0f) continue;
 
-                float k   = TwoPi / w.Wavelength;               // wave number
+                float k = TwoPi / w.Wavelength;               // wave number
                 float phi = w.Speed * k * time;                  // phase offset = ω·t, ω = speed·k
                 float dot = k * (w.Direction.x * worldXZ.x
                                + w.Direction.y * worldXZ.y)
@@ -110,7 +110,7 @@ namespace Phenotype.Water
 
                 dx += -w.Direction.x * qa * sinD;
                 dz += -w.Direction.y * qa * sinD;
-                dy +=  w.Amplitude   * cosD;
+                dy += w.Amplitude * cosD;
             }
 
             return new Vector3(dx, dy, dz);
@@ -143,7 +143,7 @@ namespace Phenotype.Water
             {
                 if (w.Amplitude <= 0f || w.Wavelength <= 0f) continue;
 
-                float k   = TwoPi / w.Wavelength;
+                float k = TwoPi / w.Wavelength;
                 float phi = w.Speed * k * time;
                 float dot = k * (w.Direction.x * worldXZ.x
                                + w.Direction.y * worldXZ.y)
@@ -160,12 +160,12 @@ namespace Phenotype.Water
 
                 // ∂displacement/∂x
                 dXdx -= qak * wx * wx * cosD;
-                dYdx -= ak  * wx      * sinD;
+                dYdx -= ak * wx * sinD;
                 dZdx -= qak * wx * wz * cosD;
 
                 // ∂displacement/∂z
                 dXdz -= qak * wx * wz * cosD;
-                dYdz -= ak  * wz      * sinD;
+                dYdz -= ak * wz * sinD;
                 dZdz -= qak * wz * wz * cosD;
             }
 
@@ -175,7 +175,7 @@ namespace Phenotype.Water
 
             // Normal = tangentZ × tangentX  (right-hand rule, Y-up)
             var normal = Vector3.Cross(tangentZ, tangentX);
-            float len  = normal.magnitude;
+            float len = normal.magnitude;
             return len > 1e-10f ? normal / len : Vector3.up;
         }
 

@@ -14,12 +14,12 @@ namespace Phenotype.Water.Tests
         private const float Tolerance = 1e-5f;
 
         private static GerstnerWaveBank SingleWave(
-            float amplitude   = 1f,
-            float wavelength  = 10f,
-            float steepness   = 0.5f,
-            float dirX        = 1f,
-            float dirZ        = 0f,
-            float speed       = 1f)
+            float amplitude = 1f,
+            float wavelength = 10f,
+            float steepness = 0.5f,
+            float dirX = 1f,
+            float dirZ = 0f,
+            float speed = 1f)
         {
             return new GerstnerWaveBank(new[]
             {
@@ -72,7 +72,7 @@ namespace Phenotype.Water.Tests
         public void SampleDisplacement_IsDeterministic()
         {
             var bank = GerstnerWaveBank.CreateOceanPreset();
-            var pos  = new Vector2(3.7f, -11.2f);
+            var pos = new Vector2(3.7f, -11.2f);
             const float t = 4.56f;
 
             var d1 = bank.SampleDisplacement(pos, t);
@@ -90,7 +90,7 @@ namespace Phenotype.Water.Tests
         public void SampleNormal_IsDeterministic()
         {
             var bank = GerstnerWaveBank.CreateOceanPreset();
-            var pos  = new Vector2(1.1f, 99.9f);
+            var pos = new Vector2(1.1f, 99.9f);
             const float t = 12.3f;
 
             var n1 = bank.SampleNormal(pos, t);
@@ -109,14 +109,14 @@ namespace Phenotype.Water.Tests
         /// The analytic normal must be unit length at multiple sample sites.
         /// </summary>
         [Theory]
-        [InlineData(  0f,    0f,  0.0f)]
-        [InlineData(  5f,   -3f,  1.5f)]
-        [InlineData(-10f,   20f,  9.9f)]
-        [InlineData( 50f,  100f, 33.3f)]
+        [InlineData(0f, 0f, 0.0f)]
+        [InlineData(5f, -3f, 1.5f)]
+        [InlineData(-10f, 20f, 9.9f)]
+        [InlineData(50f, 100f, 33.3f)]
         public void SampleNormal_IsUnitLength(float x, float z, float t)
         {
             var bank = GerstnerWaveBank.CreateOceanPreset();
-            var n    = bank.SampleNormal(new Vector2(x, z), t);
+            var n = bank.SampleNormal(new Vector2(x, z), t);
             float mag = n.magnitude;
             Assert.InRange(mag, 1f - 1e-4f, 1f + 1e-4f);
         }
@@ -128,7 +128,7 @@ namespace Phenotype.Water.Tests
         public void EmptyBank_NormalIsUp()
         {
             var bank = new GerstnerWaveBank();
-            var n    = bank.SampleNormal(new Vector2(5f, 5f), 1f);
+            var n = bank.SampleNormal(new Vector2(5f, 5f), 1f);
             Assert.InRange(n.y, 1f - Tolerance, 1f + Tolerance);
             Assert.InRange(n.x, -Tolerance, Tolerance);
             Assert.InRange(n.z, -Tolerance, Tolerance);
@@ -165,7 +165,7 @@ namespace Phenotype.Water.Tests
         public void ZeroAmplitude_ZeroDisplacement()
         {
             var bank = SingleWave(amplitude: 0f);
-            var d    = bank.SampleDisplacement(new Vector2(1f, 1f), 5f);
+            var d = bank.SampleDisplacement(new Vector2(1f, 1f), 5f);
 
             Assert.InRange(d.x, -Tolerance, Tolerance);
             Assert.InRange(d.y, -Tolerance, Tolerance);
@@ -216,7 +216,7 @@ namespace Phenotype.Water.Tests
         public void OceanPreset_NormalIsUnitLength_AtArbitraryPoint()
         {
             var bank = GerstnerWaveBank.CreateOceanPreset();
-            var n    = bank.SampleNormal(new Vector2(7.3f, -4.1f), 2.5f);
+            var n = bank.SampleNormal(new Vector2(7.3f, -4.1f), 2.5f);
             Assert.InRange(n.magnitude, 1f - 1e-4f, 1f + 1e-4f);
         }
     }

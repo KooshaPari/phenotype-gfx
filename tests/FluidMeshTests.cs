@@ -135,7 +135,7 @@ namespace Phenotype.Water.Tests
         public void Vertices_DisplacementMatchesWaveBank()
         {
             var bank = GerstnerWaveBank.CreateLakePreset();
-            const int res  = 4;
+            const int res = 4;
             const float size = 8f;
             const float time = 2.1f;
 
@@ -150,14 +150,14 @@ namespace Phenotype.Water.Tests
                 {
                     float x = col * step - half;
                     float z = row * step - half;
-                    var xz   = new Vector2(x, z);
+                    var xz = new Vector2(x, z);
                     var disp = bank.SampleDisplacement(xz, time);
 
                     int idx = row * (res + 1) + col;
-                    var v   = mesh.Vertices[idx];
+                    var v = mesh.Vertices[idx];
 
                     Assert.InRange(v.x, x + disp.x - Tolerance, x + disp.x + Tolerance);
-                    Assert.InRange(v.y, disp.y       - Tolerance, disp.y       + Tolerance);
+                    Assert.InRange(v.y, disp.y - Tolerance, disp.y + Tolerance);
                     Assert.InRange(v.z, z + disp.z - Tolerance, z + disp.z + Tolerance);
                 }
             }
@@ -167,7 +167,7 @@ namespace Phenotype.Water.Tests
         public void Normals_MatchWaveBank()
         {
             var bank = GerstnerWaveBank.CreateLakePreset();
-            const int   res  = 4;
+            const int res = 4;
             const float size = 8f;
             const float time = 2.1f;
 
@@ -180,13 +180,13 @@ namespace Phenotype.Water.Tests
             {
                 for (int col = 0; col <= res; col++)
                 {
-                    float x  = col * step - half;
-                    float z  = row * step - half;
-                    var xz   = new Vector2(x, z);
+                    float x = col * step - half;
+                    float z = row * step - half;
+                    var xz = new Vector2(x, z);
                     var expN = bank.SampleNormal(xz, time);
 
                     int idx = row * (res + 1) + col;
-                    var n   = mesh.Normals[idx];
+                    var n = mesh.Normals[idx];
 
                     Assert.InRange(n.x, expN.x - Tolerance, expN.x + Tolerance);
                     Assert.InRange(n.y, expN.y - Tolerance, expN.y + Tolerance);

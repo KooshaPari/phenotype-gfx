@@ -12,17 +12,17 @@ namespace Phenotype.Water.Tests
         // ──────────────────────────────────────────────────────────────────────
 
         [Theory]
-        [InlineData(0f,    LodTier.Near)]
-        [InlineData(25f,   LodTier.Near)]
+        [InlineData(0f, LodTier.Near)]
+        [InlineData(25f, LodTier.Near)]
         [InlineData(49.9f, LodTier.Near)]
-        [InlineData(50f,   LodTier.Mid)]
-        [InlineData(100f,  LodTier.Mid)]
-        [InlineData(149.9f,LodTier.Mid)]
-        [InlineData(150f,  LodTier.Far)]
-        [InlineData(300f,  LodTier.Far)]
-        [InlineData(399.9f,LodTier.Far)]
-        [InlineData(400f,  LodTier.Culled)]
-        [InlineData(999f,  LodTier.Culled)]
+        [InlineData(50f, LodTier.Mid)]
+        [InlineData(100f, LodTier.Mid)]
+        [InlineData(149.9f, LodTier.Mid)]
+        [InlineData(150f, LodTier.Far)]
+        [InlineData(300f, LodTier.Far)]
+        [InlineData(399.9f, LodTier.Far)]
+        [InlineData(400f, LodTier.Culled)]
+        [InlineData(999f, LodTier.Culled)]
         public void SelectTier_ReturnsCorrectTier(float distance, LodTier expected)
         {
             var lod = new WaterLod();
@@ -108,13 +108,13 @@ namespace Phenotype.Water.Tests
             var lod = new WaterLod
             {
                 NearDistance = 10f,
-                MidDistance  = 30f,
+                MidDistance = 30f,
                 CullDistance = 60f,
             };
 
-            Assert.Equal(LodTier.Near,   lod.SelectTier(5f));
-            Assert.Equal(LodTier.Mid,    lod.SelectTier(15f));
-            Assert.Equal(LodTier.Far,    lod.SelectTier(40f));
+            Assert.Equal(LodTier.Near, lod.SelectTier(5f));
+            Assert.Equal(LodTier.Mid, lod.SelectTier(15f));
+            Assert.Equal(LodTier.Far, lod.SelectTier(40f));
             Assert.Equal(LodTier.Culled, lod.SelectTier(60f));
         }
 
@@ -124,14 +124,14 @@ namespace Phenotype.Water.Tests
             var lod = new WaterLod
             {
                 NearResolution = 128,
-                MidResolution  = 64,
-                FarResolution  = 32,
+                MidResolution = 64,
+                FarResolution = 32,
             };
 
             Assert.Equal(128, lod.SelectResolution(0f));
-            Assert.Equal(64,  lod.SelectResolution(75f));
-            Assert.Equal(32,  lod.SelectResolution(200f));
-            Assert.Equal(0,   lod.SelectResolution(500f));
+            Assert.Equal(64, lod.SelectResolution(75f));
+            Assert.Equal(32, lod.SelectResolution(200f));
+            Assert.Equal(0, lod.SelectResolution(500f));
         }
 
         // ──────────────────────────────────────────────────────────────────────

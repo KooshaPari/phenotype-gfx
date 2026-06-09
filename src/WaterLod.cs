@@ -54,11 +54,11 @@ namespace Phenotype.Water
         {
             return SelectTier(distance) switch
             {
-                LodTier.Near   => NearResolution,
-                LodTier.Mid    => MidResolution,
-                LodTier.Far    => FarResolution,
+                LodTier.Near => NearResolution,
+                LodTier.Mid => MidResolution,
+                LodTier.Far => FarResolution,
                 LodTier.Culled => 0,
-                _              => 0,
+                _ => 0,
             };
         }
     }
