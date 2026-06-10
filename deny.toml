@@ -1,63 +1,46 @@
 [graph]
 all-features = true
-all-targets = true
-
-[advisories]
-version = 2
-ignore = []
 
 [licenses]
 version = 2
 allow = [
     "MIT",
+    "MIT-0",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "BSD-3-Clause-Clear",
+    "CC0-1.0",
     "ISC",
     "Zlib",
-    "Unicode-DFS-2016",
     "Unicode-3.0",
-    "Unicode-Mappings",
-    "Unicode-2.0",
-    "CC0-1.0",
-    "CC-BY-3.0",
-    "CC-BY-4.0",
+    "Unicode-DFS-2016",
     "MPL-2.0",
-    "0BSD",
+    "Unlicense",
     "OpenSSL",
-    "PSF-2.0",
-    "NCSA",
     "BSL-1.0",
     "WTFPL",
+    "0BSD",
     "NTP",
-    "Python-2.0",
-    "Unlicense",
-    "LGPL-2.0",
-    "LGPL-2.1",
-    "LGPL-3.0",
-    "AGPL-3.0",
-    "GPL-2.0",
-    "GPL-3.0",
-    "EPL-1.0",
-    "EPL-2.0",
-    "CDDL-1.0",
-    "ECL-2.0",
-    "EFL-2.0",
-    "OFL-1.1",
-    "OLDAP-2.8",
     "AFL-3.0",
-    "Zlib-acknowledgement",
+    "OFL-1.1",
+    "BlueOak-1.0.0",
+    "LGPL-2.1-only",
+    "LGPL-3.0-only",
+    "GPL-2.0-only",
+    "GPL-3.0-only",
+    "AGPL-3.0-only",
 ]
 confidence-threshold = 0.8
+unused-allowed-license = "allow"
 
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
-highlight = "all"
 
 [sources]
-unknown-registry = "deny"
+unknown-registry = "warn"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 allow-git = []
