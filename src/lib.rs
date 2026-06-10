@@ -32,6 +32,7 @@ pub mod chunk;
 pub mod coord;
 pub mod cubic_mesher;
 pub mod delta;
+pub mod fixtures;
 pub mod greedy_mesher;
 pub mod lod;
 pub mod material;
@@ -72,3 +73,11 @@ pub const SCHEMA_VERSION: u32 = 1;
 /// (mesh-local 11x5x1 ✕ sprite-scale 0.1 ≈ ~1.1x0.5x0.1 world → invisible; multiplier
 /// of 8 brought it back to a usable rendered scale).
 pub const DEFAULT_VOXEL_SCALE_MULTIPLIER: f32 = 8.0;
+
+/// Return whether a persisted wire format schema version is supported by this
+/// crate revision. This avoids version checks being repeated across downstream
+/// bridges.
+#[inline]
+pub const fn is_supported_schema_version(version: u32) -> bool {
+    version == SCHEMA_VERSION
+}
