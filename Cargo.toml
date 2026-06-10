@@ -14,11 +14,11 @@ categories = ["game-engines", "data-structures"]
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 bytemuck = "1"
-thiserror = "1"
+thiserror = "2"
 bevy = { version = "0.18.1", default-features = false, features = ["bevy_asset", "bevy_mesh"], optional = true }
 
 [dev-dependencies]
-criterion = "0.5"
+criterion = "0.8"
 proptest = "1.4"
 
 [[bench]]
