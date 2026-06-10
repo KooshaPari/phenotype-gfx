@@ -1,7 +1,6 @@
 [graph]
-all-features = false
-all-targets = false
-exclude-dev = false
+all-features = true
+all-targets = true
 
 [advisories]
 version = 2
@@ -19,14 +18,36 @@ allow = [
     "Zlib",
     "Unicode-DFS-2016",
     "Unicode-3.0",
+    "Unicode-Mappings",
+    "Unicode-2.0",
     "CC0-1.0",
+    "CC-BY-3.0",
+    "CC-BY-4.0",
     "MPL-2.0",
     "0BSD",
     "OpenSSL",
-    "BoringSSL-Notice",
-    "curl",
-    "libpng-2.0",
-    "libssh2",
+    "PSF-2.0",
+    "NCSA",
+    "BSL-1.0",
+    "WTFPL",
+    "NTP",
+    "Python-2.0",
+    "Unlicense",
+    "LGPL-2.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "AGPL-3.0",
+    "GPL-2.0",
+    "GPL-3.0",
+    "EPL-1.0",
+    "EPL-2.0",
+    "CDDL-1.0",
+    "ECL-2.0",
+    "EFL-2.0",
+    "OFL-1.1",
+    "OLDAP-2.8",
+    "AFL-3.0",
+    "Zlib-acknowledgement",
 ]
 confidence-threshold = 0.8
 
@@ -34,17 +55,9 @@ confidence-threshold = 0.8
 multiple-versions = "warn"
 wildcards = "deny"
 highlight = "all"
-deny = []
-skip = []
-skip-tree = []
 
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 allow-git = []
-
-[allow]
-# Common ecosystem crates that don't carry an explicit license file
-# but are widely used and considered acceptable
-# (Add specific crate exemptions here as needed)
