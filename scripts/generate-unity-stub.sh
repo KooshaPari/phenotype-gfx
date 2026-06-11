@@ -45,6 +45,18 @@ namespace UnityEngine
 }
 EOF
 
+cat > "${STUB_DIR}/Color.cs" <<'EOF'
+namespace UnityEngine
+{
+    public struct Color
+    {
+        public float r, g, b, a;
+        public Color(float r, float g, float b, float a) { this.r = r; this.g = g; this.b = b; this.a = a; }
+        public Color(float r, float g, float b) : this(r, g, b, 1f) { }
+    }
+}
+EOF
+
 # Build the stub assembly
 dotnet build "${STUB_DIR}/Stub.csproj" -c Release --nologo
 
