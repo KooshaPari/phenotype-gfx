@@ -22,6 +22,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\phenotype-water.csproj" />
+    <!-- LodBase shared with phenotype-terrain; pulled in as a project reference so CI can build it -->
+    <ProjectReference Include="..\..\phenotype-terrain\phenotype-terrain.csproj">
+      <UndefineProperties>TargetFramework</UndefineProperties>
+      <Properties>TargetFramework=net48</Properties>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup Condition="Exists('$(WorldBoxManaged)/UnityEngine.CoreModule.dll')">
