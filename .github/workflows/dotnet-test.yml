@@ -34,14 +34,6 @@ jobs:
           repository: KooshaPari/phenotype-terrain
           path: _sibling/phenotype-terrain
 
-      - name: Symlink sibling into expected relative path
-        run: |
-          set -euo pipefail
-          mkdir -p "$(dirname _sibling_link)"
-          # Create a relative symlink so '..\\phenotype-terrain\\phenotype-terrain.csproj'
-          # in tests/phenotype-water.tests.csproj resolves to the sibling checkout.
-          ln -sfn "_sibling/phenotype-terrain" "_sibling_link"
-
       - name: Stub UnityEngine.CoreModule
         run: |
           set -euo pipefail
