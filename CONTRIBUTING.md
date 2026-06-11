@@ -21,7 +21,7 @@ dotnet build phenotype-terrain.csproj
 dotnet test  # when tests exist
 ```
 
-Unity consumers should add the project as a sibling project reference, matching the `phenotype-voxel`/`phenotype-water` convention.
+Unity consumers should add the project as a sibling project reference, mirroring the convention used by the sibling `phenotype-water` package.
 
 ## Branch naming
 
