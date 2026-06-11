@@ -3,3 +3,17 @@ obj/
 *.user
 *.suo
 .vs/
+
+# dotnet / NuGet restore scratch dir (used by `dotnet restore --packages` overrides)
+_restore/
+
+# xUnit / dotnet test artifacts
+TestResults/
+coverage/
+*.coverage
+
+# OS / editor scratch
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

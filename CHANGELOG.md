@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- CI: `.github/scorecard.yml` OpenSSF Scorecard policy mirroring `phenotype-terrain`. Pins Binary-Artifacts, Branch-Protection, Code-Review, Dangerous-Workflow, Dependency-Update-Tool, Pinned-Dependencies, SAST, Security-Policy, and Token-Permissions checks to the same thresholds terrain uses, so a green run on terrain implies parity on water.
 - Foundation: `.editorconfig`, `.gitattributes` (LF normalize, `.meta` → `unityyamlmerge`).
 - Foundation: `AGENTS.md` (local agent governance, do/don't rules, sibling package consumers).
 - Foundation: `CLAUDE.md` (Claude-specific entry point mirroring the McpKit stack template).
@@ -51,3 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: fix test project build for cross-platform compilation by resolving UnityEngine reference conflicts.
 - Docs: align `CONTRIBUTING.md` with the `phenotype-terrain` template for consistency across the org.
 - Docs: comprehensive XML API documentation comments for all public types (`GerstnerWaveBank`, `FluidMesh`, `WaterLod`, `WaterRenderer`, etc.).
+
+### Changed
+- CI: `.github/workflows/dotnet-test.yml` re-pins the test job `runs-on` from `ubuntu-latest` to `ubuntu-24.04`. The repo had previously been pinned to `ubuntu-24.04` (commit `db01906`) then switched to `ubuntu-latest` to work around a transient runner-provisioning issue (commit `c377e2a`); the workaround stuck even after the upstream issue resolved. `ubuntu-latest` is a moving target — it resolves to a different Ubuntu LTS every ~2 years, so a green build today is not a guarantee of a green build next year. `phenotype-terrain` already pins `ubuntu-24.04`; this restores org parity and gives reproducible CI.
+
+### Hygiene
+- `.gitignore` expanded to cover: `_restore/` (scratch dir for `dotnet restore --packages` overrides), `TestResults/` and `coverage/` and `*.coverage` (xUnit / dotnet test artifacts), `.DS_Store` and `Thumbs.db` (macOS / Windows shell metadata), `*.swp` and `*.swo` (Vim swap files). The pre-existing `bin/`, `obj/`, `*.user`, `*.suo`, `.vs/` entries are preserved. Mirrors the `phenotype-terrain` pattern of an explicit, well-commented ignore list so contributors do not have to discover scratch paths from the `.gitignore` in a different repo.
