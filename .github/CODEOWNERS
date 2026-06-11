@@ -1,0 +1,8 @@
+# CODEOWNERS — default review routing
+# See: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything not matched below
+*       @KooshaPari
+
+# Workflows require maintainer review
+/.github/        @KooshaPari
