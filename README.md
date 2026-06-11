@@ -70,3 +70,4 @@ Build: `$env:WorldBoxManaged = "..."; dotnet build phenotype-terrain.csproj -c R
 
 PRs welcome. See `CONTRIBUTING.md`. Keep the `net48` / `$(WorldBoxManaged)` contract stable so sibling mods don't break.
 <!-- ci-refresh: 2026-06-10T07:21:45Z -->
+<!-- ci-refresh: 2026-06-11T09:26:41Z -->
