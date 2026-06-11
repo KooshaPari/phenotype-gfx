@@ -23,16 +23,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+
       - name: Checkout phenotype-terrain (sibling)
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           repository: KooshaPari/phenotype-terrain
           path: _sibling/phenotype-terrain
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
-        with:
-          dotnet-version: 8.0.x
+      - name: Symlink sibling into expected relative path
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname _sibling_link)"
+          # Create a relative symlink so '..\\phenotype-terrain\\phenotype-terrain.csproj'
+          # in tests/phenotype-water.tests.csproj resolves to the sibling checkout.
+          ln -sfn "_sibling/phenotype-terrain" "_sibling_link"
 
       - name: Stub UnityEngine.CoreModule
         run: |
