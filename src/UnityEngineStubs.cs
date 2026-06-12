@@ -316,6 +316,11 @@ namespace UnityEngine
         public float sqrMagnitude => x * x + y * y;
 
         /// <summary>
+        /// Length of the vector.
+        /// </summary>
+        public float magnitude => (float)System.Math.Sqrt(sqrMagnitude);
+
+        /// <summary>
         /// Returns this vector with a length of one — used by <c>Vector2.normalized</c>.
         /// </summary>
         public Vector2 normalized
@@ -377,6 +382,17 @@ namespace UnityEngine
         public static Vector3 operator *(Vector3 a, float s) => new Vector3(a.x * s, a.y * s, a.z * s);
         public static Vector3 operator *(float s, Vector3 a) => new Vector3(a.x * s, a.y * s, a.z * s);
         public static Vector3 operator /(Vector3 a, float s) => new Vector3(a.x / s, a.y / s, a.z / s);
+
+        /// <summary>
+        /// Squared length of the vector.
+        /// </summary>
+        public float sqrMagnitude => x * x + y * y + z * z;
+
+        /// <summary>
+        /// Length of the vector — used by <c>GerstnerWaveBank.SampleNormal</c> to
+        /// normalize the recovered surface normal.
+        /// </summary>
+        public float magnitude => (float)System.Math.Sqrt(sqrMagnitude);
 
         /// <summary>
         /// Computes the cross product of two vectors — used by
