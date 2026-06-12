@@ -289,6 +289,182 @@ namespace UnityEngine
     }
 
     /// <summary>
+    /// Representation of two-dimensional vectors.
+    /// </summary>
+    public struct Vector2
+    {
+        /// <summary>X component of the vector.</summary>
+        public float x;
+
+        /// <summary>Y component of the vector.</summary>
+        public float y;
+
+        /// <summary>
+        /// Creates a new vector with the given components.
+        /// </summary>
+        /// <param name="x">X component.</param>
+        /// <param name="y">Y component.</param>
+        public Vector2(float x, float y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        /// <summary>
+        /// Squared length of the vector — used by <c>Vector2.sqrMagnitude</c> in GerstnerWaveBank.
+        /// </summary>
+        public float sqrMagnitude => x * x + y * y;
+
+        /// <summary>
+        /// Returns this vector with a length of one — used by <c>Vector2.normalized</c>.
+        /// </summary>
+        public Vector2 normalized
+        {
+            get
+            {
+                var len = sqrMagnitude;
+                return len > 1e-10f ? new Vector2(x / len, y / len) : zero;
+            }
+        }
+
+        // Static vector constants — used by Vector2.zero, Vector2.right, Vector2.up, etc.
+        /// <summary>(0, 0).</summary>
+        public static Vector2 zero => new Vector2(0f, 0f);
+        /// <summary>(1, 1).</summary>
+        public static Vector2 one => new Vector2(1f, 1f);
+        /// <summary>(0, 1).</summary>
+        public static Vector2 up => new Vector2(0f, 1f);
+        /// <summary>(0, -1).</summary>
+        public static Vector2 down => new Vector2(0f, -1f);
+        /// <summary>(-1, 0).</summary>
+        public static Vector2 left => new Vector2(-1f, 0f);
+        /// <summary>(1, 0).</summary>
+        public static Vector2 right => new Vector2(1f, 0f);
+    }
+
+    /// <summary>
+    /// Representation of three-dimensional vectors.
+    /// </summary>
+    public struct Vector3
+    {
+        /// <summary>X component of the vector.</summary>
+        public float x;
+
+        /// <summary>Y component of the vector.</summary>
+        public float y;
+
+        /// <summary>Z component of the vector.</summary>
+        public float z;
+
+        /// <summary>
+        /// Creates a new vector with the given components.
+        /// </summary>
+        /// <param name="x">X component.</param>
+        /// <param name="y">Y component.</param>
+        /// <param name="z">Z component.</param>
+        public Vector3(float x, float y, float z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        // Arithmetic operators used by GerstnerWaveBank and FluidMesh (e.g. cross product
+        // and tangent / normal math in SampleNormal).
+        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
+        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
+        public static Vector3 operator -(Vector3 a) => new Vector3(-a.x, -a.y, -a.z);
+        public static Vector3 operator *(Vector3 a, float s) => new Vector3(a.x * s, a.y * s, a.z * s);
+        public static Vector3 operator *(float s, Vector3 a) => new Vector3(a.x * s, a.y * s, a.z * s);
+        public static Vector3 operator /(Vector3 a, float s) => new Vector3(a.x / s, a.y / s, a.z / s);
+
+        /// <summary>
+        /// Computes the cross product of two vectors — used by
+        /// <c>GerstnerWaveBank.SampleNormal</c> to recover the surface normal.
+        /// </summary>
+        public static Vector3 Cross(Vector3 a, Vector3 b) =>
+            new Vector3(
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x);
+
+        // Static vector constants — used by Vector3.zero, Vector3.up, Vector3.Cross callers, etc.
+        /// <summary>(0, 0, 0).</summary>
+        public static Vector3 zero => new Vector3(0f, 0f, 0f);
+        /// <summary>(1, 1, 1).</summary>
+        public static Vector3 one => new Vector3(1f, 1f, 1f);
+        /// <summary>(0, 1, 0).</summary>
+        public static Vector3 up => new Vector3(0f, 1f, 0f);
+        /// <summary>(0, -1, 0).</summary>
+        public static Vector3 down => new Vector3(0f, -1f, 0f);
+        /// <summary>(-1, 0, 0).</summary>
+        public static Vector3 left => new Vector3(-1f, 0f, 0f);
+        /// <summary>(1, 0, 0).</summary>
+        public static Vector3 right => new Vector3(1f, 0f, 0f);
+        /// <summary>(0, 0, 1).</summary>
+        public static Vector3 forward => new Vector3(0f, 0f, 1f);
+        /// <summary>(0, 0, -1).</summary>
+        public static Vector3 back => new Vector3(0f, 0f, -1f);
+    }
+
+    /// <summary>
+    /// RGBA color struct.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors the surface area of UnityEngine.Color required by the offline
+    /// build (terrain materials and water tint setters).
+    /// </remarks>
+    public struct Color
+    {
+        /// <summary>Red channel in [0, 1].</summary>
+        public float r;
+        /// <summary>Green channel in [0, 1].</summary>
+        public float g;
+        /// <summary>Blue channel in [0, 1].</summary>
+        public float b;
+        /// <summary>Alpha channel in [0, 1].</summary>
+        public float a;
+
+        /// <summary>
+        /// Creates a new color with the given components.
+        /// </summary>
+        public Color(float r, float g, float b, float a)
+        {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
+
+        /// <summary>
+        /// Creates a new opaque color with alpha defaulting to 1.
+        /// </summary>
+        public Color(float r, float g, float b) : this(r, g, b, 1f) { }
+
+        // Static color constants — used by Color.white, Color.red, etc.
+        /// <summary>(1, 1, 1, 1).</summary>
+        public static Color white => new Color(1f, 1f, 1f, 1f);
+        /// <summary>(0, 0, 0, 1).</summary>
+        public static Color black => new Color(0f, 0f, 0f, 1f);
+        /// <summary>(1, 0, 0, 1).</summary>
+        public static Color red => new Color(1f, 0f, 0f, 1f);
+        /// <summary>(0, 1, 0, 1).</summary>
+        public static Color green => new Color(0f, 1f, 0f, 1f);
+        /// <summary>(0, 0, 1, 1).</summary>
+        public static Color blue => new Color(0f, 0f, 1f, 1f);
+        /// <summary>(1, 1, 0, 1).</summary>
+        public static Color yellow => new Color(1f, 1f, 0f, 1f);
+        /// <summary>(0, 1, 1, 1).</summary>
+        public static Color cyan => new Color(0f, 1f, 1f, 1f);
+        /// <summary>(1, 0, 1, 1).</summary>
+        public static Color magenta => new Color(1f, 0f, 1f, 1f);
+        /// <summary>(0.5, 0.5, 0.5, 1).</summary>
+        public static Color gray => new Color(0.5f, 0.5f, 0.5f, 1f);
+        /// <summary>(0, 0, 0, 0).</summary>
+        public static Color clear => new Color(0f, 0f, 0f, 0f);
+    }
+
+    /// <summary>
     /// Representation of four-dimensional vectors.
     /// </summary>
     public struct Vector4
