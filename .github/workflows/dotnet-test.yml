@@ -28,6 +28,16 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      # net48 tests run via vstest's mono host on Linux runners; mono is
+      # not preinstalled on ubuntu-24.04. Install it before invoking
+      # 'dotnet test', otherwise the test host fails with:
+      #   System.IO.FileNotFoundException: Could not find 'mono' host
+      - name: Install mono (net48 test host)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mono-complete
+
       - name: Checkout phenotype-terrain (sibling)
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
