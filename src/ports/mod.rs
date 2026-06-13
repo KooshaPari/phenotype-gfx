@@ -8,7 +8,9 @@ pub mod chunk;
 pub mod material;
 pub mod mesh;
 pub mod octree;
+pub mod renderer;
 pub mod serialization;
+pub mod storage;
 
 pub use chunk::{ChunkId, ChunkView, Chunkable};
 pub use material::{
@@ -17,7 +19,9 @@ pub use material::{
 };
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeQueryable, OctreeStorage};
+pub use renderer::{Camera, FrameId, RenderError, RenderResult, RendererPort};
 pub use serialization::{
     ChunkSerializer, MockChunkSerializer, PvoxRleSerializer, SerializationError,
     SerializationResult,
 };
+pub use storage::{MockStoreCall, MockWorldStore, StorageError, StorageResult, WorldStore};

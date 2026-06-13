@@ -116,7 +116,9 @@ impl MaterialRegistry for InMemoryMaterialRegistry {
 
     fn add(&mut self, material: VoxelMaterial) -> MaterialResult<MaterialId> {
         if material.name.trim().is_empty() {
-            return Err(MaterialError::Invalid("material name must not be empty".into()));
+            return Err(MaterialError::Invalid(
+                "material name must not be empty".into(),
+            ));
         }
         let id = self.palette.add(material);
         Ok(id)

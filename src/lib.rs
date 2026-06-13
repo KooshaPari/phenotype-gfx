@@ -44,7 +44,7 @@ pub mod shape_hints;
 pub mod sprite_voxelizer;
 pub mod world;
 
-pub use adapters::{DenseChunkStore, MeshAdapter, OctreeAdapter};
+pub use adapters::{DenseChunkStore, MeshAdapter, OctreeAdapter, VoxelWorldAdapter};
 #[cfg(feature = "bevy")]
 pub use bevy_adapter::to_bevy_mesh;
 pub use chunk::{Chunk, ChunkId, ChunkView};
@@ -56,7 +56,10 @@ pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
 pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
-pub use ports::{Chunkable, OctreeQueryable, OctreeStorage};
+pub use ports::{
+    Camera, Chunkable, FrameId, OctreeQueryable, OctreeStorage, RenderError, RenderResult,
+    RendererPort, WorldStore,
+};
 pub use serial::{load_chunk, save_chunk};
 pub use shape_hints::{ShapeHint, ShapeHintRegistry};
 pub use sprite_voxelizer::{

@@ -8,7 +8,11 @@
 pub mod chunk;
 pub mod mesh;
 pub mod octree;
+pub mod renderer;
+pub mod storage;
 
 pub use chunk::DenseChunkStore;
 pub use mesh::{CubicMesher, GreedyMesher, MeshAdapter};
 pub use octree::OctreeAdapter;
+pub use renderer::FrameCountingRenderer;
+pub use storage::VoxelWorldAdapter;
