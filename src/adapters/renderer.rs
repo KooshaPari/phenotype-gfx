@@ -93,11 +93,7 @@ impl<R: RendererPort> RendererPort for FrameCountingRenderer<R> {
         self.inner.begin_frame(view)
     }
 
-    fn submit_chunk(
-        &mut self,
-        frame: FrameId,
-        chunk: &MeshBuffer,
-    ) -> RenderResult<()> {
+    fn submit_chunk(&mut self, frame: FrameId, chunk: &MeshBuffer) -> RenderResult<()> {
         // Increment only on a successfully forwarded call — a rejected
         // submit (e.g. invalid `frame` handle) must not bump the counter,
         // so counters always reflect calls that actually reached the inner
@@ -132,19 +128,12 @@ mod tests {
     }
 
     impl RendererPort for RecordingRenderer {
-        fn begin_frame(
-            &mut self,
-            view: &Camera,
-        ) -> RenderResult<FrameId> {
+        fn begin_frame(&mut self, view: &Camera) -> RenderResult<FrameId> {
             self.last_camera = Some(*view);
             Ok(FrameId(1))
         }
 
-        fn submit_chunk(
-            &mut self,
-            _frame: FrameId,
-            chunk: &MeshBuffer,
-        ) -> RenderResult<()> {
+        fn submit_chunk(&mut self, _frame: FrameId, chunk: &MeshBuffer) -> RenderResult<()> {
             self.last_chunk_vertex_count = Some(chunk.vertex_count());
             Ok(())
         }
@@ -164,19 +153,12 @@ mod tests {
     }
 
     impl RendererPort for RejectingRenderer {
-        fn begin_frame(
-            &mut self,
-            _view: &Camera,
-        ) -> RenderResult<FrameId> {
+        fn begin_frame(&mut self, _view: &Camera) -> RenderResult<FrameId> {
             self.begun = self.begun.saturating_add(1);
             Ok(FrameId(1))
         }
 
-        fn submit_chunk(
-            &mut self,
-            _frame: FrameId,
-            _chunk: &MeshBuffer,
-        ) -> RenderResult<()> {
+        fn submit_chunk(&mut self, _frame: FrameId, _chunk: &MeshBuffer) -> RenderResult<()> {
             Err(RenderError::InvalidHandle)
         }
 

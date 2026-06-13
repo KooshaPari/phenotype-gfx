@@ -175,11 +175,8 @@ impl<T: Default + Clone + PartialEq> WorldStore<T> for MockWorldStore<T> {
 
     fn write(&mut self, pos: WorldCoord, value: T) -> ChunkCoord {
         self.calls.push(MockStoreCall::Write(pos));
-        let coord = crate::coord::to_chunk_coord(
-            pos,
-            self.voxel_span,
-            crate::chunk::CHUNK_EDGE as i32,
-        );
+        let coord =
+            crate::coord::to_chunk_coord(pos, self.voxel_span, crate::chunk::CHUNK_EDGE as i32);
         let existing = self.voxels.get(&pos).cloned();
         if existing.as_ref() != Some(&value) {
             self.voxels.insert(pos, value);
@@ -286,7 +283,10 @@ mod tests {
     fn mock_compact_is_noop() {
         let mut store = MockWorldStore::<u8>::new(crate::coord::FIXED_SCALE);
         assert_eq!(store.compact(), 0);
-        assert!(store.calls().iter().any(|c| matches!(c, MockStoreCall::Compact)));
+        assert!(store
+            .calls()
+            .iter()
+            .any(|c| matches!(c, MockStoreCall::Compact)));
     }
 
     /// FR-PHENO-VOXEL-PORT-STORAGE-003 — `record_read` populates the call log

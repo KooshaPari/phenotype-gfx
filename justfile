@@ -21,3 +21,6 @@ clean:
 dev:
     cargo watch -x build -x test || echo "cargo-watch not installed; run: cargo install cargo-watch"
 
+# Measure code coverage (SSOT: see grade.sh for the canonical command)
+coverage:
+    cargo llvm-cov --workspace --fail-under-lines 85
