@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Phenotype.Water</RootNamespace>
+    <AssemblyName>phenotype-water</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**\*.cs" />
+    <Compile Remove="src\UnityEngineStubs.cs" />
+    <!-- CI checks out phenotype-terrain into _sibling/. Default Microsoft.NET.Sdk
+         glob pulls every .cs file under the project root, which would also
+         compile terrain's xUnit tests (causing CS0246 on FactAttribute) and
+         src/Ports/. Keep _sibling out of the water build; only its compiled
+         DLL flows in via ProjectReference. -->
+    <Compile Remove="_sibling\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CI checks out phenotype-terrain into _sibling/phenotype-terrain/ via
+         .github/workflows/dotnet-test.yml (relative to the checkout root, NOT
+         the project file's directory). The ProjectReference must be a
+         checkout-root-relative path because the .csproj itself lives at
+         phenotype-water/phenotype-water.csproj while the sibling is
+         phenotype-water/_sibling/phenotype-terrain/. -->
+    <ProjectReference Include="_sibling\phenotype-terrain\phenotype-terrain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(WorldBoxManaged)/UnityEngine.CoreModule.dll')">
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(WorldBoxManaged)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('$(WorldBoxManaged)/UnityEngine.CoreModule.dll')">
+    <Compile Include="src\UnityEngineStubs.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,62 @@
+name: dotnet test
+
+on:
+  push:
+    branches: [master, main, chore/**, feat/**, fix/**, refactor/**]
+  pull_request:
+    branches: [master, main, chore/**, feat/**, fix/**, refactor/**]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: dotnet test (net48)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+
+      # net48 tests run via vstest's mono host on Linux runners; mono is
+      # not preinstalled on ubuntu-24.04. Install it before invoking
+      # 'dotnet test', otherwise the test host fails with:
+      #   System.IO.FileNotFoundException: Could not find 'mono' host
+      - name: Install mono (net48 test host)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mono-complete
+
+      - name: Checkout phenotype-terrain (sibling)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          repository: KooshaPari/phenotype-terrain
+          path: _sibling/phenotype-terrain
+
+      - name: Stub UnityEngine.CoreModule
+        run: |
+          set -euo pipefail
+          bash .github/scripts/stub-unity-engine.sh --source src/UnityEngineStubs.cs --framework net48
+
+      - name: Restore
+        run: dotnet restore phenotype-water.slnx
+
+      - name: Build
+        run: dotnet build phenotype-water.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test tests/phenotype-water.tests.csproj -c Release --no-build --verbosity normal
+
+      - name: Format
+        run: dotnet format phenotype-water.slnx --verify-no-changes --verbosity diagnostic

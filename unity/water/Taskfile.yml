@@ -1,0 +1,38 @@
+version: "3"
+
+vars:
+  PROJECT: phenotype-water
+  DOTNET_VERSION: "8.0"
+
+tasks:
+  build:
+    desc: "Build with Unity stub"
+    cmds:
+      - dotnet build {{.PROJECT}}.csproj --configuration Release
+
+  test:
+    desc: "Run xUnit tests"
+    cmds:
+      - dotnet test tests/{{.PROJECT}}.tests.csproj --configuration Release
+
+  format:
+    desc: "Check C# formatting"
+    cmds:
+      - dotnet format --verify-no-changes --verbosity diagnostic
+
+  format-fix:
+    desc: "Auto-fix C# formatting"
+    cmds:
+      - dotnet format --verbosity diagnostic
+
+  lint:
+    desc: "Run dotnet format as lint"
+    cmds:
+      - task: format
+
+  default:
+    desc: "Run the full quality gate (build, lint, test)"
+    cmds:
+      - task: build
+      - task: lint
+      - task: test

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🛡️ Security disclosure
+    url: https://github.com/Phenotype-org/phenotype-water/security/advisories/new
+    about: Report a security vulnerability privately via GitHub Security Advisories. **Do not** open a public issue for security findings — see `SECURITY.md`.
+  - name: 🧭 AgilePlus spec
+    url: https://github.com/KooshaPari/AgilePlus
+    about: For non-trivial features or substantive changes, open or link an AgilePlus spec first (per `CONTRIBUTING.md`).
+  - name: 💬 Phenotype org
+    url: https://github.com/KooshaPari
+    about: Other Phenotype-ecosystem repos and discussions.
