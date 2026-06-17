@@ -1,0 +1,12 @@
+[package]
+name = "phenotype-gfx"
+version = "0.1.0"
+edition = "2021"
+description = "Unified graphics kernel: single Rust core + thin FFI edges"
+
+[dependencies]
+# (empty for now; modules land via superset-merge)
+
+[lib]
+name = "phenotype_gfx"
+path = "src/lib.rs"
