@@ -1,0 +1,12 @@
+{
+  "name": "com.phenotype.postfx",
+  "version": "0.1.0",
+  "displayName": "Phenotype PostFX",
+  "description": "Reusable BRP post-processing stack: SSAO, SSGI, Bloom, ACES tonemap, LUT color grading in a deterministic ping-pong OnRenderImage chain.",
+  "unity": "2021.3",
+  "keywords": ["postfx", "ssao", "bloom", "aces", "lut", "brp"],
+  "author": {
+    "name": "Phenotype",
+    "url": "https://github.com/Phenotype-org"
+  }
+}

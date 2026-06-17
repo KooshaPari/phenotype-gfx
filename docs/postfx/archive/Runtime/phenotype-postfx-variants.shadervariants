@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!200 &20000000
+ShaderVariantCollection:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: phenotype-postfx-variants
+  m_Shaders:
+  - first: {fileID: 4800000, guid: c345552281ffeb66637e6e8c723080db, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 0
+  - first: {fileID: 4800000, guid: c0345bd4fdccc7df95f3494f1347e8d5, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 0
+  - first: {fileID: 4800000, guid: c945de843d294f358726aff3dc204e3d, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 0
+  - first: {fileID: 4800000, guid: ee78d15b1d93fa6f81558f595b17fa08, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 0
+  - first: {fileID: 4800000, guid: fc0fe8bd393547cde137d7a8e2a95dd7, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 0
