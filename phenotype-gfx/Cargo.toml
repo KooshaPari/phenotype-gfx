@@ -1,0 +1,9 @@
+[package]
+name = "phenotype-gfx"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Single-core graphics substrate: voxel meshing, LOD, streaming, postfx, water, voxelizer"
+repository = "https://github.com/KooshaPari/phenotype-gfx"
+
+[dependencies]
