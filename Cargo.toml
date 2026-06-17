@@ -1,0 +1,13 @@
+[package]
+name = "phenotype-gfx"
+version = "0.1.0"
+edition = "2021"
+description = "Unified graphics kernel: voxel, LOD, streaming, postfx, water, voxelizer"
+
+[lib]
+name = "phenotype_gfx"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# (empty for now; add as modules land)
