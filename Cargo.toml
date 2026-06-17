@@ -10,4 +10,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# (empty for now; add as modules land)
+serde = { version = "1.0", features = ["derive"] }
+# Phenotype-org shared voxel kernel — provides ChunkId, LodLevel, LodPolicy,
+# VoxelScaleMultiplier, MaterialId, ChunkCoord, select_lod.
+phenotype-voxel = { git = "https://github.com/KooshaPari/phenotype-voxel.git", rev = "0bbd1b7c64e64e7723c42a7417680c23860dfb5a" }

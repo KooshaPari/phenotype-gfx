@@ -3,6 +3,15 @@
 //! Holds all gfx algorithms (voxel, LOD, streaming, postfx, water, voxelizer) ONCE.
 //! Thin FFI edges (C-ABI, wasm-bindgen) expose to consumers (C#, TS, web).
 //! NO duplicated logic across languages.
+//!
+//! See `docs/adr/ADR-004-single-core-ffi-edges.md` and
+//! `docs/adr/0001-single-core-thin-ffi.md` for the locked architecture.
+
+// SHARED KERNEL RE-EXPORTS (one import home for consumers)
+pub use phenotype_voxel as kernel;
+pub use phenotype_voxel::{
+    select_lod, ChunkId, LodLevel, LodPolicy, MaterialId, VoxelScaleMultiplier,
+};
 
 // ALGORITHM MODULES (all real logic lives here)
 
