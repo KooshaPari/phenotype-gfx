@@ -1,0 +1,21 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,xml,config,json,yml,yaml,slnx}]
+indent_size = 2
+
+[*.{md,mdx}]
+trim_trailing_whitespace = false
+
+# Unity may generate .meta files; we keep them as-is and don't enforce formatting
+[*.meta]
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+end_of_line = unset

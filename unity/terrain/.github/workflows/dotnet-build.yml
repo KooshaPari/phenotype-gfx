@@ -1,0 +1,58 @@
+name: dotnet build
+
+on:
+  push:
+    branches: [master, main, chore/**, feat/**, fix/**, refactor/**]
+  pull_request:
+    branches: [master, main, chore/**, feat/**, fix/**, refactor/**]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: dotnet build (net48)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        with:
+          dotnet-version: 8.0.x
+
+      # net48 tests run via vstest's mono host on Linux runners; mono is
+      # not preinstalled on ubuntu-24.04. Install it before invoking
+      # 'dotnet test', otherwise the test host fails with:
+      #   System.IO.FileNotFoundException: Could not find 'mono' host
+      - name: Install mono (net48 test host)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mono-complete
+
+      # The library references UnityEngine.CoreModule.dll under $(WorldBoxManaged);
+      # the variable is not set in CI, so we generate a minimal stub assembly locally.
+      - name: Stub UnityEngine.CoreModule
+        run: |
+          set -euo pipefail
+          bash scripts/generate-unity-stub.sh
+
+      - name: Restore
+        run: dotnet restore phenotype-terrain.csproj
+
+      - name: Build
+        run: dotnet build phenotype-terrain.csproj -c Release --no-restore
+
+      - name: Test
+        run: dotnet test tests/phenotype-terrain.tests.csproj -c Release --verbosity normal
+
+      - name: Format
+        run: dotnet format --verify-no-changes --verbosity diagnostic

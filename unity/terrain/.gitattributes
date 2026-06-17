@@ -1,0 +1,38 @@
+# Auto-detect text files; normalize line endings to LF on commit
+* text=auto eol=lf
+
+# C# / .NET sources and project files
+*.cs    text eol=lf
+*.csproj text eol=lf
+*.props text eol=lf
+*.targets text eol=lf
+*.sln  text eol=crlf
+*.slnx text eol=lf
+*.config text eol=lf
+*.xml  text eol=lf
+
+# Documentation never gets CRLF
+*.md   text eol=lf
+*.mdx  text eol=lf
+
+# Unity meta files are auto-generated and should not be diffed
+*.meta -text merge=unityyamlmerge
+
+# Windows / PowerShell scripts keep CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary / generated
+*.dll binary
+*.pdb binary
+*.exe binary
+*.so  binary
+*.dylib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.mp4 binary
+*.mov binary
