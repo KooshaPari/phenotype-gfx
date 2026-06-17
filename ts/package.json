@@ -1,0 +1,6 @@
+{
+  "name": "@phenotype/gfx-postfx",
+  "version": "0.1.0",
+  "description": "Post-processing effects placeholder — if postfx is TS this becomes the npm package",
+  "private": true
+}

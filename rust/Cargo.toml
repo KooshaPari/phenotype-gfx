@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "phenotype-gfx-voxel",
+]
+resolver = "2"

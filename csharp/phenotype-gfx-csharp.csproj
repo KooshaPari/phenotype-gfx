@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>PhenotypeGfx</RootNamespace>
+    <AssemblyName>phenotype-gfx-csharp</AssemblyName>
+    <!-- Subsystems: postfx, voxelizer, lighting[todo], LOD[todo], rendering[todo], foliage[todo], procgen[todo] -->
+    <!-- Primary consumer: WSM3D (Unity 2022.3 BRP, D3D11) -->
+  </PropertyGroup>
+</Project>

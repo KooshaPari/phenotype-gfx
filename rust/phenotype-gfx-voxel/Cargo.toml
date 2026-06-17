@@ -1,0 +1,7 @@
+[package]
+name = "phenotype-gfx-voxel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# (empty for now — filled by Civis fold + phenotype-voxel fold)
