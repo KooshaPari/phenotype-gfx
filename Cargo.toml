@@ -1,0 +1,12 @@
+[package]
+name = "phenotype-gfx"
+version = "0.1.0"
+edition = "2021"
+publish = false  # local consolidation, not yet published
+
+[dependencies]
+# (empty for now; will add as modules land)
+
+[lib]
+name = "phenotype_gfx"
+path = "src/lib.rs"
