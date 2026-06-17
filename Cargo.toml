@@ -10,4 +10,8 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# (empty for now; add as modules land)
+serde = { version = "1.0", features = ["derive"] }
+# Shared voxel kernel — provides ChunkCoord, ChunkId, LodLevel, LodPolicy,
+# MaterialId, VoxelScaleMultiplier, select_lod. Pinned to the same rev as
+# civis-platform-wt so the type identities are identical across crates.
+phenotype-voxel = { git = "https://github.com/KooshaPari/phenotype-voxel.git", rev = "0bbd1b7c64e64e7723c42a7417680c23860dfb5a" }
