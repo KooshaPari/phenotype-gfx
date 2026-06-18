@@ -1,0 +1,101 @@
+name: Package Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Unity Package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install just
+        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff # v3.0.0
+
+      # ── 1. Validate package.json ─────────────────────────────────────────────
+      - name: Validate package.json (JSON + required fields)
+        run: |
+          set -euo pipefail
+          echo "=== package.json validation ==="
+
+          # Must be valid JSON
+          python3 -c "import json, sys; json.load(open('package.json'))" \
+            && echo "  ✓ Valid JSON" \
+            || { echo "  ✗ package.json is not valid JSON"; exit 1; }
+
+          # Required fields: name, version, unity
+          python3 - <<'PY'
+          import json, sys
+          data = json.load(open("package.json"))
+          required = ["name", "version", "unity"]
+          missing = [f for f in required if not data.get(f)]
+          if missing:
+              print(f"  ✗ Missing required fields: {missing}")
+              sys.exit(1)
+          for f in required:
+              print(f"  ✓ {f} = {data[f]}")
+          PY
+
+      # ── 2. Run the justfile test gate (PostStack source + shader-variant tests) ──
+      - name: Run just test
+        run: just test
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+          DOTNET_NOLOGO: "true"
+
+      # ── 3. Verify shader files referenced in PostStack.cs exist on disk ─────
+      - name: Verify shaders referenced in PostStack.cs exist on disk
+        run: |
+          set -euo pipefail
+          echo "=== Shader file existence check ==="
+
+          # Extract all resource paths passed to TryLoad() or Resources.Load<Shader>()
+          # Matches strings like "Shaders/ScreenSpaceAO" inside the C# source
+          SHADERS=$(grep -oP '"Shaders/[^"]+(?=")' Runtime/PostStack.cs | sort -u)
+
+          if [ -z "$SHADERS" ]; then
+            echo "  No shader resource paths found in PostStack.cs — check pattern."
+            exit 1
+          fi
+
+          ERRORS=0
+          SHADER_ROOT="Runtime"
+
+          for rel_path in $SHADERS; do
+            # Try both with and without .shader extension
+            candidate_plain="$SHADER_ROOT/$rel_path"
+            candidate_ext="$SHADER_ROOT/${rel_path}.shader"
+
+            if [ -f "$candidate_plain" ] || [ -f "$candidate_ext" ]; then
+              echo "  ✓ $rel_path"
+            else
+              echo "  ✗ MISSING: $rel_path  (checked $candidate_plain and $candidate_ext)"
+              ERRORS=$((ERRORS+1))
+            fi
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo ""
+            echo "Shader check failed: $ERRORS missing file(s)."
+            exit 1
+          fi
+          echo ""
+          echo "All referenced shader files present."

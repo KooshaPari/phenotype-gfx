@@ -1,0 +1,47 @@
+version: "3"
+
+vars:
+  PROJECT: phenotype-postfx
+  DOTNET_VERSION: "8.0"
+
+tasks:
+  test:
+    desc: "Run all xUnit tests (PostStack source + variant validation)"
+    cmds:
+      - dotnet test tests/PostStackSourceTests.csproj --configuration Release
+      - dotnet test tests/PostStackVariantTests/PostStackVariantTests.csproj --configuration Release
+
+  format:
+    desc: "Check C# formatting"
+    cmds:
+      - dotnet format --verify-no-changes --verbosity diagnostic
+
+  format-fix:
+    desc: "Auto-fix C# formatting"
+    cmds:
+      - dotnet format --verbosity diagnostic
+
+  lint:
+    desc: "Run dotnet format as lint"
+    cmds:
+      - task: format
+
+  validate:
+    desc: "Validate package.json + shader existence"
+    cmds:
+      - |
+        set -euo pipefail
+        echo "=== package.json validation ==="
+        python3 -c "import json, sys; json.load(open('package.json'))" && echo "  Valid JSON"
+        python3 -c "import json, sys; data=json.load(open('package.json')); required=['name','version','unity']; missing=[f for f in required if not data.get(f)]; [sys.exit(1) if missing else None]; [print(f'  {f} = {data[f]}') for f in required]"
+        echo "=== Shader existence check ==="
+        SHADERS=$(python3 -c "import re, sys; text=open('Runtime/PostStack.cs').read(); matches=re.findall(r'\"Shaders/[^\"]+\"', text); [print(m[1:-1]) for m in matches]")
+        for rel_path in $SHADERS; do
+          if [ -f "Runtime/$rel_path" ] || [ -f "Runtime/${rel_path}.shader" ]; then echo "  ✓ $rel_path"; else echo "  ✗ MISSING: $rel_path"; exit 1; fi
+        done
+
+  default:
+    desc: "Run the full quality gate (lint, test)"
+    cmds:
+      - task: lint
+      - task: test
