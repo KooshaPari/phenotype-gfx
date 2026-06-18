@@ -15,7 +15,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use phenotype_voxel::ChunkCoord;
+use crate::voxel::ChunkCoord;
 
 // ============================================================================
 // ring_distance — the core metric
