@@ -3,7 +3,7 @@
 sdk = "0.1.0"
 
 [modules]
-voxel   = "0.1.0"   # rust/voxel  — upstream: KooshaPari/phenotype-voxel
-terrain = "0.1.0"   # unity/terrain — upstream: KooshaPari/phenotype-terrain
-water   = "0.1.0"   # unity/water  — upstream: KooshaPari/phenotype-water
+voxel   = "0.1.0"   # src/voxel — canonical in phenotype-gfx (was: KooshaPari/phenotype-voxel, archived)
+terrain = "0.1.0"   # unity/terrain — canonical in phenotype-gfx (was: KooshaPari/phenotype-terrain, archived)
+water   = "0.1.0"   # unity/water — canonical in phenotype-gfx (was: KooshaPari/phenotype-water, archived)
 postfx  = "0.1.0"   # unity/postfx — upstream: KooshaPari/phenotype-postfx

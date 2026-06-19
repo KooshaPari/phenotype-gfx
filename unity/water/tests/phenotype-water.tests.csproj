@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\phenotype-water.csproj" />
-    <!-- LodBase shared with phenotype-terrain; pulled from the absorbed module. -->
+    <!-- LodBase shared with in-monorepo terrain shim -->
     <ProjectReference Include="..\..\terrain\phenotype-terrain.csproj">
       <UndefineProperties>TargetFramework</UndefineProperties>
       <Properties>TargetFramework=net48</Properties>

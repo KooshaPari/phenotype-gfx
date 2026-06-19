@@ -1,3 +1,7 @@
+[workspace]
+resolver = "2"
+members = [".", "crates/phenotype-voxel"]
+
 [package]
 name = "phenotype-gfx"
 version = "0.2.0"
