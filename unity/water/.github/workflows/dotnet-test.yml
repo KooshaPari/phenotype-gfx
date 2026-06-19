@@ -38,12 +38,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends mono-complete
 
-      - name: Checkout phenotype-terrain (sibling)
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-        with:
-          repository: KooshaPari/phenotype-terrain
-          path: _sibling/phenotype-terrain
-
       - name: Stub UnityEngine.CoreModule
         run: |
           set -euo pipefail

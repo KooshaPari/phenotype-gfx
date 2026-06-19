@@ -1,0 +1,11 @@
+[package]
+name = "phenotype-voxel"
+version = "0.2.0"
+edition = "2021"
+description = "Compatibility shim — re-exports the phenotype-gfx voxel kernel (ADR-004)"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/KooshaPari/phenotype-gfx"
+publish = false
+
+[dependencies]
+phenotype-gfx = { path = "../..", package = "phenotype-gfx" }

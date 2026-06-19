@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- In-monorepo terrain shim (ADR-004): ../terrain lives under phenotype-gfx/unity/terrain. -->
     <ProjectReference Include="..\terrain\phenotype-terrain.csproj" />
   </ItemGroup>
 
