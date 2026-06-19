@@ -36,6 +36,11 @@ pub mod voxelizer;
 /// Terrain system: height field, chunk mesh builder, terrain LOD, materials.
 pub mod terrain;
 
+// Re-export the absorbed voxel kernel at the crate root so consumers that rename
+// `phenotype-gfx` to `phenotype-voxel` keep the old `phenotype_voxel::Chunk` API.
+pub use voxel as kernel;
+pub use voxel::*;
+
 // FUTURE: FFI EDGES (thin bindings, NOT logic)
 // pub mod c_api;   // C-ABI via cbindgen → C# P/Invoke shim (WSM3D)
 // pub mod wasm;    // wasm-bindgen → TS/npm (web)

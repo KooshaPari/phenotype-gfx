@@ -19,6 +19,13 @@ This file is the contract. Changing a format here is a breaking change and bumps
 ## Surface exchange (water → renderers)
 - Water emits a per-chunk surface level `f32` + flow vector `[f32;2]`.
 
+## Render inputs (world modules → postfx)
+- Renderers pass color, depth, normal, and motion-vector textures into postfx.
+- Postfx owns screen-space effects and tone mapping; it must not own terrain,
+  water, or voxel simulation state.
+- Postfx settings are versioned with the umbrella SDK so Unity consumers can
+  bind one package version for terrain, water, and post-processing.
+
 ## TODO (fill when module audits land)
 - voxel chunk serialization format (Rust side) — pending phenotype-voxel audit
 - terrain/water mesh export format (C# side) — pending audits

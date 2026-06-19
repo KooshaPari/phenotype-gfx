@@ -21,13 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- CI checks out phenotype-terrain into _sibling/phenotype-terrain/ via
-         .github/workflows/dotnet-test.yml (relative to the checkout root, NOT
-         the project file's directory). The ProjectReference must be a
-         checkout-root-relative path because the .csproj itself lives at
-         phenotype-water/phenotype-water.csproj while the sibling is
-         phenotype-water/_sibling/phenotype-terrain/. -->
-    <ProjectReference Include="_sibling\phenotype-terrain\phenotype-terrain.csproj" />
+    <ProjectReference Include="..\terrain\phenotype-terrain.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="Exists('$(WorldBoxManaged)/UnityEngine.CoreModule.dll')">

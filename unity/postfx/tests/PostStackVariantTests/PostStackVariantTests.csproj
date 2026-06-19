@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RollForward>LatestMajor</RollForward>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>PostStackVariantTests</RootNamespace>
+    <!-- Compile PostStack.cs directly into this test project (with Unity stubs) -->
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+  </ItemGroup>
+
+  <!-- Compile the real PostStack source (along with Unity stubs provided here) -->
+  <ItemGroup>
+    <Compile Include="../../Runtime/PostStack.cs" />
+    <Compile Include="../../Runtime/PostFxPassRegistry.cs" />
+    <Compile Include="../../Runtime/IPostFxPass.cs" />
+    <Compile Include="../../Runtime/Ports/IPostFxPass.cs" />
+    <Compile Include="../../Runtime/Ports/IShaderAvailabilityProvider.cs" />
+    <Compile Include="../../Runtime/BloomPass.cs" />
+    <Compile Include="../../Runtime/SSAOPass.cs" />
+  </ItemGroup>
+</Project>

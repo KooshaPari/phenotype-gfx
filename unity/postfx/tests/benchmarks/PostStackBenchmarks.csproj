@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <RootNamespace>Phenotype.PostFx.Benchmarks</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+  </ItemGroup>
+
+  <!-- Compile the real PostStack source (along with Unity stubs) -->
+  <ItemGroup>
+    <Compile Include="../../Runtime/PostStack.cs" />
+    <Compile Include="../../Runtime/PostFxPassRegistry.cs" />
+    <Compile Include="../../Runtime/IPostFxPass.cs" />
+    <Compile Include="../../Runtime/Ports/IPostFxPass.cs" />
+    <Compile Include="../../Runtime/Ports/IShaderAvailabilityProvider.cs" />
+    <Compile Include="../PostStackVariantTests/UnityStubs.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="PostStackBenchmarks.cs" />
+    <Compile Include="UnityStubsExtra.cs" />
+  </ItemGroup>
+</Project>
