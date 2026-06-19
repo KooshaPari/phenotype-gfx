@@ -8,9 +8,7 @@
 
 // Re-export the shared voxel kernel so consumers import from one place.
 pub use phenotype_voxel as kernel;
-pub use phenotype_voxel::{
-    select_lod, ChunkCoord, ChunkId, LodLevel, LodPolicy, MaterialId, VoxelScaleMultiplier,
-};
+pub use phenotype_voxel::*;
 
 // ALGORITHM MODULES (all real logic lives here, exactly once)
 
