@@ -11,7 +11,7 @@ use core::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
 
-use phenotype_voxel::{select_lod, ChunkCoord, ChunkId, LodLevel, LodPolicy, VoxelScaleMultiplier};
+use crate::voxel::{select_lod, ChunkCoord, ChunkId, LodLevel, LodPolicy, VoxelScaleMultiplier};
 
 use crate::streaming::{ring_distance, WindowPolicy};
 
