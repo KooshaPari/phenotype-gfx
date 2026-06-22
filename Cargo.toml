@@ -13,8 +13,6 @@ repository = "https://github.com/KooshaPari/phenotype-gfx"
 keywords = ["graphics", "voxel", "terrain", "water", "postfx"]
 categories = ["game-engines", "graphics", "data-structures"]
 
-[workspace]
-
 [lib]
 name = "phenotype_gfx"
 path = "src/lib.rs"
