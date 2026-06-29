@@ -32,13 +32,21 @@ use crate::voxel::ChunkCoord;
 /// `vy_weight = 0` is treated as 1 (defensive; `WindowPolicy::checked` rejects it).
 #[must_use]
 pub const fn ring_distance(coord: ChunkCoord, anchor: ChunkCoord, vy_weight: u8) -> u32 {
-    let w = if vy_weight == 0 { 1u32 } else { vy_weight as u32 };
+    let w = if vy_weight == 0 {
+        1u32
+    } else {
+        vy_weight as u32
+    };
     let dx = (coord.cx - anchor.cx).unsigned_abs();
     let dz = (coord.cz - anchor.cz).unsigned_abs();
     let dy = (coord.cy - anchor.cy).unsigned_abs() * w;
     // Manual max-of-three to stay const fn (u32::max not const-stable yet).
     let m = if dx > dz { dx } else { dz };
-    if m > dy { m } else { dy }
+    if m > dy {
+        m
+    } else {
+        dy
+    }
 }
 
 // ============================================================================
@@ -76,7 +84,10 @@ impl ChunkState {
     /// True if the chunk occupies RAM (counted against the active budget).
     #[must_use]
     pub const fn is_resident(self) -> bool {
-        matches!(self, Self::Resident | Self::Meshed | Self::Fading { .. } | Self::Evicting)
+        matches!(
+            self,
+            Self::Resident | Self::Meshed | Self::Fading { .. } | Self::Evicting
+        )
     }
 }
 
@@ -174,16 +185,35 @@ impl WindowPolicy {
     /// Construct with explicit invariants validated.
     #[allow(clippy::too_many_arguments)]
     pub fn checked(
-        mesh_ring: u8, sim_ring: u8, coarse_ring: u8, seam_chunks: u8,
-        vy_weight: u8, sim_lod_step: u8, prefetch_ring: u8,
-        forward_cone_cos_theta: i8, fade_ticks: u8,
+        mesh_ring: u8,
+        sim_ring: u8,
+        coarse_ring: u8,
+        seam_chunks: u8,
+        vy_weight: u8,
+        sim_lod_step: u8,
+        prefetch_ring: u8,
+        forward_cone_cos_theta: i8,
+        fade_ticks: u8,
     ) -> Result<Self, PolicyError> {
-        if vy_weight == 0 { return Err(PolicyError::ZeroVyWeight); }
-        if sim_lod_step == 0 { return Err(PolicyError::ZeroSimLodStep); }
-        if sim_ring > coarse_ring { return Err(PolicyError::SimRingAboveCoarseRing); }
+        if vy_weight == 0 {
+            return Err(PolicyError::ZeroVyWeight);
+        }
+        if sim_lod_step == 0 {
+            return Err(PolicyError::ZeroSimLodStep);
+        }
+        if sim_ring > coarse_ring {
+            return Err(PolicyError::SimRingAboveCoarseRing);
+        }
         Ok(Self {
-            mesh_ring, sim_ring, coarse_ring, seam_chunks, vy_weight,
-            sim_lod_step, prefetch_ring, forward_cone_cos_theta, fade_ticks,
+            mesh_ring,
+            sim_ring,
+            coarse_ring,
+            seam_chunks,
+            vy_weight,
+            sim_lod_step,
+            prefetch_ring,
+            forward_cone_cos_theta,
+            fade_ticks,
         })
     }
 
@@ -197,7 +227,9 @@ impl WindowPolicy {
             if self.fade_ticks == 0 {
                 ChunkState::Resident
             } else {
-                ChunkState::Fading { ticks_remaining: self.fade_ticks }
+                ChunkState::Fading {
+                    ticks_remaining: self.fade_ticks,
+                }
             }
         } else {
             ChunkState::Unloaded
@@ -211,7 +243,9 @@ impl WindowPolicy {
         if ring <= self.sim_ring as u32 {
             SimCohort::FullSim
         } else if ring <= self.coarse_ring as u32 {
-            SimCohort::CoarseSim { step_multiplier: self.sim_lod_step }
+            SimCohort::CoarseSim {
+                step_multiplier: self.sim_lod_step,
+            }
         } else {
             SimCohort::Frozen
         }
@@ -220,12 +254,21 @@ impl WindowPolicy {
     /// True if `coord` is in the prefetch cone.
     #[must_use]
     pub const fn in_prefetch_cone(
-        &self, coord: ChunkCoord, anchor: ChunkCoord, forward_q7: [i32; 3],
+        &self,
+        coord: ChunkCoord,
+        anchor: ChunkCoord,
+        forward_q7: [i32; 3],
     ) -> bool {
-        if self.prefetch_ring == 0 { return false; }
+        if self.prefetch_ring == 0 {
+            return false;
+        }
         let ring = ring_distance(coord, anchor, self.vy_weight);
-        if ring <= self.mesh_ring as u32 { return true; }
-        if ring > (self.mesh_ring as u32).saturating_add(self.prefetch_ring as u32) { return false; }
+        if ring <= self.mesh_ring as u32 {
+            return true;
+        }
+        if ring > (self.mesh_ring as u32).saturating_add(self.prefetch_ring as u32) {
+            return false;
+        }
         let dx = coord.cx - anchor.cx;
         let dy = (coord.cy - anchor.cy) * (self.vy_weight as i32);
         let dz = coord.cz - anchor.cz;
@@ -260,14 +303,20 @@ impl EvictionKey {
     /// Build an eviction key for a chunk.
     #[must_use]
     pub const fn new(coord: ChunkCoord, anchor: ChunkCoord, vy_weight: u8, lru_pos: u32) -> Self {
-        Self { ring: ring_distance(coord, anchor, vy_weight), lru_pos }
+        Self {
+            ring: ring_distance(coord, anchor, vy_weight),
+            lru_pos,
+        }
     }
 }
 
 impl Ord for EvictionKey {
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         // Larger ring = evict first → invert ring comparison.
-        other.ring.cmp(&self.ring).then(self.lru_pos.cmp(&other.lru_pos))
+        other
+            .ring
+            .cmp(&self.ring)
+            .then(self.lru_pos.cmp(&other.lru_pos))
     }
 }
 
@@ -281,7 +330,9 @@ impl PartialOrd for EvictionKey {
 mod tests {
     use super::*;
 
-    fn coord(cx: i32, cy: i32, cz: i32) -> ChunkCoord { ChunkCoord { cx, cy, cz } }
+    fn coord(cx: i32, cy: i32, cz: i32) -> ChunkCoord {
+        ChunkCoord { cx, cy, cz }
+    }
 
     #[test]
     fn ring_distance_horizontal_is_chebyshev() {
@@ -301,16 +352,28 @@ mod tests {
         let policy = WindowPolicy::default(); // mesh_ring=1
         let anchor = coord(0, 0, 0);
         assert_eq!(policy.classify(coord(1, 0, 0), anchor), ChunkState::Meshed);
-        assert!(matches!(policy.classify(coord(2, 0, 0), anchor), ChunkState::Resident));
-        assert_eq!(policy.classify(coord(5, 0, 0), anchor), ChunkState::Unloaded);
+        assert!(matches!(
+            policy.classify(coord(2, 0, 0), anchor),
+            ChunkState::Resident
+        ));
+        assert_eq!(
+            policy.classify(coord(5, 0, 0), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     #[test]
     fn window_policy_sim_cohort_bands() {
         let policy = WindowPolicy::default(); // sim_ring=1, coarse_ring=2
         let anchor = coord(0, 0, 0);
-        assert_eq!(policy.sim_cohort(coord(1, 0, 0), anchor), SimCohort::FullSim);
-        assert!(matches!(policy.sim_cohort(coord(2, 0, 0), anchor), SimCohort::CoarseSim { .. }));
+        assert_eq!(
+            policy.sim_cohort(coord(1, 0, 0), anchor),
+            SimCohort::FullSim
+        );
+        assert!(matches!(
+            policy.sim_cohort(coord(2, 0, 0), anchor),
+            SimCohort::CoarseSim { .. }
+        ));
         assert_eq!(policy.sim_cohort(coord(3, 0, 0), anchor), SimCohort::Frozen);
     }
 

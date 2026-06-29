@@ -9,7 +9,9 @@ use super::water_shader::WaterShader;
 /// Handle for a water material in the registry. Deprecated: the actual
 /// material lives in the engine; this is a stable identity for the registry.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[deprecated(note = "WaterMaterial is a name-only pass-through. Use the engine-side material at render time.")]
+#[deprecated(
+    note = "WaterMaterial is a name-only pass-through. Use the engine-side material at render time."
+)]
 pub struct WaterMaterial {
     id: u64,
     shader_name: String,
@@ -26,9 +28,15 @@ impl WaterMaterial {
         }
     }
     /// Stable id assigned on construction.
-    pub fn id(&self) -> u64 { self.id }
+    pub fn id(&self) -> u64 {
+        self.id
+    }
     /// The shader name (Unity `Shader.Find` lookup key).
-    pub fn shader_name(&self) -> &str { &self.shader_name }
+    pub fn shader_name(&self) -> &str {
+        &self.shader_name
+    }
     /// Human-readable label for the material.
-    pub fn label(&self) -> &str { &self.label }
+    pub fn label(&self) -> &str {
+        &self.label
+    }
 }

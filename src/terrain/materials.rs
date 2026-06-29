@@ -4,8 +4,8 @@
 //! and `TerrainMaterialPropertyType.cs`. Unity's `Color` becomes `[f32; 4]`
 //! (RGBA), and `Vector3` becomes `glam::Vec3`.
 
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -49,19 +49,21 @@ pub enum MaterialPropertyError {
 
 impl TerrainMaterialProperty {
     /// Property name.
-    pub fn name(&self) -> &str { &self.name }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
     /// Property kind.
-    pub fn kind(&self) -> TerrainMaterialPropertyType { self.kind }
+    pub fn kind(&self) -> TerrainMaterialPropertyType {
+        self.kind
+    }
 
     /// Create a float property.
     pub fn new_float(name: impl Into<String>, value: f32) -> Self {
-        Self::new_unchecked(name.into(), TerrainMaterialPropertyType::Float)
-            .with_float(value)
+        Self::new_unchecked(name.into(), TerrainMaterialPropertyType::Float).with_float(value)
     }
     /// Create a color property.
     pub fn new_color(name: impl Into<String>, value: [f32; 4]) -> Self {
-        Self::new_unchecked(name.into(), TerrainMaterialPropertyType::Color)
-            .with_color(value)
+        Self::new_unchecked(name.into(), TerrainMaterialPropertyType::Color).with_color(value)
     }
     /// Create a texture property.
     pub fn new_texture(name: impl Into<String>, texture_path: impl Into<String>) -> Self {
@@ -70,8 +72,7 @@ impl TerrainMaterialProperty {
     }
     /// Create a vector property.
     pub fn new_vector(name: impl Into<String>, value: glam::Vec3) -> Self {
-        Self::new_unchecked(name.into(), TerrainMaterialPropertyType::Vector)
-            .with_vector(value)
+        Self::new_unchecked(name.into(), TerrainMaterialPropertyType::Vector).with_vector(value)
     }
 
     fn new_unchecked(name: String, kind: TerrainMaterialPropertyType) -> Self {
@@ -85,22 +86,40 @@ impl TerrainMaterialProperty {
         }
     }
 
-    fn with_float(mut self, v: f32) -> Self { self.float_value = v; self }
-    fn with_color(mut self, v: [f32; 4]) -> Self { self.color_value = v; self }
-    fn with_texture_path(mut self, v: String) -> Self { self.texture_path = v; self }
-    fn with_vector(mut self, v: glam::Vec3) -> Self { self.vector_value = v; self }
+    fn with_float(mut self, v: f32) -> Self {
+        self.float_value = v;
+        self
+    }
+    fn with_color(mut self, v: [f32; 4]) -> Self {
+        self.color_value = v;
+        self
+    }
+    fn with_texture_path(mut self, v: String) -> Self {
+        self.texture_path = v;
+        self
+    }
+    fn with_vector(mut self, v: glam::Vec3) -> Self {
+        self.vector_value = v;
+        self
+    }
 
     /// Get the float value.
     pub fn float_value(&self) -> Result<f32, MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Float {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "float" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "float",
+            });
         }
         Ok(self.float_value)
     }
     /// Set the float value.
     pub fn set_float_value(&mut self, v: f32) -> Result<(), MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Float {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "float" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "float",
+            });
         }
         self.float_value = v;
         Ok(())
@@ -109,14 +128,20 @@ impl TerrainMaterialProperty {
     /// Get the color value.
     pub fn color_value(&self) -> Result<[f32; 4], MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Color {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "color" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "color",
+            });
         }
         Ok(self.color_value)
     }
     /// Set the color value.
     pub fn set_color_value(&mut self, v: [f32; 4]) -> Result<(), MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Color {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "color" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "color",
+            });
         }
         self.color_value = v;
         Ok(())
@@ -126,14 +151,20 @@ impl TerrainMaterialProperty {
     /// wrong kind — callers should check `kind()` first.
     pub fn texture_path(&self) -> Result<&str, MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Texture {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "texture" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "texture",
+            });
         }
         Ok(&self.texture_path)
     }
     /// Set the texture path.
     pub fn set_texture_path(&mut self, v: impl Into<String>) -> Result<(), MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Texture {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "texture" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "texture",
+            });
         }
         self.texture_path = v.into();
         Ok(())
@@ -142,14 +173,20 @@ impl TerrainMaterialProperty {
     /// Get the vector value.
     pub fn vector_value(&self) -> Result<glam::Vec3, MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Vector {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "vector" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "vector",
+            });
         }
         Ok(self.vector_value)
     }
     /// Set the vector value.
     pub fn set_vector_value(&mut self, v: glam::Vec3) -> Result<(), MaterialPropertyError> {
         if self.kind != TerrainMaterialPropertyType::Vector {
-            return Err(MaterialPropertyError::WrongType { name: self.name.clone(), expected: "vector" });
+            return Err(MaterialPropertyError::WrongType {
+                name: self.name.clone(),
+                expected: "vector",
+            });
         }
         self.vector_value = v;
         Ok(())
@@ -194,41 +231,71 @@ impl TerrainMaterial {
     }
 
     /// Stable material id (UUID v4).
-    pub fn id(&self) -> Uuid { self.id }
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
     /// Human-readable name.
-    pub fn name(&self) -> &str { &self.name }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
     /// Set the human-readable name.
-    pub fn set_name(&mut self, name: impl Into<String>) { self.name = name.into(); }
+    pub fn set_name(&mut self, name: impl Into<String>) {
+        self.name = name.into();
+    }
 
     /// Base color tint (RGBA in sRGB).
-    pub fn base_color(&self) -> [f32; 4] { self.base_color }
+    pub fn base_color(&self) -> [f32; 4] {
+        self.base_color
+    }
     /// Set the base color tint.
-    pub fn set_base_color(&mut self, c: [f32; 4]) { self.base_color = c; }
+    pub fn set_base_color(&mut self, c: [f32; 4]) {
+        self.base_color = c;
+    }
 
     /// Path to the primary diffuse / albedo texture.
-    pub fn main_texture_path(&self) -> &str { &self.main_texture_path }
+    pub fn main_texture_path(&self) -> &str {
+        &self.main_texture_path
+    }
     /// Set the main texture path.
-    pub fn set_main_texture_path(&mut self, p: impl Into<String>) { self.main_texture_path = p.into(); }
+    pub fn set_main_texture_path(&mut self, p: impl Into<String>) {
+        self.main_texture_path = p.into();
+    }
 
     /// Path to the normal map texture.
-    pub fn normal_map_path(&self) -> &str { &self.normal_map_path }
+    pub fn normal_map_path(&self) -> &str {
+        &self.normal_map_path
+    }
     /// Set the normal map path.
-    pub fn set_normal_map_path(&mut self, p: impl Into<String>) { self.normal_map_path = p.into(); }
+    pub fn set_normal_map_path(&mut self, p: impl Into<String>) {
+        self.normal_map_path = p.into();
+    }
 
     /// UV tiling scale for the main texture. `1.0` = no tiling.
-    pub fn texture_scale(&self) -> f32 { self.texture_scale }
+    pub fn texture_scale(&self) -> f32 {
+        self.texture_scale
+    }
     /// Set the texture scale.
-    pub fn set_texture_scale(&mut self, v: f32) { self.texture_scale = v; }
+    pub fn set_texture_scale(&mut self, v: f32) {
+        self.texture_scale = v;
+    }
 
     /// Smoothness (0 = rough, 1 = mirror-like).
-    pub fn smoothness(&self) -> f32 { self.smoothness }
+    pub fn smoothness(&self) -> f32 {
+        self.smoothness
+    }
     /// Set the smoothness.
-    pub fn set_smoothness(&mut self, v: f32) { self.smoothness = v; }
+    pub fn set_smoothness(&mut self, v: f32) {
+        self.smoothness = v;
+    }
 
     /// Metallic factor (0 = dielectric, 1 = metallic).
-    pub fn metallic(&self) -> f32 { self.metallic }
+    pub fn metallic(&self) -> f32 {
+        self.metallic
+    }
     /// Set the metallic factor.
-    pub fn set_metallic(&mut self, v: f32) { self.metallic = v; }
+    pub fn set_metallic(&mut self, v: f32) {
+        self.metallic = v;
+    }
 
     /// Add a property. Errors if a property with the same name already exists.
     pub fn add_property(&mut self, property: TerrainMaterialProperty) -> Result<(), TerrainError> {
@@ -262,7 +329,9 @@ impl TerrainMaterial {
     }
 
     /// Number of properties.
-    pub fn property_count(&self) -> usize { self.properties.len() }
+    pub fn property_count(&self) -> usize {
+        self.properties.len()
+    }
 
     /// Iterator over all property names (insertion order, not guaranteed).
     pub fn property_names(&self) -> impl Iterator<Item = &String> {
@@ -379,8 +448,13 @@ mod tests {
     #[test]
     fn material_add_property_stores_and_retrieves() {
         let mut m = TerrainMaterial::new("Grass").unwrap();
-        m.add_property(TerrainMaterialProperty::new_float("Moisture", 0.6)).unwrap();
-        m.add_property(TerrainMaterialProperty::new_texture("Albedo", "Textures/Grass")).unwrap();
+        m.add_property(TerrainMaterialProperty::new_float("Moisture", 0.6))
+            .unwrap();
+        m.add_property(TerrainMaterialProperty::new_texture(
+            "Albedo",
+            "Textures/Grass",
+        ))
+        .unwrap();
         assert_eq!(m.property_count(), 2);
         assert!(m.has_property("Albedo"));
         let p = m.get_property("Albedo").unwrap();
@@ -390,14 +464,18 @@ mod tests {
     #[test]
     fn material_add_property_rejects_duplicate() {
         let mut m = TerrainMaterial::new("Grass").unwrap();
-        m.add_property(TerrainMaterialProperty::new_float("Smoothness", 0.5)).unwrap();
-        assert!(m.add_property(TerrainMaterialProperty::new_float("Smoothness", 0.9)).is_err());
+        m.add_property(TerrainMaterialProperty::new_float("Smoothness", 0.5))
+            .unwrap();
+        assert!(m
+            .add_property(TerrainMaterialProperty::new_float("Smoothness", 0.9))
+            .is_err());
     }
 
     #[test]
     fn material_remove_property_returns_bool() {
         let mut m = TerrainMaterial::new("Debug").unwrap();
-        m.add_property(TerrainMaterialProperty::new_float("Grid", 1.0)).unwrap();
+        m.add_property(TerrainMaterialProperty::new_float("Grid", 1.0))
+            .unwrap();
         assert!(m.remove_property("Grid"));
         assert!(!m.remove_property("Grid"));
     }

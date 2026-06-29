@@ -36,7 +36,11 @@ pub struct RenderTarget {
 impl RenderTarget {
     /// New render target.
     pub fn new(width: u32, height: u32, color_format: impl Into<String>) -> Self {
-        Self { width, height, color_format: color_format.into() }
+        Self {
+            width,
+            height,
+            color_format: color_format.into(),
+        }
     }
 }
 
@@ -59,7 +63,10 @@ pub struct PostFxMaterial {
 impl PostFxMaterial {
     /// New material.
     pub fn new(id: u64, shader_name: impl Into<String>) -> Self {
-        Self { id: MaterialHandle::new(id), shader_name: shader_name.into() }
+        Self {
+            id: MaterialHandle::new(id),
+            shader_name: shader_name.into(),
+        }
     }
 }
 

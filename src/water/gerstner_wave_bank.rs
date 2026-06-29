@@ -32,7 +32,13 @@ impl GerstnerWave {
     ///
     /// `steepness` is clamped to `[0, 1]`. `direction` is normalised; if a
     /// zero-length direction is supplied, falls back to `(1, 0)` (east).
-    pub fn new(amplitude: f32, wavelength: f32, steepness: f32, direction: (f32, f32), speed: f32) -> Self {
+    pub fn new(
+        amplitude: f32,
+        wavelength: f32,
+        steepness: f32,
+        direction: (f32, f32),
+        speed: f32,
+    ) -> Self {
         let steepness = steepness.clamp(0.0, 1.0);
         let mag2 = direction.0 * direction.0 + direction.1 * direction.1;
         let direction = if mag2 > 1e-10 {
@@ -41,7 +47,13 @@ impl GerstnerWave {
         } else {
             (1.0, 0.0)
         };
-        Self { amplitude, wavelength, steepness, direction, speed }
+        Self {
+            amplitude,
+            wavelength,
+            steepness,
+            direction,
+            speed,
+        }
     }
 }
 
@@ -53,7 +65,9 @@ pub struct GerstnerWaveBank {
 
 impl GerstnerWaveBank {
     /// Create an empty bank.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Create a bank pre-populated with `waves`.
     pub fn from_waves(waves: Vec<GerstnerWave>) -> Self {
@@ -61,13 +75,19 @@ impl GerstnerWaveBank {
     }
 
     /// Read-only view of the current wave set.
-    pub fn waves(&self) -> &[GerstnerWave] { &self.waves }
+    pub fn waves(&self) -> &[GerstnerWave] {
+        &self.waves
+    }
 
     /// Number of waves in the bank.
-    pub fn len(&self) -> usize { self.waves.len() }
+    pub fn len(&self) -> usize {
+        self.waves.len()
+    }
 
     /// Whether the bank has no waves.
-    pub fn is_empty(&self) -> bool { self.waves.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.waves.is_empty()
+    }
 
     /// Adds a wave to the bank and returns `self` for chaining.
     pub fn add(&mut self, wave: GerstnerWave) -> &mut Self {
@@ -83,7 +103,9 @@ impl GerstnerWaveBank {
         let mut dz = 0.0f32;
 
         for w in &self.waves {
-            if w.amplitude <= 0.0 || w.wavelength <= 0.0 { continue; }
+            if w.amplitude <= 0.0 || w.wavelength <= 0.0 {
+                continue;
+            }
 
             let k = TWO_PI / w.wavelength;
             let phi = w.speed * k * time;
@@ -112,7 +134,9 @@ impl GerstnerWaveBank {
         let mut d_zdz = 1.0f32;
 
         for w in &self.waves {
-            if w.amplitude <= 0.0 || w.wavelength <= 0.0 { continue; }
+            if w.amplitude <= 0.0 || w.wavelength <= 0.0 {
+                continue;
+            }
 
             let k = TWO_PI / w.wavelength;
             let phi = w.speed * k * time;
@@ -136,15 +160,19 @@ impl GerstnerWaveBank {
         let tangent_x = glam::Vec3::new(d_xdx, d_ydx, d_zdx);
         let tangent_z = glam::Vec3::new(d_xdz, d_ydz, d_zdz);
         let normal = tangent_z.cross(tangent_x);
-        if normal.length() > NORMAL_EPSILON { normal.normalize() } else { glam::Vec3::Y }
+        if normal.length() > NORMAL_EPSILON {
+            normal.normalize()
+        } else {
+            glam::Vec3::Y
+        }
     }
 
     /// Create a default open-ocean preset with four varied waves covering a
     /// range of scales and directions.
     pub fn create_ocean_preset() -> Self {
         Self::from_waves(vec![
-            GerstnerWave::new(0.8, 60.0, 0.45, (0.7,  0.7), 6.5),
-            GerstnerWave::new(0.4, 24.0, 0.5,  (-0.6, 0.8), 4.0),
+            GerstnerWave::new(0.8, 60.0, 0.45, (0.7, 0.7), 6.5),
+            GerstnerWave::new(0.4, 24.0, 0.5, (-0.6, 0.8), 4.0),
             GerstnerWave::new(0.25, 15.0, 0.55, (-0.8, -0.6), 3.2),
             GerstnerWave::new(0.08, 4.0, 0.35, (0.4, -0.9), 2.0),
         ])
@@ -153,8 +181,8 @@ impl GerstnerWaveBank {
     /// Create a calm lake preset with two gentle, low-steepness waves.
     pub fn create_lake_preset() -> Self {
         Self::from_waves(vec![
-            GerstnerWave::new(0.05, 10.0, 0.2,  (1.0, 0.3),  1.5),
-            GerstnerWave::new(0.03,  6.0, 0.15, (-0.5, 1.0), 1.0),
+            GerstnerWave::new(0.05, 10.0, 0.2, (1.0, 0.3), 1.5),
+            GerstnerWave::new(0.03, 6.0, 0.15, (-0.5, 1.0), 1.0),
         ])
     }
 }
@@ -174,7 +202,9 @@ pub fn validate_time(time: f32) -> Result<(), WaterError> {
 mod tests {
     use super::*;
 
-    fn approx(a: f32, b: f32, tol: f32) -> bool { (a - b).abs() < tol }
+    fn approx(a: f32, b: f32, tol: f32) -> bool {
+        (a - b).abs() < tol
+    }
 
     #[test]
     fn empty_bank_has_no_waves() {

@@ -175,8 +175,11 @@ impl<T: Default + Clone + PartialEq> WorldStore<T> for MockWorldStore<T> {
 
     fn write(&mut self, pos: WorldCoord, value: T) -> ChunkCoord {
         self.calls.push(MockStoreCall::Write(pos));
-        let coord =
-            crate::voxel::coord::to_chunk_coord(pos, self.voxel_span, crate::voxel::chunk::CHUNK_EDGE as i32);
+        let coord = crate::voxel::coord::to_chunk_coord(
+            pos,
+            self.voxel_span,
+            crate::voxel::chunk::CHUNK_EDGE as i32,
+        );
         let existing = self.voxels.get(&pos).cloned();
         if existing.as_ref() != Some(&value) {
             self.voxels.insert(pos, value);

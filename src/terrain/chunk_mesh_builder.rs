@@ -50,8 +50,15 @@ impl ChunkMeshBuilder {
         let cell_size = size / resolution as f32;
         for z in 0..=res_u {
             for x in 0..=res_u {
-                vertices.push(glam::Vec3::new(x as f32 * cell_size, 0.0, z as f32 * cell_size));
-                uvs.push(glam::Vec2::new(x as f32 / resolution as f32, z as f32 / resolution as f32));
+                vertices.push(glam::Vec3::new(
+                    x as f32 * cell_size,
+                    0.0,
+                    z as f32 * cell_size,
+                ));
+                uvs.push(glam::Vec2::new(
+                    x as f32 / resolution as f32,
+                    z as f32 / resolution as f32,
+                ));
                 normals.push(glam::Vec3::Y);
             }
         }
@@ -74,12 +81,22 @@ impl ChunkMeshBuilder {
             }
         }
 
-        Ok(MeshData { vertices, indices, uvs, normals })
+        Ok(MeshData {
+            vertices,
+            indices,
+            uvs,
+            normals,
+        })
     }
 
     /// Build a height-mapped mesh by sampling `height_field` at each grid vertex.
     /// `height_field` must have dimensions `(resolution + 1) x (resolution + 1)`.
-    pub fn build_mesh_from_height(&self, height_field: &HeightField, resolution: i32, size: f32) -> TerrainResult<MeshData> {
+    pub fn build_mesh_from_height(
+        &self,
+        height_field: &HeightField,
+        resolution: i32,
+        size: f32,
+    ) -> TerrainResult<MeshData> {
         if resolution <= 0 {
             return Err(TerrainError::InvalidResolution { value: resolution });
         }
@@ -103,8 +120,15 @@ impl ChunkMeshBuilder {
         for z in 0..=res_u {
             for x in 0..=res_u {
                 let y = height_field.get_height(x as i32, z as i32).unwrap_or(0.0);
-                vertices.push(glam::Vec3::new(x as f32 * cell_size, y, z as f32 * cell_size));
-                uvs.push(glam::Vec2::new(x as f32 / resolution as f32, z as f32 / resolution as f32));
+                vertices.push(glam::Vec3::new(
+                    x as f32 * cell_size,
+                    y,
+                    z as f32 * cell_size,
+                ));
+                uvs.push(glam::Vec2::new(
+                    x as f32 / resolution as f32,
+                    z as f32 / resolution as f32,
+                ));
                 normals.push(glam::Vec3::Y);
             }
         }
@@ -125,7 +149,12 @@ impl ChunkMeshBuilder {
             }
         }
 
-        Ok(MeshData { vertices, indices, uvs, normals })
+        Ok(MeshData {
+            vertices,
+            indices,
+            uvs,
+            normals,
+        })
     }
 }
 

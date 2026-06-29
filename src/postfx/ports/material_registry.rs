@@ -14,9 +14,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 /// Logical classification of a managed post-fx material asset.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PostFxMaterialKind {
     /// Generic copy / passthrough material (used by several passes).

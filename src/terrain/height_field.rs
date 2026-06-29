@@ -50,22 +50,34 @@ impl HeightField {
             }
             None => vec![0.0; expected],
         };
-        Ok(Self { width, height, data })
+        Ok(Self {
+            width,
+            height,
+            data,
+        })
     }
 
     /// Width of the height field in tiles.
-    pub fn width(&self) -> i32 { self.width }
+    pub fn width(&self) -> i32 {
+        self.width
+    }
 
     /// Height of the height field in tiles.
-    pub fn height(&self) -> i32 { self.height }
+    pub fn height(&self) -> i32 {
+        self.height
+    }
 
     /// Returns the elevation at the given tile coordinate.
     pub fn get_height(&self, x: i32, z: i32) -> TerrainResult<f32> {
         if x < 0 || x >= self.width {
-            return Err(TerrainError::OutOfBounds { msg: format!("x={x} out of [0, {})", self.width) });
+            return Err(TerrainError::OutOfBounds {
+                msg: format!("x={x} out of [0, {})", self.width),
+            });
         }
         if z < 0 || z >= self.height {
-            return Err(TerrainError::OutOfBounds { msg: format!("z={z} out of [0, {})", self.height) });
+            return Err(TerrainError::OutOfBounds {
+                msg: format!("z={z} out of [0, {})", self.height),
+            });
         }
         Ok(self.data[z as usize * self.width as usize + x as usize])
     }
@@ -73,10 +85,14 @@ impl HeightField {
     /// Sets the elevation at the given tile coordinate.
     pub fn set_height(&mut self, x: i32, z: i32, value: f32) -> TerrainResult<()> {
         if x < 0 || x >= self.width {
-            return Err(TerrainError::OutOfBounds { msg: format!("x={x} out of [0, {})", self.width) });
+            return Err(TerrainError::OutOfBounds {
+                msg: format!("x={x} out of [0, {})", self.width),
+            });
         }
         if z < 0 || z >= self.height {
-            return Err(TerrainError::OutOfBounds { msg: format!("z={z} out of [0, {})", self.height) });
+            return Err(TerrainError::OutOfBounds {
+                msg: format!("z={z} out of [0, {})", self.height),
+            });
         }
         self.data[z as usize * self.width as usize + x as usize] = value;
         Ok(())
@@ -183,6 +199,9 @@ mod tests {
     #[test]
     fn heightfield_invalid_data_length() {
         let result = HeightField::with_data(2, 2, Some(vec![0.0, 1.0]));
-        assert!(matches!(result, Err(TerrainError::InvalidDataLength { .. })));
+        assert!(matches!(
+            result,
+            Err(TerrainError::InvalidDataLength { .. })
+        ));
     }
 }

@@ -309,16 +309,24 @@ pub enum RingRole {
 impl RingRole {
     /// True if this role is the inner mesh ring.
     #[must_use]
-    pub const fn is_inner(self) -> bool { matches!(self, Self::Inner) }
+    pub const fn is_inner(self) -> bool {
+        matches!(self, Self::Inner)
+    }
     /// True if this role is in the horizon-fade seam band.
     #[must_use]
-    pub const fn is_seam(self) -> bool { matches!(self, Self::Seam { .. }) }
+    pub const fn is_seam(self) -> bool {
+        matches!(self, Self::Seam { .. })
+    }
     /// True if this role is the outer (coarse-LOD) ring.
     #[must_use]
-    pub const fn is_outer(self) -> bool { matches!(self, Self::Outer) }
+    pub const fn is_outer(self) -> bool {
+        matches!(self, Self::Outer)
+    }
     /// True if this role is frozen (renderer does not see it).
     #[must_use]
-    pub const fn is_frozen(self) -> bool { matches!(self, Self::Frozen) }
+    pub const fn is_frozen(self) -> bool {
+        matches!(self, Self::Frozen)
+    }
 }
 
 /// LOD ring plan — the renderer's view of the streaming window.
@@ -362,7 +370,10 @@ impl LodRingPlan {
     /// Default plan: `coarse_render_ring = mesh_ring + 1`.
     pub const fn default_for(policy: WindowPolicy) -> Self {
         let crr = policy.mesh_ring.saturating_add(1);
-        Self { policy, coarse_render_ring: crr }
+        Self {
+            policy,
+            coarse_render_ring: crr,
+        }
     }
 
     /// Construct with an explicit `coarse_render_ring`.
@@ -373,7 +384,10 @@ impl LodRingPlan {
                 mesh_ring: policy.mesh_ring,
             });
         }
-        Ok(Self { policy, coarse_render_ring })
+        Ok(Self {
+            policy,
+            coarse_render_ring,
+        })
     }
 
     /// Classify a chunk's render role given its coord and the camera anchor.
@@ -389,7 +403,9 @@ impl LodRingPlan {
             RingRole::Frozen
         } else if ring <= mesh.saturating_add(seam) {
             let steps_out = ring - mesh;
-            RingRole::Seam { weight: self.seam_blend(steps_out) }
+            RingRole::Seam {
+                weight: self.seam_blend(steps_out),
+            }
         } else {
             RingRole::Outer
         }
@@ -399,8 +415,12 @@ impl LodRingPlan {
     #[must_use]
     pub const fn seam_blend(&self, steps_out: u32) -> u8 {
         let seam = self.policy.seam_chunks as u32;
-        if seam == 0 || steps_out == 0 { return 255; }
-        if steps_out >= seam { return (255 / seam) as u8; }
+        if seam == 0 || steps_out == 0 {
+            return 255;
+        }
+        if steps_out >= seam {
+            return (255 / seam) as u8;
+        }
         let numerator = 255u32.saturating_mul(seam - steps_out);
         (numerator / seam) as u8
     }
@@ -408,7 +428,9 @@ impl LodRingPlan {
     /// Inner ring count (chunks in `Inner` role) per side.
     #[must_use]
     pub const fn inner_side_chunks(&self) -> u32 {
-        (self.policy.mesh_ring as u32).saturating_mul(2).saturating_add(1)
+        (self.policy.mesh_ring as u32)
+            .saturating_mul(2)
+            .saturating_add(1)
     }
 
     /// Seam band count (chunks in `Seam` role) per side.
@@ -445,15 +467,23 @@ pub struct CohortTotals {
 
 impl CohortTotals {
     /// Empty cohort (no chunks contributed).
-    pub const EMPTY: Self = Self { mass: 0.0, agents: 0.0, chunks: 0 };
+    pub const EMPTY: Self = Self {
+        mass: 0.0,
+        agents: 0.0,
+        chunks: 0,
+    };
 
     /// True if no chunks contributed.
     #[must_use]
-    pub fn is_empty(&self) -> bool { self.chunks == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.chunks == 0
+    }
 }
 
 impl Default for CohortTotals {
-    fn default() -> Self { Self::EMPTY }
+    fn default() -> Self {
+        Self::EMPTY
+    }
 }
 
 /// A gestalt summary — per-tick output of [`SimLodAggregator::fold`].
@@ -481,13 +511,21 @@ impl Gestalt {
     /// Mass per chunk. `0.0` if no chunks.
     #[must_use]
     pub fn mass_per_chunk(&self) -> f32 {
-        if self.total_chunks == 0 { 0.0 } else { self.total_mass / (self.total_chunks as f32) }
+        if self.total_chunks == 0 {
+            0.0
+        } else {
+            self.total_mass / (self.total_chunks as f32)
+        }
     }
 
     /// Agents per chunk. `0.0` if no chunks.
     #[must_use]
     pub fn agents_per_chunk(&self) -> f32 {
-        if self.total_chunks == 0 { 0.0 } else { self.total_agents / (self.total_chunks as f32) }
+        if self.total_chunks == 0 {
+            0.0
+        } else {
+            self.total_agents / (self.total_chunks as f32)
+        }
     }
 }
 
@@ -504,13 +542,17 @@ impl SimLodAggregator {
     /// Current schema version.
     pub const SCHEMA_VERSION: u16 = 1;
     /// Default aggregator.
-    pub const DEFAULT: Self = Self { schema_version: Self::SCHEMA_VERSION };
+    pub const DEFAULT: Self = Self {
+        schema_version: Self::SCHEMA_VERSION,
+    };
 
     /// Fold an unsorted input slice (sorts by mass/agents/chunks before summing).
     pub fn fold(&self, inputs: &[CohortTotals]) -> Gestalt {
         let mut sorted: Vec<CohortTotals> = inputs.to_vec();
         sorted.sort_by(|a, b| {
-            a.mass.partial_cmp(&b.mass).unwrap_or(Ordering::Equal)
+            a.mass
+                .partial_cmp(&b.mass)
+                .unwrap_or(Ordering::Equal)
                 .then_with(|| a.agents.partial_cmp(&b.agents).unwrap_or(Ordering::Equal))
                 .then_with(|| a.chunks.cmp(&b.chunks))
         });
@@ -527,13 +569,20 @@ impl SimLodAggregator {
             total_agents += c.agents;
             total_chunks = total_chunks.saturating_add(c.chunks);
         }
-        Gestalt { total_mass, total_agents, total_chunks, cohort_count: inputs.len() as u32 }
+        Gestalt {
+            total_mass,
+            total_agents,
+            total_chunks,
+            cohort_count: inputs.len() as u32,
+        }
     }
 
     /// Bound on mass divergence from inputs (`len * f32::EPSILON * max_mass`).
     #[must_use]
     pub fn mass_divergence_bound(inputs: &[CohortTotals]) -> Option<f32> {
-        if inputs.is_empty() { return None; }
+        if inputs.is_empty() {
+            return None;
+        }
         let max_mass = inputs.iter().map(|c| c.mass.abs()).fold(0.0_f32, f32::max);
         Some(inputs.len() as f32 * f32::EPSILON * max_mass)
     }
@@ -556,9 +605,22 @@ mod tests {
     #[test]
     fn plan_is_culled_before_lod_selection() {
         let policy = LodPolicy::default();
-        assert!(plan_chunk_render(ChunkId(3), 32.0, false, VoxelScaleMultiplier::default(), policy).is_none());
-        let plan = plan_chunk_render(ChunkId(7), 1.0e6, true, VoxelScaleMultiplier::default(), policy)
-            .expect("visible chunk");
+        assert!(plan_chunk_render(
+            ChunkId(3),
+            32.0,
+            false,
+            VoxelScaleMultiplier::default(),
+            policy
+        )
+        .is_none());
+        let plan = plan_chunk_render(
+            ChunkId(7),
+            1.0e6,
+            true,
+            VoxelScaleMultiplier::default(),
+            policy,
+        )
+        .expect("visible chunk");
         assert_eq!(plan.chunk_id, ChunkId(7));
         assert_eq!(plan.lod, LodLevel(policy.max_level));
     }
@@ -575,7 +637,10 @@ mod tests {
     #[test]
     fn fr_civ_scale_001_budget_fits_default_policy() {
         let budget = MvpResidentBudget::MVP;
-        let cfg = StreamConfigLite { active_window_side: 5, policy: WindowPolicy::default() };
+        let cfg = StreamConfigLite {
+            active_window_side: 5,
+            policy: WindowPolicy::default(),
+        };
         assert!(budget.fits(cfg));
     }
 
@@ -587,13 +652,18 @@ mod tests {
         assert!(ExtentBudget::SMALL.is_bounded());
     }
 
-    fn coord(cx: i32, cy: i32, cz: i32) -> ChunkCoord { ChunkCoord { cx, cy, cz } }
+    fn coord(cx: i32, cy: i32, cz: i32) -> ChunkCoord {
+        ChunkCoord { cx, cy, cz }
+    }
 
     #[test]
     fn fr_civ_scale_002_bounded_rejects_out_of_extent() {
         let budget = ExtentBudget::SMALL;
         assert!(budget.validate(coord(0, 0, 0)).is_ok());
-        assert!(matches!(budget.validate(coord(128, 0, 0)), Err(ExtentError::OutOfExtent { .. })));
+        assert!(matches!(
+            budget.validate(coord(128, 0, 0)),
+            Err(ExtentError::OutOfExtent { .. })
+        ));
     }
 
     // ---- FR-CIV-SCALE-003 ----
@@ -610,7 +680,10 @@ mod tests {
 
     #[test]
     fn fr_civ_scale_003_checked_rejects_coarse_below_mesh() {
-        let policy = WindowPolicy { mesh_ring: 2, ..WindowPolicy::default() };
+        let policy = WindowPolicy {
+            mesh_ring: 2,
+            ..WindowPolicy::default()
+        };
         assert!(LodRingPlan::checked(policy, 1).is_err());
     }
 
@@ -626,9 +699,21 @@ mod tests {
     fn fr_civ_scale_004_fold_is_order_independent() {
         let agg = SimLodAggregator::DEFAULT;
         let a = [
-            CohortTotals { mass: 1.0, agents: 2.0, chunks: 4 },
-            CohortTotals { mass: 2.0, agents: 1.0, chunks: 3 },
-            CohortTotals { mass: 3.0, agents: 3.0, chunks: 2 },
+            CohortTotals {
+                mass: 1.0,
+                agents: 2.0,
+                chunks: 4,
+            },
+            CohortTotals {
+                mass: 2.0,
+                agents: 1.0,
+                chunks: 3,
+            },
+            CohortTotals {
+                mass: 3.0,
+                agents: 3.0,
+                chunks: 2,
+            },
         ];
         let b = [a[2], a[0], a[1]];
         assert_eq!(agg.fold(&a), agg.fold(&b));
