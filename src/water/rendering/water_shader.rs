@@ -20,5 +20,7 @@ impl WaterShader {
         Self { name: name.into() }
     }
     /// The shader name (Unity `Shader.Find` lookup key).
-    pub fn name(&self) -> &str { &self.name }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }

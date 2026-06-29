@@ -12,7 +12,10 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum PostFxError {
     #[error("shader variant unavailable: {shader_name} ({keyword})")]
-    ShaderVariantUnavailable { shader_name: String, keyword: String },
+    ShaderVariantUnavailable {
+        shader_name: String,
+        keyword: String,
+    },
 
     #[error("invalid pass descriptor: {0}")]
     InvalidPassDescriptor(String),
@@ -35,12 +38,13 @@ pub type PostFxResult<T> = std::result::Result<T, PostFxError>;
 impl Clone for PostFxError {
     fn clone(&self) -> Self {
         match self {
-            PostFxError::ShaderVariantUnavailable { shader_name, keyword } => {
-                PostFxError::ShaderVariantUnavailable {
-                    shader_name: shader_name.clone(),
-                    keyword: keyword.clone(),
-                }
-            }
+            PostFxError::ShaderVariantUnavailable {
+                shader_name,
+                keyword,
+            } => PostFxError::ShaderVariantUnavailable {
+                shader_name: shader_name.clone(),
+                keyword: keyword.clone(),
+            },
             PostFxError::InvalidPassDescriptor(s) => PostFxError::InvalidPassDescriptor(s.clone()),
             PostFxError::InvalidLut(s) => PostFxError::InvalidLut(s.clone()),
             PostFxError::Io(e) => PostFxError::Io(std::io::Error::new(e.kind(), e.to_string())),

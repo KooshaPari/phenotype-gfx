@@ -22,18 +22,29 @@ pub struct MeshData {
 
 impl MeshData {
     /// Whether this mesh has any triangles.
-    pub fn is_empty(&self) -> bool { self.vertices.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.vertices.is_empty()
+    }
     /// Number of vertices.
-    pub fn vertex_count(&self) -> usize { self.vertices.len() }
+    pub fn vertex_count(&self) -> usize {
+        self.vertices.len()
+    }
     /// Number of triangles (every 3 indices = 1 triangle).
-    pub fn triangle_count(&self) -> usize { self.indices.len() / 3 }
+    pub fn triangle_count(&self) -> usize {
+        self.indices.len() / 3
+    }
 }
 
 /// Generate a tiling water grid mesh displaced by `bank`.
 ///
 /// `resolution` is the number of quad columns (and rows) — must be `>= 1`.
 /// `size` is the world-space side length of the square grid; must be `> 0`.
-pub fn build(bank: &GerstnerWaveBank, resolution: u32, size: f32, time: f32) -> Result<MeshData, WaterError> {
+pub fn build(
+    bank: &GerstnerWaveBank,
+    resolution: u32,
+    size: f32,
+    time: f32,
+) -> Result<MeshData, WaterError> {
     if resolution < 1 {
         return Err(WaterError::OutOfBounds {
             msg: "resolution must be >= 1".to_string(),
@@ -66,7 +77,10 @@ pub fn build(bank: &GerstnerWaveBank, resolution: u32, size: f32, time: f32) -> 
             let disp = bank.sample_displacement(xz, time);
             vertices.push(glam::Vec3::new(x + disp.x, disp.y, z + disp.z));
             normals.push(bank.sample_normal(xz, time));
-            uvs.push(glam::Vec2::new(col as f32 / resolution as f32, row as f32 / resolution as f32));
+            uvs.push(glam::Vec2::new(
+                col as f32 / resolution as f32,
+                row as f32 / resolution as f32,
+            ));
         }
     }
 
@@ -88,14 +102,21 @@ pub fn build(bank: &GerstnerWaveBank, resolution: u32, size: f32, time: f32) -> 
         }
     }
 
-    Ok(MeshData { vertices, normals, indices, uvs })
+    Ok(MeshData {
+        vertices,
+        normals,
+        indices,
+        uvs,
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn approx(a: f32, b: f32, tol: f32) -> bool { (a - b).abs() < tol }
+    fn approx(a: f32, b: f32, tol: f32) -> bool {
+        (a - b).abs() < tol
+    }
 
     #[test]
     fn vertex_count_matches_resolution() {

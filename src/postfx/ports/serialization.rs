@@ -108,9 +108,9 @@ impl PostFxSerializationPort for JsonFilePostFxSerialization {
             ));
         }
         let bytes = fs::read(destination).map_err(|e| match e.kind() {
-            io::ErrorKind::NotFound => PostFxError::InvalidLut(format!(
-                "snapshot file not found: {destination}"
-            )),
+            io::ErrorKind::NotFound => {
+                PostFxError::InvalidLut(format!("snapshot file not found: {destination}"))
+            }
             _ => PostFxError::Io(e),
         })?;
         if bytes.is_empty() {

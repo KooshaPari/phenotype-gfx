@@ -69,7 +69,9 @@ impl SsaoConfig {
         // Deterministic LCG seeded at 1337 (matches the C# `new System.Random(1337)`).
         let mut state: u64 = 1337;
         let mut next = || -> f32 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((state >> 11) as f64 / (1u64 << 53) as f64) as f32
         };
 
@@ -159,7 +161,10 @@ impl PostFxPass for SsaoPass {
     fn on_dispose(&mut self) {
         self.kernel.clear();
     }
-    fn validate_variants(&self, provider: &dyn PostFxShaderAvailability) -> Result<(), PostFxError> {
+    fn validate_variants(
+        &self,
+        provider: &dyn PostFxShaderAvailability,
+    ) -> Result<(), PostFxError> {
         if !provider.is_available(SSAO_SHADER_NAME, SSAO_KEYWORD) {
             return Err(PostFxError::ShaderVariantUnavailable {
                 shader_name: SSAO_SHADER_NAME.into(),

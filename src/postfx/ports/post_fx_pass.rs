@@ -69,9 +69,7 @@ impl PassEffect {
 }
 
 /// Quality settings — the driver passes the current value to each pass.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PassQuality {
     /// Effect is disabled.
@@ -185,10 +183,8 @@ pub trait PostFxPass: Send + Sync {
     fn on_dispose(&mut self);
 
     /// Validates that all required shader variants are present.
-    fn validate_variants(
-        &self,
-        provider: &dyn PostFxShaderAvailability,
-    ) -> Result<(), PostFxError>;
+    fn validate_variants(&self, provider: &dyn PostFxShaderAvailability)
+        -> Result<(), PostFxError>;
 }
 
 #[cfg(test)]
@@ -225,10 +221,7 @@ mod tests {
             Ok(())
         }
         fn on_dispose(&mut self) {}
-        fn validate_variants(
-            &self,
-            _p: &dyn PostFxShaderAvailability,
-        ) -> Result<(), PostFxError> {
+        fn validate_variants(&self, _p: &dyn PostFxShaderAvailability) -> Result<(), PostFxError> {
             Ok(())
         }
     }
@@ -240,7 +233,10 @@ mod tests {
         assert_eq!(PassEffect::Bloom.name(), "Bloom");
         assert_eq!(PassEffect::Aces.name(), "ACES");
         assert_eq!(PassEffect::Vignette.name(), "Vignette");
-        assert_eq!(PassEffect::ChromaticAberration.name(), "ChromaticAberration");
+        assert_eq!(
+            PassEffect::ChromaticAberration.name(),
+            "ChromaticAberration"
+        );
         assert_eq!(PassEffect::Lut.name(), "LUT");
     }
 
