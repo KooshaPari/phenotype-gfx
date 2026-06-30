@@ -1,0 +1,132 @@
+name: Release
+
+# Triggered on semver tags: v0.2.1, v1.0.0, etc.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+# Cancel any in-progress release for the same tag (idempotent retries only).
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # create GitHub Releases
+  packages: read    # read crates registry (no write needed here)
+
+jobs:
+  # ── 1. Verify the tag passes the full test suite ──────────────────────────
+  verify:
+    name: Verify (cargo check + test + clippy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        # SHA-pinned: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Rust toolchain (stable)
+        # SHA-pinned: dtolnay/rust-toolchain@stable (2025-01-15 stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo registry + target
+        # SHA-pinned: actions/cache@v4.2.0
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c6158d
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-release-
+
+      - name: cargo check (all targets)
+        run: cargo check --all-targets
+
+      - name: cargo test
+        run: cargo test --all-targets
+
+      - name: cargo clippy (deny warnings)
+        run: cargo clippy --all-targets -- -D warnings
+
+  # ── 2. Publish to crates.io ───────────────────────────────────────────────
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: verify
+    permissions:
+      contents: read
+    environment: crates-io   # requires CRATES_IO_TOKEN secret in this env
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c6158d
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --no-verify  # already verified in prior job
+
+  # ── 3. Create GitHub Release with changelog excerpt ───────────────────────
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: verify
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0   # full history for changelog generation
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog section
+        id: changelog
+        # Pass the version through an env var — never interpolate expressions
+        # directly into the run script (command injection risk per GH Actions
+        # security guide: https://github.blog/security/vulnerability-research/
+        # how-to-catch-github-actions-workflow-injections-before-attackers-do/).
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Pull the section between the two most recent H2 headings in CHANGELOG.md.
+          # Falls back to "See CHANGELOG.md" if the file does not exist or has no match.
+          if [ -f CHANGELOG.md ]; then
+            awk -v ver="## [$VERSION]" '
+              $0 ~ ver        { found=1; next }
+              found && /^## / { exit }
+              found           { print }
+            ' CHANGELOG.md > /tmp/release_notes.txt
+          fi
+          if [ ! -s /tmp/release_notes.txt ]; then
+            echo "See [CHANGELOG.md](CHANGELOG.md) for details." > /tmp/release_notes.txt
+          fi
+          echo "notes_file=/tmp/release_notes.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        # SHA-pinned: softprops/action-gh-release@v2.2.1
+        uses: softprops/action-gh-release@c062e08bd532815e2082a7e09ce9571a6d1f0e4f
+        with:
+          body_path: ${{ steps.changelog.outputs.notes_file }}
+          generate_release_notes: false
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

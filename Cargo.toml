@@ -28,6 +28,10 @@ thiserror = "2"
 glam = { version = "0.29", features = ["serde"] }
 # L5-110 terrain uses UUID v4 ids for material registry keys.
 uuid = { version = "1", features = ["v4", "serde"] }
+# L5-obs (2026-06-30): structured tracing — zero-cost when no subscriber is wired.
+tracing = { version = "0.1", default-features = false, features = ["std", "attributes"] }
+# metrics facade — no-op when no recorder is installed; consumers opt-in to prometheus/statsd.
+metrics = { version = "0.24", default-features = false }
 
 # Bevy adapter is optional — only pulled in when consumers need ECS integration
 bevy = { version = "0.18.1", default-features = false, features = ["bevy_asset", "bevy_mesh"], optional = true }

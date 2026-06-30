@@ -33,6 +33,8 @@
 
 use core::marker::PhantomData;
 
+use tracing::instrument;
+
 use crate::voxel::chunk::{ChunkView, CHUNK_EDGE};
 use crate::voxel::cubic_mesher::face_ao;
 use crate::voxel::lod::LodLevel;
@@ -98,7 +100,9 @@ impl<V: CubicVoxel> GreedyMesher<V> {
     /// Faces are merged only when both the material **and** the AO signature
     /// are identical, preserving per-vertex AO detail at occlusion boundaries
     /// while still collapsing large flat unoccluded regions into single quads.
+    #[instrument(level = "trace", skip(chunk), fields(lod = ?_lod))]
     pub fn mesh_greedy(chunk: ChunkView<'_, V>, _lod: LodLevel) -> MeshResult<MeshBuffer> {
+        metrics::counter!("phenotype_gfx.voxel_mesh_builds").increment(1);
         let n = CHUNK_EDGE;
         let expected = n * n * n;
         if chunk.voxels.len() != expected {
