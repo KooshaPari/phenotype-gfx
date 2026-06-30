@@ -9,6 +9,8 @@
 //! Production renderers will replace this with greedy-quad or marching-cubes /
 //! dual-contouring meshers; the cubic version is the floor.
 
+use tracing::instrument;
+
 use crate::voxel::chunk::{ChunkView, CHUNK_EDGE};
 use crate::voxel::lod::LodLevel;
 use crate::voxel::material::MaterialId;
@@ -68,7 +70,9 @@ impl<V: CubicVoxel> CubicMesher<V> {
     /// LOD currently affects nothing for the cubic mesher (every level emits the
     /// same geometry). Future LOD-aware meshers will collapse far chunks into
     /// merged-face geometry.
+    #[instrument(level = "trace", skip(chunk), fields(lod = ?_lod))]
     pub fn mesh_cubic(chunk: ChunkView<'_, V>, _lod: LodLevel) -> MeshResult<MeshBuffer> {
+        metrics::counter!("phenotype_gfx.voxel_mesh_builds").increment(1);
         let expected = CHUNK_EDGE * CHUNK_EDGE * CHUNK_EDGE;
         if chunk.voxels.len() != expected {
             return Err(MeshError::BadChunkSize {

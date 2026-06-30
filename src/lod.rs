@@ -10,6 +10,7 @@
 use core::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 
 use crate::voxel::{select_lod, ChunkCoord, ChunkId, LodLevel, LodPolicy, VoxelScaleMultiplier};
 
@@ -44,7 +45,12 @@ pub fn select_mesh_detail_level(
 ///
 /// Returns `None` when `in_frustum == false`. The caller frustum-culls
 /// first; this function handles LOD selection only.
+///
+/// Emits a `tracing` span (`phenotype_gfx::lod::plan_chunk_render`) and
+/// increments the `phenotype_gfx.lod_plan_calls` counter on every
+/// call where `in_frustum == true`.
 #[must_use]
+#[instrument(level = "trace", skip_all, fields(chunk_id = ?chunk_id, dist = distance_metres))]
 pub fn plan_chunk_render(
     chunk_id: ChunkId,
     distance_metres: f32,
@@ -55,6 +61,7 @@ pub fn plan_chunk_render(
     if !in_frustum {
         return None;
     }
+    metrics::counter!("phenotype_gfx.lod_plan_calls").increment(1);
     Some(ChunkRenderPlan {
         chunk_id,
         lod: select_mesh_detail_level(distance_metres, scale, policy),

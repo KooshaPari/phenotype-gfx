@@ -13,6 +13,13 @@
 //! - L5-111 (2026-06-18): ported C# `phenotype-water` into `water`.
 //! - L5-112 (2026-06-18): ported C# + HLSL `phenotype-postfx` into `postfx`.
 
+// OBSERVABILITY FAÇADE (L5 — 2026-06-30)
+//
+// Zero-cost when no tracing subscriber / metrics recorder is installed.
+// Consumers opt in at their binary entry point; see `src/obs.rs` for the
+// full metric catalogue and setup examples.
+pub mod obs;
+
 // ALGORITHM MODULES (all real logic lives here, exactly once)
 
 /// Voxel kernel: storage, meshing, chunk management; PBR material policy.
