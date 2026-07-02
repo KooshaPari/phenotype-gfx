@@ -31,16 +31,26 @@ pub struct InMemoryTerrainMaterialRegistry {
 
 impl InMemoryTerrainMaterialRegistry {
     /// New empty registry.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Number of registered materials.
-    pub fn len(&self) -> usize { self.by_id.len() }
+    pub fn len(&self) -> usize {
+        self.by_id.len()
+    }
     /// Whether the registry is empty.
-    pub fn is_empty(&self) -> bool { self.by_id.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.by_id.is_empty()
+    }
 }
 
 impl IMaterialRegistry for InMemoryTerrainMaterialRegistry {
-    fn list(&mut self) -> Vec<TerrainMaterial> { self.by_id.values().cloned().collect() }
-    fn find(&mut self, id: Uuid) -> Option<TerrainMaterial> { self.by_id.get(&id).cloned() }
+    fn list(&mut self) -> Vec<TerrainMaterial> {
+        self.by_id.values().cloned().collect()
+    }
+    fn find(&mut self, id: Uuid) -> Option<TerrainMaterial> {
+        self.by_id.get(&id).cloned()
+    }
     fn register(&mut self, material: TerrainMaterial) -> Result<(), TerrainError> {
         if material.name().trim().is_empty() {
             return Err(TerrainError::NullMaterial);
@@ -48,7 +58,9 @@ impl IMaterialRegistry for InMemoryTerrainMaterialRegistry {
         self.by_id.insert(material.id(), material);
         Ok(())
     }
-    fn unregister(&mut self, id: Uuid) -> bool { self.by_id.remove(&id).is_some() }
+    fn unregister(&mut self, id: Uuid) -> bool {
+        self.by_id.remove(&id).is_some()
+    }
 }
 
 /// Recording mock used by domain tests. Each method call is logged to a list
@@ -61,11 +73,17 @@ pub struct RecordingTerrainMaterialRegistry {
 
 impl RecordingTerrainMaterialRegistry {
     /// New empty recording mock.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Sequence of method names invoked on this mock.
-    pub fn calls(&self) -> &[String] { &self.calls }
+    pub fn calls(&self) -> &[String] {
+        &self.calls
+    }
     /// Reset the call log (keeps the registry contents intact).
-    pub fn reset_calls(&mut self) { self.calls.clear(); }
+    pub fn reset_calls(&mut self) {
+        self.calls.clear();
+    }
 }
 
 impl IMaterialRegistry for RecordingTerrainMaterialRegistry {
@@ -133,11 +151,14 @@ mod tests {
         mock.register(m.clone()).unwrap();
         mock.find(m.id());
         mock.unregister(m.id());
-        assert_eq!(mock.calls(), &[
-            format!("Register({})", m.id()),
-            format!("Find({})", m.id()),
-            format!("Unregister({})", m.id()),
-        ]);
+        assert_eq!(
+            mock.calls(),
+            &[
+                format!("Register({})", m.id()),
+                format!("Find({})", m.id()),
+                format!("Unregister({})", m.id()),
+            ]
+        );
     }
 
     #[test]

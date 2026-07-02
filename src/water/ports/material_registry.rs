@@ -17,7 +17,9 @@ use crate::water::rendering::water_material::WaterMaterial;
 static NEXT_HANDLE: AtomicU64 = AtomicU64::new(1);
 
 /// Returns the next fresh material handle. Called by [`WaterMaterial::new`].
-pub(crate) fn next_handle() -> u64 { NEXT_HANDLE.fetch_add(1, Ordering::Relaxed) }
+pub(crate) fn next_handle() -> u64 {
+    NEXT_HANDLE.fetch_add(1, Ordering::Relaxed)
+}
 
 /// Hexagonal port: registry of water materials.
 pub trait IMaterialRegistry {
@@ -40,16 +42,26 @@ pub struct InMemoryWaterMaterialRegistry {
 
 impl InMemoryWaterMaterialRegistry {
     /// New empty registry.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Number of registered materials.
-    pub fn len(&self) -> usize { self.by_id.len() }
+    pub fn len(&self) -> usize {
+        self.by_id.len()
+    }
     /// Whether the registry is empty.
-    pub fn is_empty(&self) -> bool { self.by_id.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.by_id.is_empty()
+    }
 }
 
 impl IMaterialRegistry for InMemoryWaterMaterialRegistry {
-    fn list(&mut self) -> Vec<WaterMaterial> { self.by_id.values().cloned().collect() }
-    fn find(&mut self, id: u64) -> Option<WaterMaterial> { self.by_id.get(&id).cloned() }
+    fn list(&mut self) -> Vec<WaterMaterial> {
+        self.by_id.values().cloned().collect()
+    }
+    fn find(&mut self, id: u64) -> Option<WaterMaterial> {
+        self.by_id.get(&id).cloned()
+    }
     fn register(&mut self, material: WaterMaterial) -> WaterResult<()> {
         if material.label().trim().is_empty() {
             return Err(WaterError::NullMaterial);
@@ -57,7 +69,9 @@ impl IMaterialRegistry for InMemoryWaterMaterialRegistry {
         self.by_id.insert(material.id(), material);
         Ok(())
     }
-    fn unregister(&mut self, id: u64) -> bool { self.by_id.remove(&id).is_some() }
+    fn unregister(&mut self, id: u64) -> bool {
+        self.by_id.remove(&id).is_some()
+    }
 }
 
 /// Recording mock used by domain tests. Each method call is logged to a list
@@ -70,11 +84,17 @@ pub struct RecordingWaterMaterialRegistry {
 
 impl RecordingWaterMaterialRegistry {
     /// New empty recording mock.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Sequence of method names invoked on this mock.
-    pub fn calls(&self) -> &[String] { &self.calls }
+    pub fn calls(&self) -> &[String] {
+        &self.calls
+    }
     /// Reset the call log (keeps the registry contents intact).
-    pub fn reset_calls(&mut self) { self.calls.clear(); }
+    pub fn reset_calls(&mut self) {
+        self.calls.clear();
+    }
 }
 
 impl IMaterialRegistry for RecordingWaterMaterialRegistry {
@@ -142,10 +162,13 @@ mod tests {
         mock.register(m).unwrap();
         mock.find(id);
         mock.unregister(id);
-        assert_eq!(mock.calls(), &[
-            format!("Register({})", id),
-            format!("Find({})", id),
-            format!("Unregister({})", id),
-        ]);
+        assert_eq!(
+            mock.calls(),
+            &[
+                format!("Register({})", id),
+                format!("Find({})", id),
+                format!("Unregister({})", id),
+            ]
+        );
     }
 }

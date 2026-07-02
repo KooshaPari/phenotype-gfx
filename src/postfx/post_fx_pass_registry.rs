@@ -49,7 +49,11 @@ pub struct BlitProvider<P: PostFxPass> {
 impl<P: PostFxPass> BlitProvider<P> {
     /// New blit provider wrapping a pass.
     pub fn new(descriptor: BlitPassDescriptor, pass: P) -> Self {
-        Self { descriptor, pass, supported: true }
+        Self {
+            descriptor,
+            pass,
+            supported: true,
+        }
     }
 
     /// Mark this provider as supported (or not) in the current build.
@@ -139,15 +143,19 @@ impl PostFxPassRegistry {
         &mut self,
         effect: PassEffect,
     ) -> Option<&mut (dyn PostFxPassDescriptor + '_)> {
-        self.providers.get_mut(&effect).map(|b| b.as_mut() as &mut dyn PostFxPassDescriptor)
+        self.providers
+            .get_mut(&effect)
+            .map(|b| b.as_mut() as &mut dyn PostFxPassDescriptor)
     }
 
     /// Iterate over providers in the current render order.
     pub fn providers(&self) -> impl Iterator<Item = &dyn PostFxPassDescriptor> {
         let order = self.render_order.clone();
-        Box::new(order.into_iter().filter_map(move |e| {
-            self.providers.get(&e).map(|p| p.as_ref())
-        }))
+        Box::new(
+            order
+                .into_iter()
+                .filter_map(move |e| self.providers.get(&e).map(|p| p.as_ref())),
+        )
     }
 
     /// Returns `true` if at least one pass is enabled, supported, and has
@@ -167,8 +175,8 @@ impl PostFxPassRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::postfx::ports::post_fx_pass::{PassEffect, PassQuality, PostFxContext, PostFxPass};
     use crate::postfx::error::{PostFxError, PostFxResult};
+    use crate::postfx::ports::post_fx_pass::{PassEffect, PassQuality, PostFxContext, PostFxPass};
 
     struct MockPass {
         effect: PassEffect,
@@ -176,15 +184,34 @@ mod tests {
     }
 
     impl PostFxPass for MockPass {
-        fn name(&self) -> &str { self.effect.name() }
-        fn effect(&self) -> PassEffect { self.effect }
-        fn cost(&self) -> f32 { 0.1 }
-        fn is_enabled(&self) -> bool { self.enabled }
-        fn set_enabled(&mut self, e: bool) { self.enabled = e; }
-        fn on_setup(&mut self, _: &PostFxContext) -> PostFxResult<()> { Ok(()) }
-        fn on_render(&mut self, _: &PostFxContext) -> PostFxResult<()> { Ok(()) }
+        fn name(&self) -> &str {
+            self.effect.name()
+        }
+        fn effect(&self) -> PassEffect {
+            self.effect
+        }
+        fn cost(&self) -> f32 {
+            0.1
+        }
+        fn is_enabled(&self) -> bool {
+            self.enabled
+        }
+        fn set_enabled(&mut self, e: bool) {
+            self.enabled = e;
+        }
+        fn on_setup(&mut self, _: &PostFxContext) -> PostFxResult<()> {
+            Ok(())
+        }
+        fn on_render(&mut self, _: &PostFxContext) -> PostFxResult<()> {
+            Ok(())
+        }
         fn on_dispose(&mut self) {}
-        fn validate_variants(&self, _: &dyn crate::postfx::ports::shader_availability::PostFxShaderAvailability) -> Result<(), PostFxError> { Ok(()) }
+        fn validate_variants(
+            &self,
+            _: &dyn crate::postfx::ports::shader_availability::PostFxShaderAvailability,
+        ) -> Result<(), PostFxError> {
+            Ok(())
+        }
     }
 
     fn make_provider(effect: PassEffect) -> Box<dyn PostFxPassDescriptor> {
@@ -194,7 +221,10 @@ mod tests {
                 display_name: effect.name().to_string(),
                 shader_name: format!("Hidden/{}", effect.name()),
             },
-            MockPass { effect, enabled: true },
+            MockPass {
+                effect,
+                enabled: true,
+            },
         ))
     }
 
@@ -214,7 +244,10 @@ mod tests {
                 display_name: "Bloom".into(),
                 shader_name: "Hidden/Bloom".into(),
             },
-            MockPass { effect: PassEffect::Bloom, enabled: true },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: true,
+            },
         ));
         assert!(reg.get_provider(PassEffect::Bloom).is_some());
     }
@@ -228,7 +261,10 @@ mod tests {
                 display_name: "Bloom".into(),
                 shader_name: "Hidden/Bloom".into(),
             },
-            MockPass { effect: PassEffect::Bloom, enabled: true },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: true,
+            },
         ));
         reg.unregister(PassEffect::Bloom);
         assert!(reg.get_provider(PassEffect::Bloom).is_none());
@@ -238,12 +274,26 @@ mod tests {
     fn render_order_set_then_keep() {
         let mut reg = PostFxPassRegistry::new();
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Ssao, display_name: "SSAO".into(), shader_name: "Hidden/SSAO".into() },
-            MockPass { effect: PassEffect::Ssao, enabled: true },
+            BlitPassDescriptor {
+                effect: PassEffect::Ssao,
+                display_name: "SSAO".into(),
+                shader_name: "Hidden/SSAO".into(),
+            },
+            MockPass {
+                effect: PassEffect::Ssao,
+                enabled: true,
+            },
         ));
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Bloom, display_name: "Bloom".into(), shader_name: "Hidden/Bloom".into() },
-            MockPass { effect: PassEffect::Bloom, enabled: true },
+            BlitPassDescriptor {
+                effect: PassEffect::Bloom,
+                display_name: "Bloom".into(),
+                shader_name: "Hidden/Bloom".into(),
+            },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: true,
+            },
         ));
         reg.set_render_order(&[PassEffect::Bloom, PassEffect::Ssao]);
         assert_eq!(reg.render_order(), &[PassEffect::Bloom, PassEffect::Ssao]);
@@ -253,8 +303,15 @@ mod tests {
     fn has_any_active_pass_true_when_enabled_and_supported() {
         let mut reg = PostFxPassRegistry::new();
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Bloom, display_name: "Bloom".into(), shader_name: "Hidden/Bloom".into() },
-            MockPass { effect: PassEffect::Bloom, enabled: true },
+            BlitPassDescriptor {
+                effect: PassEffect::Bloom,
+                display_name: "Bloom".into(),
+                shader_name: "Hidden/Bloom".into(),
+            },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: true,
+            },
         ));
         assert!(reg.has_any_active_pass());
     }
@@ -263,8 +320,15 @@ mod tests {
     fn has_any_active_pass_false_when_disabled() {
         let mut reg = PostFxPassRegistry::new();
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Bloom, display_name: "Bloom".into(), shader_name: "Hidden/Bloom".into() },
-            MockPass { effect: PassEffect::Bloom, enabled: false },
+            BlitPassDescriptor {
+                effect: PassEffect::Bloom,
+                display_name: "Bloom".into(),
+                shader_name: "Hidden/Bloom".into(),
+            },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: false,
+            },
         ));
         assert!(!reg.has_any_active_pass());
     }
@@ -273,14 +337,31 @@ mod tests {
     fn providers_iteration_in_order() {
         let mut reg = PostFxPassRegistry::new();
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Ssao, display_name: "SSAO".into(), shader_name: "Hidden/SSAO".into() },
-            MockPass { effect: PassEffect::Ssao, enabled: true },
+            BlitPassDescriptor {
+                effect: PassEffect::Ssao,
+                display_name: "SSAO".into(),
+                shader_name: "Hidden/SSAO".into(),
+            },
+            MockPass {
+                effect: PassEffect::Ssao,
+                enabled: true,
+            },
         ));
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Bloom, display_name: "Bloom".into(), shader_name: "Hidden/Bloom".into() },
-            MockPass { effect: PassEffect::Bloom, enabled: true },
+            BlitPassDescriptor {
+                effect: PassEffect::Bloom,
+                display_name: "Bloom".into(),
+                shader_name: "Hidden/Bloom".into(),
+            },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: true,
+            },
         ));
-        let names: Vec<String> = reg.providers().map(|p| p.descriptor().display_name).collect();
+        let names: Vec<String> = reg
+            .providers()
+            .map(|p| p.descriptor().display_name)
+            .collect();
         assert_eq!(names, vec!["SSAO".to_string(), "Bloom".to_string()]);
     }
 
@@ -288,8 +369,15 @@ mod tests {
     fn get_provider_mut_works() {
         let mut reg = PostFxPassRegistry::new();
         reg.register(BlitProvider::new(
-            BlitPassDescriptor { effect: PassEffect::Bloom, display_name: "Bloom".into(), shader_name: "Hidden/Bloom".into() },
-            MockPass { effect: PassEffect::Bloom, enabled: true },
+            BlitPassDescriptor {
+                effect: PassEffect::Bloom,
+                display_name: "Bloom".into(),
+                shader_name: "Hidden/Bloom".into(),
+            },
+            MockPass {
+                effect: PassEffect::Bloom,
+                enabled: true,
+            },
         ));
         let p = reg.get_provider_mut(PassEffect::Bloom).unwrap();
         p.pass_mut().set_enabled(false);

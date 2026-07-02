@@ -7,9 +7,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use std::collections::BTreeMap;
-use serde::{Deserialize, Serialize};
 use crate::voxel::MaterialId;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 // -----------------------------------------------------------------------
 // CC0 sourcing
@@ -72,8 +72,12 @@ impl LicenseAttestation {
     ) -> Result<Self, AttestationError> {
         let manifest_url = manifest_url.into();
         let attested_by = attested_by.into();
-        if manifest_url.trim().is_empty() { return Err(AttestationError::EmptyManifestUrl); }
-        if attested_by.trim().is_empty() { return Err(AttestationError::EmptyAttestedBy); }
+        if manifest_url.trim().is_empty() {
+            return Err(AttestationError::EmptyManifestUrl);
+        }
+        if attested_by.trim().is_empty() {
+            return Err(AttestationError::EmptyAttestedBy);
+        }
         Ok(Self {
             asset_path: asset_path.into(),
             license: "CC0".to_string(),
@@ -121,15 +125,23 @@ pub struct LodDistanceConfig {
 
 impl Default for LodDistanceConfig {
     fn default() -> Self {
-        Self { near_chunks: 2, mid_chunks: 4, far_chunks: 8 }
+        Self {
+            near_chunks: 2,
+            mid_chunks: 4,
+            far_chunks: 8,
+        }
     }
 }
 
 impl LodDistanceConfig {
     /// Validate monotonic ordering. Returns `Err` if not monotonically non-decreasing.
     pub fn validate(self) -> Result<(), &'static str> {
-        if self.near_chunks > self.mid_chunks { return Err("near_chunks must be <= mid_chunks"); }
-        if self.mid_chunks > self.far_chunks { return Err("mid_chunks must be <= far_chunks"); }
+        if self.near_chunks > self.mid_chunks {
+            return Err("near_chunks must be <= mid_chunks");
+        }
+        if self.mid_chunks > self.far_chunks {
+            return Err("mid_chunks must be <= far_chunks");
+        }
         Ok(())
     }
 }
@@ -153,8 +165,15 @@ impl LodRenderPlan {
         } else {
             RenderMode::VertexColor
         };
-        let vertex_color_blend = if matches!(mode, RenderMode::VertexColor) { 1.0 } else { 0.0 };
-        Self { mode, vertex_color_blend }
+        let vertex_color_blend = if matches!(mode, RenderMode::VertexColor) {
+            1.0
+        } else {
+            0.0
+        };
+        Self {
+            mode,
+            vertex_color_blend,
+        }
     }
 }
 
@@ -324,7 +343,9 @@ impl MissingTextureReport {
     /// Compute the runtime action for this report.
     #[must_use]
     pub fn action(&self) -> RuntimeAction {
-        if self.loaded { return RuntimeAction::Keep; }
+        if self.loaded {
+            return RuntimeAction::Keep;
+        }
         match self.policy.resolve(self.flavour) {
             PolicyAction::Panic => RuntimeAction::Panic,
             PolicyAction::FlatTintWithWarning => RuntimeAction::FlatTintWithWarning,
@@ -383,26 +404,54 @@ impl TextureChannelMap {
     /// Minimal map: albedo + normal only.
     #[must_use]
     pub fn minimal(albedo: impl Into<String>, normal: impl Into<String>) -> Self {
-        Self { albedo_path: Some(albedo.into()), normal_path: Some(normal.into()), ..Default::default() }
+        Self {
+            albedo_path: Some(albedo.into()),
+            normal_path: Some(normal.into()),
+            ..Default::default()
+        }
     }
 
     /// Full standalone map: albedo + normal + dedicated MR + AO.
     #[must_use]
-    pub fn standalone(a: impl Into<String>, n: impl Into<String>, mr: impl Into<String>, ao: impl Into<String>) -> Self {
-        Self { albedo_path: Some(a.into()), normal_path: Some(n.into()), mr_path: Some(mr.into()), ao_path: Some(ao.into()), orm_path: None }
+    pub fn standalone(
+        a: impl Into<String>,
+        n: impl Into<String>,
+        mr: impl Into<String>,
+        ao: impl Into<String>,
+    ) -> Self {
+        Self {
+            albedo_path: Some(a.into()),
+            normal_path: Some(n.into()),
+            mr_path: Some(mr.into()),
+            ao_path: Some(ao.into()),
+            orm_path: None,
+        }
     }
 
     /// ORM-packed map: albedo + normal + single ORM file.
     #[must_use]
     pub fn orm_packed(a: impl Into<String>, n: impl Into<String>, orm: impl Into<String>) -> Self {
-        Self { albedo_path: Some(a.into()), normal_path: Some(n.into()), orm_path: Some(orm.into()), ..Default::default() }
+        Self {
+            albedo_path: Some(a.into()),
+            normal_path: Some(n.into()),
+            orm_path: Some(orm.into()),
+            ..Default::default()
+        }
     }
 
     /// All channel-source paths in deterministic order: albedo→normal→mr→ao→orm.
     pub fn required_paths(&self) -> Vec<&str> {
         let mut out = Vec::with_capacity(5);
-        for p in [&self.albedo_path, &self.normal_path, &self.mr_path, &self.ao_path, &self.orm_path] {
-            if let Some(s) = p { out.push(s.as_str()); }
+        for p in [
+            &self.albedo_path,
+            &self.normal_path,
+            &self.mr_path,
+            &self.ao_path,
+            &self.orm_path,
+        ] {
+            if let Some(s) = p {
+                out.push(s.as_str());
+            }
         }
         out
     }
@@ -441,20 +490,30 @@ pub struct ColorSpacePolicy {
 }
 
 impl Default for ColorSpacePolicy {
-    fn default() -> Self { Self::strict() }
+    fn default() -> Self {
+        Self::strict()
+    }
 }
 
 impl ColorSpacePolicy {
     /// Spec-mandated: color = sRGB, data = linear.
     #[must_use]
-    pub const fn strict() -> Self { Self { color: ColorSpace::Srgb, data: ColorSpace::Linear } }
+    pub const fn strict() -> Self {
+        Self {
+            color: ColorSpace::Srgb,
+            data: ColorSpace::Linear,
+        }
+    }
 
     /// Color space for a given channel.
     #[must_use]
     pub const fn for_channel(&self, channel: PbrChannel) -> ColorSpace {
         match channel {
             PbrChannel::Albedo => self.color,
-            PbrChannel::Normal | PbrChannel::Metallic | PbrChannel::Roughness | PbrChannel::AmbientOcclusion => self.data,
+            PbrChannel::Normal
+            | PbrChannel::Metallic
+            | PbrChannel::Roughness
+            | PbrChannel::AmbientOcclusion => self.data,
         }
     }
 }

@@ -4,9 +4,9 @@
 //! `serde_json::Error` aren't comparable), so we implement `PartialEq` manually
 //! via `to_string()` comparison.
 
+use serde_json;
 use std::fmt;
 use std::io;
-use serde_json;
 
 /// All recoverable errors from the water module.
 #[derive(Debug)]
@@ -82,10 +82,14 @@ impl std::error::Error for WaterError {
 }
 
 impl From<io::Error> for WaterError {
-    fn from(e: io::Error) -> Self { Self::Io(e) }
+    fn from(e: io::Error) -> Self {
+        Self::Io(e)
+    }
 }
 impl From<serde_json::Error> for WaterError {
-    fn from(e: serde_json::Error) -> Self { Self::Json(e) }
+    fn from(e: serde_json::Error) -> Self {
+        Self::Json(e)
+    }
 }
 impl From<crate::terrain::error::TerrainError> for WaterError {
     fn from(e: crate::terrain::error::TerrainError) -> Self {

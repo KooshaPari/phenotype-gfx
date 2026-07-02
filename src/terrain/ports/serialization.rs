@@ -2,9 +2,9 @@
 //!
 //! Ported from C# `Ports/ISerializationPort.cs`. Format version is `1`.
 
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 use crate::terrain::error::TerrainError;
 
@@ -28,7 +28,9 @@ pub struct TerrainSnapshot {
     pub material_ids: Vec<String>,
 }
 
-fn default_version() -> i32 { 1 }
+fn default_version() -> i32 {
+    1
+}
 
 /// Hexagonal port: save / load terrain snapshots.
 pub trait ISerializationPort {
@@ -46,11 +48,15 @@ pub struct JsonFileSerializationPort;
 
 impl JsonFileSerializationPort {
     /// New JSON adapter.
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 }
 
 impl ISerializationPort for JsonFileSerializationPort {
-    fn format_id(&self) -> &'static str { "terrain-json-v1" }
+    fn format_id(&self) -> &'static str {
+        "terrain-json-v1"
+    }
 
     fn save(&self, snapshot: &TerrainSnapshot, destination: &str) -> Result<(), TerrainError> {
         if destination.trim().is_empty() {
@@ -98,7 +104,10 @@ mod tests {
     use std::env;
 
     fn tmp_path(name: &str) -> String {
-        env::temp_dir().join(format!("terrain-snap-{}.json", name)).to_string_lossy().into_owned()
+        env::temp_dir()
+            .join(format!("terrain-snap-{}.json", name))
+            .to_string_lossy()
+            .into_owned()
     }
 
     #[test]
@@ -142,7 +151,13 @@ mod tests {
     #[test]
     fn json_adapter_save_empty_destination_raises() {
         let port = JsonFileSerializationPort::new();
-        let snap = TerrainSnapshot { version: 1, width: 1, height: 1, elevations: vec![0.0], material_ids: vec![] };
+        let snap = TerrainSnapshot {
+            version: 1,
+            width: 1,
+            height: 1,
+            elevations: vec![0.0],
+            material_ids: vec![],
+        };
         assert!(port.save(&snap, "").is_err());
     }
 

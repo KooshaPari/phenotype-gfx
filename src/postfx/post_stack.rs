@@ -206,45 +206,50 @@ impl PostStack {
     /// inspector / dispatcher without referring to the concrete `BloomPass`
     /// / `SsaoPass` types.
     pub fn describe_passes() -> Vec<PassDescriptor> {
-        vec![
-            SsaoConfig::descriptor(),
-            BloomConfig::descriptor(),
-        ]
+        vec![SsaoConfig::descriptor(), BloomConfig::descriptor()]
     }
 
     /// Audits each effect against the availability provider and updates the
     /// per-effect support flags.
     pub fn validate_shader_variants(&mut self, provider: &dyn PostFxShaderAvailability) {
-        self.ssao_supported =
-            provider.is_available("ScreenSpaceAO", "SSAOPASS");
-        self.ssgi_supported =
-            provider.is_available("ScreenSpaceGI", "SSGIPASS");
-        self.bloom_supported =
-            provider.is_available("BrpBloom", "BLOOM_HIGH");
-        self.aces_supported =
-            provider.is_available("BrpACES", "ACES");
-        self.vignette_supported =
-            provider.is_available("Vignette", "VIGNETTE");
+        self.ssao_supported = provider.is_available("ScreenSpaceAO", "SSAOPASS");
+        self.ssgi_supported = provider.is_available("ScreenSpaceGI", "SSGIPASS");
+        self.bloom_supported = provider.is_available("BrpBloom", "BLOOM_HIGH");
+        self.aces_supported = provider.is_available("BrpACES", "ACES");
+        self.vignette_supported = provider.is_available("Vignette", "VIGNETTE");
         self.chromatic_aberration_supported =
             provider.is_available("ChromaticAberration", "CHROMATIC");
-        self.lut_supported =
-            provider.is_available("ColorGradingLUT", "LUT");
+        self.lut_supported = provider.is_available("ColorGradingLUT", "LUT");
     }
 
     /// Returns `true` if the SSAO shader variant is available.
-    pub fn ssao_supported(&self) -> bool { self.ssao_supported }
+    pub fn ssao_supported(&self) -> bool {
+        self.ssao_supported
+    }
     /// Returns `true` if the SSGI shader variant is available.
-    pub fn ssgi_supported(&self) -> bool { self.ssgi_supported }
+    pub fn ssgi_supported(&self) -> bool {
+        self.ssgi_supported
+    }
     /// Returns `true` if the Bloom shader variant is available.
-    pub fn bloom_supported(&self) -> bool { self.bloom_supported }
+    pub fn bloom_supported(&self) -> bool {
+        self.bloom_supported
+    }
     /// Returns `true` if the ACES shader variant is available.
-    pub fn aces_supported(&self) -> bool { self.aces_supported }
+    pub fn aces_supported(&self) -> bool {
+        self.aces_supported
+    }
     /// Returns `true` if the Vignette shader variant is available.
-    pub fn vignette_supported(&self) -> bool { self.vignette_supported }
+    pub fn vignette_supported(&self) -> bool {
+        self.vignette_supported
+    }
     /// Returns `true` if the ChromaticAberration shader variant is available.
-    pub fn chromatic_aberration_supported(&self) -> bool { self.chromatic_aberration_supported }
+    pub fn chromatic_aberration_supported(&self) -> bool {
+        self.chromatic_aberration_supported
+    }
     /// Returns `true` if the LUT shader variant is available.
-    pub fn lut_supported(&self) -> bool { self.lut_supported }
+    pub fn lut_supported(&self) -> bool {
+        self.lut_supported
+    }
 }
 
 impl Default for PostStack {
@@ -256,7 +261,9 @@ impl Default for PostStack {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::postfx::ports::shader_availability::{DefaultPostFxShaderAvailability, MapPostFxShaderAvailability};
+    use crate::postfx::ports::shader_availability::{
+        DefaultPostFxShaderAvailability, MapPostFxShaderAvailability,
+    };
 
     #[test]
     fn default_config_baseline() {
@@ -319,7 +326,13 @@ mod tests {
 
     #[test]
     fn default_postfx_stack_matches_default_config() {
-        assert_eq!(PostStackConfig::default().enable_ssao, DEFAULT_POSTFX_STACK.enable_ssao);
-        assert_eq!(PostStackConfig::default().quality, DEFAULT_POSTFX_STACK.quality);
+        assert_eq!(
+            PostStackConfig::default().enable_ssao,
+            DEFAULT_POSTFX_STACK.enable_ssao
+        );
+        assert_eq!(
+            PostStackConfig::default().quality,
+            DEFAULT_POSTFX_STACK.quality
+        );
     }
 }

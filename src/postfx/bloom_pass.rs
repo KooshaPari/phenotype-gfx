@@ -126,7 +126,10 @@ impl PostFxPass for BloomPass {
         Ok(())
     }
     fn on_dispose(&mut self) {}
-    fn validate_variants(&self, provider: &dyn PostFxShaderAvailability) -> Result<(), PostFxError> {
+    fn validate_variants(
+        &self,
+        provider: &dyn PostFxShaderAvailability,
+    ) -> Result<(), PostFxError> {
         let keyword = BloomConfig::quality_keyword(PassQuality::High);
         if !provider.is_available(BLOOM_SHADER_NAME, keyword) {
             return Err(PostFxError::ShaderVariantUnavailable {
@@ -161,10 +164,22 @@ mod tests {
 
     #[test]
     fn quality_keyword_mapping() {
-        assert_eq!(BloomConfig::quality_keyword(PassQuality::Low), BLOOM_LOW_KEYWORD);
-        assert_eq!(BloomConfig::quality_keyword(PassQuality::Medium), BLOOM_MEDIUM_KEYWORD);
-        assert_eq!(BloomConfig::quality_keyword(PassQuality::High), BLOOM_HIGH_KEYWORD);
-        assert_eq!(BloomConfig::quality_keyword(PassQuality::Ultra), BLOOM_ULTRA_KEYWORD);
+        assert_eq!(
+            BloomConfig::quality_keyword(PassQuality::Low),
+            BLOOM_LOW_KEYWORD
+        );
+        assert_eq!(
+            BloomConfig::quality_keyword(PassQuality::Medium),
+            BLOOM_MEDIUM_KEYWORD
+        );
+        assert_eq!(
+            BloomConfig::quality_keyword(PassQuality::High),
+            BLOOM_HIGH_KEYWORD
+        );
+        assert_eq!(
+            BloomConfig::quality_keyword(PassQuality::Ultra),
+            BLOOM_ULTRA_KEYWORD
+        );
     }
 
     #[test]

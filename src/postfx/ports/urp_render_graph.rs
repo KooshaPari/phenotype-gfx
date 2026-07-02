@@ -33,7 +33,10 @@ pub struct PostFxUrpContext {
 
 impl Default for PostFxUrpContext {
     fn default() -> Self {
-        Self { camera: 0, quality: PassQuality::Off }
+        Self {
+            camera: 0,
+            quality: PassQuality::Off,
+        }
     }
 }
 
@@ -69,20 +72,37 @@ impl<P: PostFxPass> PostFxUrpPass for BrpToUrpAdapter<P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::postfx::ports::post_fx_pass::{PassEffect, PostFxContext};
     use crate::postfx::error::{PostFxError, PostFxResult};
+    use crate::postfx::ports::post_fx_pass::{PassEffect, PostFxContext};
 
     struct Stub;
     impl PostFxPass for Stub {
-        fn name(&self) -> &str { "Stub" }
-        fn effect(&self) -> PassEffect { PassEffect::Bloom }
-        fn cost(&self) -> f32 { 0.1 }
-        fn is_enabled(&self) -> bool { true }
+        fn name(&self) -> &str {
+            "Stub"
+        }
+        fn effect(&self) -> PassEffect {
+            PassEffect::Bloom
+        }
+        fn cost(&self) -> f32 {
+            0.1
+        }
+        fn is_enabled(&self) -> bool {
+            true
+        }
         fn set_enabled(&mut self, _: bool) {}
-        fn on_setup(&mut self, _: &PostFxContext) -> PostFxResult<()> { Ok(()) }
-        fn on_render(&mut self, _: &PostFxContext) -> PostFxResult<()> { Ok(()) }
+        fn on_setup(&mut self, _: &PostFxContext) -> PostFxResult<()> {
+            Ok(())
+        }
+        fn on_render(&mut self, _: &PostFxContext) -> PostFxResult<()> {
+            Ok(())
+        }
         fn on_dispose(&mut self) {}
-        fn validate_variants(&self, _: &dyn crate::postfx::ports::shader_availability::PostFxShaderAvailability) -> Result<(), PostFxError> { Ok(()) }
+        fn validate_variants(
+            &self,
+            _: &dyn crate::postfx::ports::shader_availability::PostFxShaderAvailability,
+        ) -> Result<(), PostFxError> {
+            Ok(())
+        }
     }
 
     #[test]

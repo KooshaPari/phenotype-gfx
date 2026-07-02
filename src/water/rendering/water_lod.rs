@@ -32,20 +32,34 @@ impl Default for WaterLod {
 
 impl WaterLod {
     /// Create a water LOD with default thresholds and resolutions.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Grid resolution for the `Near` tier.
-    pub fn near_resolution(&self) -> i32 { self.near_resolution }
+    pub fn near_resolution(&self) -> i32 {
+        self.near_resolution
+    }
     /// Set the near resolution.
-    pub fn set_near_resolution(&mut self, v: i32) { self.near_resolution = v; }
+    pub fn set_near_resolution(&mut self, v: i32) {
+        self.near_resolution = v;
+    }
     /// Grid resolution for the `Mid` tier.
-    pub fn mid_resolution(&self) -> i32 { self.mid_resolution }
+    pub fn mid_resolution(&self) -> i32 {
+        self.mid_resolution
+    }
     /// Set the mid resolution.
-    pub fn set_mid_resolution(&mut self, v: i32) { self.mid_resolution = v; }
+    pub fn set_mid_resolution(&mut self, v: i32) {
+        self.mid_resolution = v;
+    }
     /// Grid resolution for the `Far` tier.
-    pub fn far_resolution(&self) -> i32 { self.far_resolution }
+    pub fn far_resolution(&self) -> i32 {
+        self.far_resolution
+    }
     /// Set the far resolution.
-    pub fn set_far_resolution(&mut self, v: i32) { self.far_resolution = v; }
+    pub fn set_far_resolution(&mut self, v: i32) {
+        self.far_resolution = v;
+    }
 
     /// Returns the grid resolution for the given distance; `0` when culled.
     pub fn select_resolution(&self, distance: f32) -> WaterResult<i32> {
@@ -59,12 +73,24 @@ impl WaterLod {
 }
 
 impl LodBase for WaterLod {
-    fn near_distance(&self) -> f32 { self.near }
-    fn set_near_distance(&mut self, v: f32) { self.near = v; }
-    fn mid_distance(&self) -> f32 { self.mid }
-    fn set_mid_distance(&mut self, v: f32) { self.mid = v; }
-    fn cull_distance(&self) -> f32 { self.cull }
-    fn set_cull_distance(&mut self, v: f32) { self.cull = v; }
+    fn near_distance(&self) -> f32 {
+        self.near
+    }
+    fn set_near_distance(&mut self, v: f32) {
+        self.near = v;
+    }
+    fn mid_distance(&self) -> f32 {
+        self.mid
+    }
+    fn set_mid_distance(&mut self, v: f32) {
+        self.mid = v;
+    }
+    fn cull_distance(&self) -> f32 {
+        self.cull
+    }
+    fn set_cull_distance(&mut self, v: f32) {
+        self.cull = v;
+    }
 }
 
 #[cfg(test)]
@@ -145,11 +171,16 @@ mod tests {
     #[test]
     fn monotonic_farther_distance_never_finer_resolution() {
         let lod = WaterLod::new();
-        let distances = [0.0, 10.0, 49.0, 50.0, 100.0, 149.0, 150.0, 300.0, 399.0, 400.0, 800.0];
+        let distances = [
+            0.0, 10.0, 49.0, 50.0, 100.0, 149.0, 150.0, 300.0, 399.0, 400.0, 800.0,
+        ];
         let mut prev = i32::MAX;
         for d in distances {
             let res = lod.select_resolution(d).unwrap();
-            assert!(res <= prev, "At d={d} resolution {res} is finer than previous {prev}");
+            assert!(
+                res <= prev,
+                "At d={d} resolution {res} is finer than previous {prev}"
+            );
             prev = res;
         }
     }
@@ -190,13 +221,21 @@ mod tests {
 
     #[test]
     fn invalid_thresholds_near_ge_mid_raises() {
-        let lod = WaterLod { near: 200.0, mid: 100.0, ..WaterLod::default() };
+        let lod = WaterLod {
+            near: 200.0,
+            mid: 100.0,
+            ..WaterLod::default()
+        };
         assert!(lod.validate_thresholds().is_err());
     }
 
     #[test]
     fn invalid_thresholds_mid_ge_cull_raises() {
-        let lod = WaterLod { mid: 500.0, cull: 300.0, ..WaterLod::default() };
+        let lod = WaterLod {
+            mid: 500.0,
+            cull: 300.0,
+            ..WaterLod::default()
+        };
         assert!(lod.validate_thresholds().is_err());
     }
 
