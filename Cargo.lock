@@ -1710,6 +1710,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "phenotype-voxel"
+version = "0.2.0"
+dependencies = [
+ "phenotype-gfx",
+]
+
+[[package]]
 name = "pin-project"
 version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
