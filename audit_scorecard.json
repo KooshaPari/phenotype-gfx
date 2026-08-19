@@ -21,11 +21,33 @@
     "fmt_warnings": 0
   },
   "gate_results": {
-    "fmt": { "pass": true, "exit_code": 0, "note": "Code formatting is consistent across the workspace" },
-    "clippy": { "pass": true, "exit_code": 0, "warnings": 0, "note": "Zero lint warnings detected" },
-    "build": { "pass": true, "exit_code": 0, "note": "Workspace compiles cleanly" },
-    "test": { "pass": true, "exit_code": 0, "note": "All test binaries compiled and passed" },
-    "deny": { "pass": true, "exit_code": 0, "vulnerabilities": 0, "note": "No security advisories found" }
+    "fmt": {
+      "pass": true,
+      "exit_code": 0,
+      "note": "Code formatting is consistent across the workspace"
+    },
+    "clippy": {
+      "pass": true,
+      "exit_code": 0,
+      "warnings": 0,
+      "note": "Zero lint warnings detected"
+    },
+    "build": {
+      "pass": true,
+      "exit_code": 0,
+      "note": "Workspace compiles cleanly"
+    },
+    "test": {
+      "pass": true,
+      "exit_code": 0,
+      "note": "All test binaries compiled and passed"
+    },
+    "deny": {
+      "pass": true,
+      "exit_code": 0,
+      "vulnerabilities": 0,
+      "note": "No security advisories found"
+    }
   },
   "scores": {
     "L01_Compilation": 100,
