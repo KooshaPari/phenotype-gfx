@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: phenotype-gfx
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - given-names: Koosha
+    family-names: Pari
+    alias: KooshaPari
+repository-code: "https://github.com/KooshaPari/phenotype-gfx"
+license: Apache-2.0
