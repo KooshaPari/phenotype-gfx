@@ -20,16 +20,12 @@ lint:
     - eslint
     - golangci-lint
     - mypy
+    - prettier
     - ruff
+    - rustfmt
     - shellcheck
     - taplo
     - yamllint
-
-fmt:
-  enabled:
-    - black
-    - prettier
-    - rustfmt
 
 actions:
   enabled:
