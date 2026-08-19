@@ -442,16 +442,17 @@ impl TextureChannelMap {
     /// All channel-source paths in deterministic order: albedo→normal→mr→ao→orm.
     pub fn required_paths(&self) -> Vec<&str> {
         let mut out = Vec::with_capacity(5);
-        for p in [
+        for s in [
             &self.albedo_path,
             &self.normal_path,
             &self.mr_path,
             &self.ao_path,
             &self.orm_path,
-        ] {
-            if let Some(s) = p {
-                out.push(s.as_str());
-            }
+        ]
+        .into_iter()
+        .flatten()
+        {
+            out.push(s.as_str());
         }
         out
     }

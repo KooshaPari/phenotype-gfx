@@ -79,6 +79,10 @@ macro_rules! gfx_error {
 /// Usage: `gfx_count!("phenotype_gfx.lod_plan_calls")`
 #[macro_export]
 macro_rules! gfx_count {
-    ($name:expr) => { ::metrics::counter!($name).increment(1) };
-    ($name:expr, $n:expr) => { ::metrics::counter!($name).increment($n) };
+    ($name:expr) => {
+        ::metrics::counter!($name).increment(1)
+    };
+    ($name:expr, $n:expr) => {
+        ::metrics::counter!($name).increment($n)
+    };
 }

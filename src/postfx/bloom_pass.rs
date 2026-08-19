@@ -184,8 +184,10 @@ mod tests {
 
     #[test]
     fn blit_count_scales_with_iterations() {
-        let mut cfg = BloomConfig::default();
-        cfg.iterations = 3;
+        let cfg = BloomConfig {
+            iterations: 3,
+            ..BloomConfig::default()
+        };
         let pass = BloomPass::new(cfg);
         assert_eq!(pass.blit_count(), 8); // 1 + 3*2 + 1
     }

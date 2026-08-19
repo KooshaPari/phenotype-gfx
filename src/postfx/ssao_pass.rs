@@ -11,9 +11,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::postfx::error::{PostFxError, PostFxResult};
-use crate::postfx::ports::post_fx_pass::{
-    PassDescriptor, PassEffect, PassQuality, PostFxContext, PostFxPass,
-};
+use crate::postfx::ports::post_fx_pass::{PassDescriptor, PassEffect, PostFxContext, PostFxPass};
 use crate::postfx::ports::shader_availability::PostFxShaderAvailability;
 
 /// Stable shader name used by the SSAO pass.
@@ -77,8 +75,8 @@ impl SsaoConfig {
 
         let mut kernel = Vec::with_capacity(size as usize);
         for i in 0..size {
-            let mut x = lerp(-1.0_f32, 1.0_f32, next());
-            let mut y = lerp(-1.0_f32, 1.0_f32, next());
+            let x = lerp(-1.0_f32, 1.0_f32, next());
+            let y = lerp(-1.0_f32, 1.0_f32, next());
             let mut s = [x, y];
             let sqr = s[0] * s[0] + s[1] * s[1];
             if sqr < 0.0001 {
@@ -178,6 +176,7 @@ impl PostFxPass for SsaoPass {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::postfx::ports::post_fx_pass::{PassEffect, PassQuality, PostFxContext};
     use crate::postfx::ports::shader_availability::DefaultPostFxShaderAvailability;
 
     #[test]

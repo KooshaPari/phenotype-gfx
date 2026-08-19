@@ -16,8 +16,10 @@ use serde::{Deserialize, Serialize};
 /// Logical classification of a managed post-fx material asset.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum PostFxMaterialKind {
     /// Generic copy / passthrough material (used by several passes).
+    #[default]
     Copy,
     /// Bloom prefilter / downsample / upscale material.
     Bloom,
@@ -29,12 +31,6 @@ pub enum PostFxMaterialKind {
     Tonemap,
     /// Anything not covered above — escape hatch.
     Other,
-}
-
-impl Default for PostFxMaterialKind {
-    fn default() -> Self {
-        PostFxMaterialKind::Copy
-    }
 }
 
 /// Metadata for a single managed post-fx material.

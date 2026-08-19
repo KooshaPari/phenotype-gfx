@@ -176,7 +176,7 @@ impl PostFxPassRegistry {
 mod tests {
     use super::*;
     use crate::postfx::error::{PostFxError, PostFxResult};
-    use crate::postfx::ports::post_fx_pass::{PassEffect, PassQuality, PostFxContext, PostFxPass};
+    use crate::postfx::ports::post_fx_pass::{PassEffect, PostFxContext, PostFxPass};
 
     struct MockPass {
         effect: PassEffect,
@@ -214,6 +214,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn make_provider(effect: PassEffect) -> Box<dyn PostFxPassDescriptor> {
         Box::new(BlitProvider::new(
             BlitPassDescriptor {

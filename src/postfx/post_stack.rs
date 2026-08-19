@@ -15,9 +15,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::postfx::bloom_pass::BloomConfig;
-use crate::postfx::ports::post_fx_pass::{
-    PassDescriptor, PassEffect, PassQuality, PostFxContext, PostFxPass,
-};
+use crate::postfx::ports::post_fx_pass::{PassDescriptor, PassQuality};
 use crate::postfx::ports::shader_availability::PostFxShaderAvailability;
 use crate::postfx::post_fx_pass_registry::PostFxPassRegistry;
 use crate::postfx::ssao_pass::SsaoConfig;
@@ -261,6 +259,7 @@ impl Default for PostStack {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::postfx::ports::post_fx_pass::{PassEffect, PassQuality};
     use crate::postfx::ports::shader_availability::{
         DefaultPostFxShaderAvailability, MapPostFxShaderAvailability,
     };

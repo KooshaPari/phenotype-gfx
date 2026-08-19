@@ -15,13 +15,7 @@ plugins:
 lint:
   enabled:
     - actionlint
-    - black
     - clippy
-    - eslint
-    - golangci-lint
-    - mypy
-    - prettier
-    - ruff
     - rustfmt
     - shellcheck
     - taplo

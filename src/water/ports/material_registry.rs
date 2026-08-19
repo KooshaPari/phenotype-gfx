@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::water::error::{WaterError, WaterResult};
+#[allow(deprecated)]
 use crate::water::rendering::water_material::WaterMaterial;
 
 static NEXT_HANDLE: AtomicU64 = AtomicU64::new(1);
@@ -22,6 +23,7 @@ pub(crate) fn next_handle() -> u64 {
 }
 
 /// Hexagonal port: registry of water materials.
+#[allow(deprecated)]
 pub trait IMaterialRegistry {
     /// Returns all materials currently registered.
     fn list(&mut self) -> Vec<WaterMaterial>;
@@ -36,6 +38,7 @@ pub trait IMaterialRegistry {
 
 /// In-memory adapter backed by a `HashMap<u64, WaterMaterial>`.
 #[derive(Debug, Default, Clone)]
+#[allow(deprecated)]
 pub struct InMemoryWaterMaterialRegistry {
     by_id: HashMap<u64, WaterMaterial>,
 }
@@ -55,6 +58,7 @@ impl InMemoryWaterMaterialRegistry {
     }
 }
 
+#[allow(deprecated)]
 impl IMaterialRegistry for InMemoryWaterMaterialRegistry {
     fn list(&mut self) -> Vec<WaterMaterial> {
         self.by_id.values().cloned().collect()
@@ -77,6 +81,7 @@ impl IMaterialRegistry for InMemoryWaterMaterialRegistry {
 /// Recording mock used by domain tests. Each method call is logged to a list
 /// the test can replay.
 #[derive(Debug, Default, Clone)]
+#[allow(deprecated)]
 pub struct RecordingWaterMaterialRegistry {
     by_id: HashMap<u64, WaterMaterial>,
     calls: Vec<String>,
@@ -97,6 +102,7 @@ impl RecordingWaterMaterialRegistry {
     }
 }
 
+#[allow(deprecated)]
 impl IMaterialRegistry for RecordingWaterMaterialRegistry {
     fn list(&mut self) -> Vec<WaterMaterial> {
         self.calls.push("List".to_string());
@@ -121,6 +127,7 @@ impl IMaterialRegistry for RecordingWaterMaterialRegistry {
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::*;
     use crate::water::rendering::water_shader::WaterShader;

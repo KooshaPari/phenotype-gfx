@@ -271,7 +271,7 @@ fn ao_single_exposed_voxel_all_lit() {
     assert!(
         mesh.ao.iter().all(|&v| v == 3),
         "REGRESSION: fully-exposed corner voxel must have all AO = 3, got {:?}",
-        &mesh.ao
+        mesh.ao
     );
 }
 
