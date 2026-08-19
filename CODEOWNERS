@@ -1,0 +1,32 @@
+# Code Owners for phenotype-gfx
+# These owners will be automatically requested for review
+# when someone opens a pull request.
+#
+# Order matters: later rules take precedence over earlier ones.
+#
+# Default owner for everything
+* @kooshapari
+
+# Rust modules
+rust/ @kooshapari
+rust/voxel/ @kooshapari
+
+# Unity modules
+unity/ @kooshapari
+unity/terrain/ @kooshapari
+unity/water/ @kooshapari
+unity/postfx/ @kooshapari
+
+# CI and tooling
+.trunk/ @kooshapari
+.github/ @kooshapari
+.circleci/ @kooshapari
+.mergify.yml @kooshapari
+.pre-commit-config.yaml @kooshapari
+renovate.json @kooshapari
+trunk.yaml @kooshapari
+Taskfile.yml @kooshapari
+
+# Specs and docs
+spec/ @kooshapari
+docs/ @kooshapari
