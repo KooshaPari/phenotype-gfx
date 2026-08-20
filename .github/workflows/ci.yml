@@ -86,27 +86,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: cargo fmt --check
-        run: |
-          cargo fmt --all -- --check 2>&1 || echo "::warning::cargo fmt issues (advisory)"
+        run: cargo fmt --all -- --check
       - name: cargo clippy
-        run: |
-          cargo clippy --all-targets -- -D warnings 2>&1 || echo "::warning::clippy issues (advisory)"
+        run: cargo clippy --all-targets -- -D warnings
       - name: cargo test
-        run: |
-          cargo test --workspace --no-fail-fast 2>&1 || echo "::warning::test failures (advisory)"
+        run: cargo test --workspace --no-fail-fast
 
   cargo-deny:
     name: Cargo Deny (Advisories + Licenses)
     needs: detect
     if: needs.detect.outputs.has_deny == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -120,7 +115,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_python == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -129,34 +123,32 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: ruff check
-        run: ruff check . 2>&1 || echo "::warning::ruff issues (advisory)"
+        run: ruff check .
       - name: ruff format --check
-        run: ruff format --check . 2>&1 || echo "::warning::format issues (advisory)"
+        run: ruff format --check .
 
   go:
     name: Go
     needs: detect
     if: needs.detect.outputs.has_go == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
       - name: gofmt check
-        run: gofmt -l . 2>&1 || echo "::warning::gofmt issues (advisory)"
+        run: gofmt -l .
       - name: go vet
-        run: go vet ./... 2>&1 || echo "::warning::go vet issues (advisory)"
+        run: go vet ./...
       - name: go test
-        run: go test ./... 2>&1 || echo "::warning::test failures (advisory)"
+        run: go test ./...
 
   typescript:
     name: TS/JS
     needs: detect
     if: needs.detect.outputs.has_typescript == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -167,12 +159,12 @@ jobs:
       - name: lint
         run: |
           if [ -f package.json ] && grep -q '"lint"' package.json; then
-            npm run lint 2>&1 || echo "::warning::lint issues (advisory)"
+            npm run lint
           fi
       - name: test
         run: |
           if [ -f package.json ] && grep -q '"test"' package.json; then
-            npm test 2>&1 || echo "::warning::test failures (advisory)"
+            npm test
           fi
 
   security:
@@ -180,7 +172,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_security == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: gitleaks
@@ -192,7 +183,6 @@ jobs:
     name: Dependency Review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/dependency-review-action@v4
@@ -202,7 +192,7 @@ jobs:
   lint:
     name: ci / lint
     if: always()
-    needs: [detect, rust, cargo-deny, python, go, typescript, security, dep-review]
+    needs: [detect, rust, cargo-deny, python, go, typescript, security, dep-review, security-audit]
     runs-on: ubuntu-latest
     steps:
       - name: Aggregate lint gate
@@ -216,6 +206,7 @@ jobs:
             "typescript:${{ needs.typescript.result }}" \
             "security:${{ needs.security.result }}" \
             "dep-review:${{ needs.dependency-review.result }}" \
+            "security-audit:${{ needs.security-audit.result }}" \
             ; do
             name="${pair%%:*}"
             result="${pair#*:}"
@@ -246,3 +237,15 @@ jobs:
         run: |
           # Test gate is currently combined with lint
           echo "✅ All test stages passed (gated via ci / lint)"
+
+  security-audit:
+    name: Security Audit
+    needs: detect
+    if: needs.detect.outputs.has_rust == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

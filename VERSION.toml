@@ -1,9 +1,9 @@
 # Phenotype GFX SDK — umbrella version manifest
 # Single source of truth for module versions in this monorepo.
-sdk = "0.1.0"
+sdk = "0.2.0"
 
 [modules]
-voxel   = "0.1.0"   # src/voxel — canonical in phenotype-gfx (was: KooshaPari/phenotype-voxel, archived)
-terrain = "0.1.0"   # unity/terrain — canonical in phenotype-gfx (was: KooshaPari/phenotype-terrain, archived)
-water   = "0.1.0"   # unity/water — canonical in phenotype-gfx (was: KooshaPari/phenotype-water, archived)
-postfx  = "0.1.0"   # unity/postfx — upstream: KooshaPari/phenotype-postfx
+voxel   = "0.2.0"   # src/voxel — canonical in phenotype-gfx (was: KooshaPari/phenotype-voxel, archived)
+terrain = "0.2.0"   # unity/terrain — canonical in phenotype-gfx (was: KooshaPari/phenotype-terrain, archived)
+water   = "0.2.0"   # unity/water — canonical in phenotype-gfx (was: KooshaPari/phenotype-water, archived)
+postfx  = "0.2.0"   # unity/postfx — upstream: KooshaPari/phenotype-postfx
