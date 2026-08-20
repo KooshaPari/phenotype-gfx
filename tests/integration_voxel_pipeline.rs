@@ -111,7 +111,15 @@ fn voxelworld_write_to_cubic_mesh_pipeline() {
 #[test]
 fn multi_material_palette_to_greedy_mesh() {
     // 1. Build a material palette.
+    // MaterialId(0) is reserved as "air" (not solid), so seed with a dummy entry.
     let mut palette = MaterialPalette::default();
+    let _air = palette
+        .add(VoxelMaterial {
+            name: "air".into(),
+            era: 0,
+            hardness: 0.0,
+        })
+        .expect("add air (reserved id 0)");
     let stone_id = palette
         .add(VoxelMaterial {
             name: "stone".into(),
@@ -127,8 +135,8 @@ fn multi_material_palette_to_greedy_mesh() {
         })
         .expect("add wood");
 
-    assert_eq!(stone_id, MaterialId(0));
-    assert_eq!(wood_id, MaterialId(1));
+    assert_eq!(stone_id, MaterialId(1));
+    assert_eq!(wood_id, MaterialId(2));
 
     // 2. Create a chunk with both materials in separate regions.
     let mut chunk = Chunk::<MaterialId>::default();
