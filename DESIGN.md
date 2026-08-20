@@ -9,17 +9,18 @@
 ```
 phenotype-gfx/
 ├── crates/
-│   └── phenotype-voxel/ # Compatibility shim re-exporting the core voxel kernel (ADR-004)
+│   └── phenotype-voxel/  # Compatibility shim re-exporting the core voxel kernel (ADR-004)
 ├── src/
-│   ├── voxel/           # Voxel kernel: chunk storage, meshing (cubic, greedy), materials
-│   ├── lod/             # LOD system: frustum culling, chunk render planning
-│   ├── streaming/       # Streaming window: ring-based chunk lifecycle, eviction
-│   ├── water/           # Water simulation: Gerstner waves, fluid mesh
-│   ├── postfx/          # Post-processing: SSAO, SSGI, Bloom, ACES, LUT
-│   ├── terrain/         # Terrain: height field, chunk mesh builder
-│   └── voxelizer/       # Sprite voxelizer: voxel-to-sprite rendering
-├── examples/            # Sample projects
-└── docs/                # API reference + design docs
+│   ├── voxel/            # Voxel kernel: chunk storage, meshing (cubic, greedy), materials
+│   ├── lod.rs            # LOD system: frustum culling, chunk render planning
+│   ├── streaming.rs      # Streaming window: ring-based chunk lifecycle, eviction
+│   ├── water/            # Water simulation: Gerstner waves, fluid mesh
+│   ├── postfx/           # Post-processing: SSAO, SSGI, Bloom, ACES, LUT
+│   ├── terrain/          # Terrain: height field, chunk mesh builder
+│   └── voxelizer.rs      # Sprite voxelizer: voxel-to-sprite rendering
+├── tests/                # Cross-module integration tests
+├── examples/             # Sample projects
+└── docs/                 # API reference + design docs
 ```
 
 ## Key Design Decisions
@@ -31,7 +32,7 @@ phenotype-gfx/
 ## Data Flow
 
 ```
-Unity C# → FFI call → gfx-core (Rust) → mesh generation → GPU buffer → Unity rendering pipeline
+Unity C# → FFI call → phenotype-gfx (Rust) → mesh generation → GPU buffer → Unity rendering pipeline
 ```
 
 ## Non-Goals

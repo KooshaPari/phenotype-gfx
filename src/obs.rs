@@ -77,12 +77,26 @@ macro_rules! gfx_error {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tracing_test::traced_test;
+    use crate::gfx_count;
+
+    // ======================================================================
+    // tracing subscriber init
+    // ======================================================================
 
     #[test]
     fn init_tracing_subscriber_no_panic() {
         let _ = tracing_subscriber::fmt().try_init();
     }
+
+    #[test]
+    fn multiple_subscriber_init_graceful() {
+        let _ = tracing_subscriber::fmt().try_init();
+        let _ = tracing_subscriber::fmt().try_init();
+    }
+
+    // ======================================================================
+    // counter lifecycle
+    // ======================================================================
 
     #[test]
     fn create_and_increment_counter() {
@@ -92,6 +106,25 @@ mod tests {
     }
 
     #[test]
+    fn counter_increment_by_arbitrary_amount() {
+        let c = counter!("phenotype_gfx.test_counter_batch");
+        c.increment(42);
+        c.increment(7);
+    }
+
+    #[test]
+    fn counter_is_send_and_sync() {
+        let c = counter!("phenotype_gfx.test_counter_threadsafe");
+        fn assert_send_sync<T: Send + Sync>() {}
+        assert_send_sync::<metrics::Counter>();
+        c.increment(1);
+    }
+
+    // ======================================================================
+    // gauge lifecycle
+    // ======================================================================
+
+    #[test]
     fn create_and_set_gauge() {
         let g = gauge!("phenotype_gfx.test_gauge");
         g.set(42.0);
@@ -99,13 +132,71 @@ mod tests {
     }
 
     #[test]
+    fn gauge_set_to_zero() {
+        let g = gauge!("phenotype_gfx.test_gauge_zero");
+        g.set(0.0);
+    }
+
+    #[test]
+    fn gauge_overwrite_previous_value() {
+        let g = gauge!("phenotype_gfx.test_gauge_overwrite");
+        g.set(10.0);
+        g.set(20.0);
+    }
+
+    // ======================================================================
+    // span creation and entry
+    // ======================================================================
+
+    #[test]
     fn span_creation_and_entry() {
         let _guard = span!(Level::INFO, "test_span").entered();
     }
 
-    #[traced_test]
-    fn multiple_subscriber_init_graceful() {
-        let _ = tracing_subscriber::fmt().try_init();
+    #[test]
+    fn span_with_fields() {
+        let _guard = span!(Level::DEBUG, "fielded_span", chunk = 42, ring = 3).entered();
+    }
+
+    #[test]
+    fn nested_spans() {
+        let _outer = span!(Level::INFO, "outer").entered();
+        let _inner = span!(Level::DEBUG, "inner").entered();
+    }
+
+    // ======================================================================
+    // gfx_* macro smoke tests — verify macros compile and don't panic
+    // ======================================================================
+
+    #[test]
+    fn gfx_trace_macro_smoke() {
+        gfx_trace!("trace message chunk={}", 7);
+    }
+
+    #[test]
+    fn gfx_debug_macro_smoke() {
+        gfx_debug!("debug message ring={}", 3);
+    }
+
+    #[test]
+    fn gfx_info_macro_smoke() {
+        gfx_info!("info message anchor={}", "origin");
+    }
+
+    #[test]
+    fn gfx_warn_macro_smoke() {
+        gfx_warn!("warn message budget={}", 1024);
+    }
+
+    #[test]
+    fn gfx_error_macro_smoke() {
+        gfx_error!("error message code={}", 500);
+    }
+
+    #[test]
+    fn gfx_count_macro_smoke() {
+        gfx_count!("phenotype_gfx.test_gfx_count");
+        gfx_count!("phenotype_gfx.test_gfx_count_batch", 5);
     }
 }
 
