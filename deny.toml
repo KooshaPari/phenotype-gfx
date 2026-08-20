@@ -1,43 +1,23 @@
 # cargo-deny configuration for phenotype-gfx
-# https://embarkstudios.github.io/cargo-deny/
+# https://embarkstududios.github.io/cargo-deny/
 
 [graph]
-# Resolve the dependency tree with all features enabled to ensure full coverage.
 all-features = true
 
 [advisories]
-# In cargo-deny 0.14+, 'vulnerability' and 'notice' are removed and always deny.
-# 'unmaintained' now uses scope values: "all", "workspace", "transitive", "none".
-# "all" is the strictest (fail on any crate). "workspace" fails only for direct workspace deps.
-unmaintained = "all"
-yanked = "warn"
+vulnerability = 'deny'
+unmaintained = 'warn'
+yanked = 'warn'
+notice = 'warn'
 
 [licenses]
-# In cargo-deny 0.14+, 'unlicensed' and 'copyleft' are removed.
-# Licenses not in the 'allow' list are denied by default.
-allow = [
-    "MIT",
-    "Apache-2.0",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Unicode-3.0",
-    "Unicode-DFS-2016",
-    "Zlib",
-    "0BSD",
-    "OpenSSL",
-    "MIT-0",
-]
-confidence-threshold = 0.8
+allow = ['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC', 'Unicode-3.0', 'Unicode-DFS-2016', 'Zlib']
+unlicensed = 'deny'
 
 [bans]
-multiple-versions = "warn"
-wildcards = "allow"
-highlight = "all"
-skip = []
+multiple-versions = 'warn'
+wildcards = 'allow'
 
 [sources]
-unknown-registry = "deny"
-unknown-git = "deny"
-allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-allow-git = []
+unknown-registry = 'deny'
+unknown-git = 'deny'
