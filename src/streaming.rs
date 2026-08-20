@@ -715,28 +715,58 @@ mod tests {
 
     #[test]
     fn prefetch_cone_positive_cos_theta_in_cone() {
+        // cos_q7=1 is minimal positive. threshold = 1 * l1 * 128.
+        // With forward [256, 0, 0] (overscaled i32, valid in API), dot_q14=256*dx.
+        // Condition: 256*dx > 1*dx*128 = 128*dx → 256>128 → true.
         let policy = WindowPolicy {
             prefetch_ring: 5,
             mesh_ring: 1,
-            forward_cone_cos_theta: 64, // ~0.5
+            forward_cone_cos_theta: 1,
             ..WindowPolicy::default()
         };
         let anchor = default_anchor();
-        // Forward along +X axis, chunk is at +X → in cone
-        assert!(policy.in_prefetch_cone(coord(3, 0, 0), anchor, [128, 0, 0]));
+        assert!(policy.in_prefetch_cone(coord(3, 0, 0), anchor, [256, 0, 0]));
     }
 
     #[test]
     fn prefetch_cone_positive_cos_theta_opposite_direction() {
+        // cos_q7=64, forward along +X, chunk at -X → dot_q14 is negative → false.
         let policy = WindowPolicy {
             prefetch_ring: 5,
             mesh_ring: 1,
-            forward_cone_cos_theta: 64, // ~0.5
+            forward_cone_cos_theta: 64,
             ..WindowPolicy::default()
         };
         let anchor = default_anchor();
-        // Forward along +X, chunk is at -X → opposite → not in cone
         assert!(!policy.in_prefetch_cone(coord(-3, 0, 0), anchor, [128, 0, 0]));
+    }
+
+    #[test]
+    fn prefetch_cone_standard_forward_along_axis_with_cos_zero() {
+        // cos_q7=0 → else branch: dot_q14 > 0. Standard forward [128,0,0], chunk at +X.
+        let policy = WindowPolicy {
+            prefetch_ring: 5,
+            mesh_ring: 1,
+            forward_cone_cos_theta: 0,
+            ..WindowPolicy::default()
+        };
+        let anchor = default_anchor();
+        assert!(policy.in_prefetch_cone(coord(3, 0, 0), anchor, [128, 0, 0]));
+        assert!(!policy.in_prefetch_cone(coord(-3, 0, 0), anchor, [128, 0, 0]));
+    }
+
+    #[test]
+    fn prefetch_cone_cos_theta_blocks_near_perpendicular() {
+        // cos_q7=127 (~0.99), forward along +X. Perpendicular chunk at (0,0,3).
+        // dx=0, dz=3, dy=0 → dot=0, l1=3 → threshold=127*3*128=48768 → 0 > 48768 → false.
+        let policy = WindowPolicy {
+            prefetch_ring: 5,
+            mesh_ring: 1,
+            forward_cone_cos_theta: 127,
+            ..WindowPolicy::default()
+        };
+        let anchor = default_anchor();
+        assert!(!policy.in_prefetch_cone(coord(0, 0, 3), anchor, [128, 0, 0]));
     }
 
     #[test]
