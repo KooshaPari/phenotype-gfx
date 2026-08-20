@@ -1,16 +1,20 @@
-# deny.toml — cargo-deny configuration for phenotype-gfx
+# cargo-deny configuration for phenotype-gfx
 # https://embarkstudios.github.io/cargo-deny/
 
+[graph]
+# Resolve the dependency tree with all features enabled to ensure full coverage.
+all-features = true
+
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
+# In cargo-deny 0.14+, 'vulnerability' and 'notice' are removed and always deny.
+# 'unmaintained' now uses scope values: "all", "workspace", "transitive", "none".
+# "all" is the strictest (fail on any crate). "workspace" fails only for direct workspace deps.
+unmaintained = "all"
 yanked = "warn"
-notice = "warn"
-ignore = []
 
 [licenses]
-version = 2
-unlicensed = "deny"
+# In cargo-deny 0.14+, 'unlicensed' and 'copyleft' are removed.
+# Licenses not in the 'allow' list are denied by default.
 allow = [
     "MIT",
     "Apache-2.0",
@@ -20,12 +24,10 @@ allow = [
     "Unicode-3.0",
     "Unicode-DFS-2016",
     "Zlib",
-    "Unicode-DFS-2015",
     "0BSD",
     "OpenSSL",
-    "Zlib",
+    "MIT-0",
 ]
-copyleft = "deny"
 confidence-threshold = 0.8
 
 [bans]
