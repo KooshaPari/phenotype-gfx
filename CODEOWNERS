@@ -1,32 +1,55 @@
 # Code Owners for phenotype-gfx
-# These owners will be automatically requested for review
-# when someone opens a pull request.
-#
-# Order matters: later rules take precedence over earlier ones.
-#
-# Default owner for everything
-* @kooshapari
+# Scoped directory-level review paths
+# See: https://docs.github.com/en/repositories/creating-and-managing-repositories/about-code-owners
 
-# Rust modules
-rust/ @kooshapari
-rust/voxel/ @kooshapari
+# Default catch-all
+* @KooshaPari
+
+# Rust source, crates, benchmarks
+/src/ @KooshaPari
+/crates/ @KooshaPari
+/benches/ @KooshaPari
+/examples/ @KooshaPari
+/tests/ @KooshaPari
+
+# Bindings (FFI, engine bindings)
+/bindings/ @KooshaPari
 
 # Unity modules
-unity/ @kooshapari
-unity/terrain/ @kooshapari
-unity/water/ @kooshapari
-unity/postfx/ @kooshapari
+/unity/ @KooshaPari
+/unity/terrain/ @KooshaPari
+/unity/water/ @KooshaPari
+/unity/postfx/ @KooshaPari
 
-# CI and tooling
-.trunk/ @kooshapari
-.github/ @kooshapari
-.circleci/ @kooshapari
-.mergify.yml @kooshapari
-.pre-commit-config.yaml @kooshapari
-renovate.json @kooshapari
-trunk.yaml @kooshapari
-Taskfile.yml @kooshapari
+# Specs, docs, findings
+/spec/ @KooshaPari
+/docs/ @KooshaPari
+/findings/ @KooshaPari
 
-# Specs and docs
-spec/ @kooshapari
-docs/ @kooshapari
+# Build & module config
+/Cargo.toml @KooshaPari
+/Cargo.lock @KooshaPari
+/Taskfile.yml @KooshaPari
+/VERSION.toml @KooshaPari
+/rust-toolchain.toml @KooshaPari
+
+# CI & tooling
+/.github/ @KooshaPari
+/.trunk/ @KooshaPari
+/.circleci/ @KooshaPari
+/.pre-commit-config.yaml @KooshaPari
+/.mergify.yml @KooshaPari
+/renovate.json @KooshaPari
+/trunk.yaml @KooshaPari
+
+# Docs & governance
+/AGENTS.md @KooshaPari
+/CLAUDE.md @KooshaPari
+/DESIGN.md @KooshaPari
+/SECURITY.md @KooshaPari
+/CODEOWNERS @KooshaPari
+/CONTRIBUTING.md @KooshaPari
+/LICENSE-APACHE @KooshaPari
+/LICENSE-MIT @KooshaPari
+/NOTICE @KooshaPari
+/audit_scorecard.json @KooshaPari
