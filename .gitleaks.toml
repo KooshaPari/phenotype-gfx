@@ -1,0 +1,21 @@
+# Gitleaks configuration for phenotype-gfx
+# Excludes governance and documentation files that may contain
+# patterns that look like secrets (email addresses, URLs, etc.)
+
+title = "phenotype-gfx gitleaks config"
+
+[allowlist]
+paths = [
+  '''SECURITY\.md''',
+  '''CITATION\.cff''',
+  '''FUNDING\.yml''',
+  '''CLAUDE\.md''',
+  '''AGENTS\.md''',
+  '''DESIGN\.md''',
+  '''NOTICE''',
+  '''LICENSE.*''',
+  '''CHANGELOG\.md''',
+  '''README\.md''',
+  '''\.github/''',
+  '''target/''',
+]
