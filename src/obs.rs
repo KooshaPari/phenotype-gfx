@@ -74,6 +74,41 @@ macro_rules! gfx_error {
     ($($arg:tt)*) => { ::tracing::error!($($arg)*) };
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tracing_test::traced_test;
+
+    #[test]
+    fn init_tracing_subscriber_no_panic() {
+        let _ = tracing_subscriber::fmt().try_init();
+    }
+
+    #[test]
+    fn create_and_increment_counter() {
+        let c = counter!("phenotype_gfx.test_counter");
+        c.increment(1);
+        // Increment should not panic even with no recorder installed
+    }
+
+    #[test]
+    fn create_and_set_gauge() {
+        let g = gauge!("phenotype_gfx.test_gauge");
+        g.set(42.0);
+        // Set should not panic even with no recorder installed
+    }
+
+    #[test]
+    fn span_creation_and_entry() {
+        let _guard = span!(Level::INFO, "test_span").entered();
+    }
+
+    #[traced_test]
+    fn multiple_subscriber_init_graceful() {
+        let _ = tracing_subscriber::fmt().try_init();
+    }
+}
+
 /// Increment a named counter metric.  No-op when no recorder is installed.
 ///
 /// Usage: `gfx_count!("phenotype_gfx.lod_plan_calls")`

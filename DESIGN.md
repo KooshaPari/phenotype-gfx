@@ -9,9 +9,15 @@
 ```
 phenotype-gfx/
 ├── crates/
-│   ├── gfx-core/        # Rust core: voxel meshing, terrain gen, water sim
-│   ├── gfx-unity/       # Unity C# bindings via FFI
-│   └── gfx-shaders/     # WGSL/GLSL shader modules
+│   └── phenotype-voxel/ # Compatibility shim re-exporting the core voxel kernel (ADR-004)
+├── src/
+│   ├── voxel/           # Voxel kernel: chunk storage, meshing (cubic, greedy), materials
+│   ├── lod/             # LOD system: frustum culling, chunk render planning
+│   ├── streaming/       # Streaming window: ring-based chunk lifecycle, eviction
+│   ├── water/           # Water simulation: Gerstner waves, fluid mesh
+│   ├── postfx/          # Post-processing: SSAO, SSGI, Bloom, ACES, LUT
+│   ├── terrain/         # Terrain: height field, chunk mesh builder
+│   └── voxelizer/       # Sprite voxelizer: voxel-to-sprite rendering
 ├── examples/            # Sample projects
 └── docs/                # API reference + design docs
 ```
