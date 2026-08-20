@@ -243,7 +243,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_rust == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: rustsec/audit-check@v2.0.0
