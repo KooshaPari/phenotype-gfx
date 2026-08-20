@@ -8,25 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-08-19
 
 ### Added
-- **SBOM Generation**: Integrated CycloneDX and SPDX SBOM generation into the CI workflow.
-- **CI Multi-OS Matrix**: Extended the CI pipeline to run across multiple operating systems for broader compatibility.
-- **Governance**: Added comprehensive governance files including `CLAUDE.md`, `CODEOWNERS`, `SECURITY.md`, `DESIGN.md`, and a `Taskfile.yml` for AgilePlus governance.
-- **Security**: Added dual-license support and integrated Infisical for secret management.
-- **Tooling**: Added `pre-commit` hooks and `renovate.json` for automated dependency management.
+- **CI & Tooling**: Added `deny.toml` for `cargo-deny` CI compliance and `cargo-audit` security scanning to the CI and release pipeline.
+- **Testing**: Added comprehensive streaming module tests (previously 0% coverage) and observability module tests.
+- **Security**: Added SBOM generation workflow (CycloneDX + SPDX) and integrated `SECURITY.md`.
+- **Governance**: Added `CODEOWNERS`, `Taskfile.yml`, `CLAUDE.md`, `DESIGN.md`, and Infisical integration for secret management.
 - **Trunk Integration**: Configured `trunk.yaml` for linting and formatting.
 
 ### Changed
-- **CI Modernization**: Updated `trunk-io/trunk-action` to `v1.3.1` to resolve workflow failures.
-- **Workflow Stability**: Updated CI workflows to use stable lint/test gate names for better consistency.
+- **Configuration**: Aligned `VERSION.toml` with `Cargo.toml` (0.2.0) and scoped `CODEOWNERS` with directory-level review paths.
+- **Workflow Stability**: Updated `trunk-io/trunk-action` to `v1.3.1` and migrated CI to use stable lint/test gate names.
+- **CI Multi-OS Matrix**: Extended the CI pipeline to run across multiple operating systems for broader compatibility.
 
 ### Fixed
 - **Deep Audit**: Resolved doc-test issues, updated `MaterialPalette` to return `Result`, and removed deprecated Bevy annotations.
-- **Performance Regression Guards**: Addressed potential performance regressions through clippy cleanup and targeted fixes.
-- **Trunk Configuration**: Migrated `trunk.yaml` to v0.1 format and removed invalid configuration keys.
-- **Trunk Formatting**: Repaired `trunk check` formatting failures to ensure CI stability.
+- **Trunk Integration**: Migrated `trunk.yaml` to v0.1 format and removed invalid configuration keys to resolve CI failures.
+- **Maintenance**: Addressed 56 clippy warnings, crossbeam CVE fix, and formatting regressions.
 
 ### Security
-- **Crossbeam CVE**: Patched `crossbeam-epoch` to address a known vulnerability (CVE fix).
+- **Vulnerability Remediation**: Patched `crossbeam-epoch` to address a known vulnerability (CVE fix) and implemented automated security auditing via `cargo-audit`.
 
 ## [0.1.0] - 2026-06-18
 
