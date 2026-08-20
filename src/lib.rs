@@ -40,8 +40,11 @@ pub mod water;
 /// Sprite voxelizer: voxel-to-sprite rendering (OrganicBlob, Lathe, PerTexel).
 pub mod voxelizer;
 
-/// Terrain system: height field, chunk mesh builder, terrain LOD, materials.
+/// Terrain system: height field, chunk mesh builder, terrain LOD, materials, shaders.
 pub mod terrain;
+
+/// Lighting system: SSAO, directional light, point light, shadow mapping.
+pub mod lighting;
 
 // Re-export the absorbed voxel kernel at the crate root so consumers that rename
 // `phenotype-gfx` to `phenotype-voxel` keep the old `phenotype_voxel::Chunk` API.

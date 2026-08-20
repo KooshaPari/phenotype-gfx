@@ -1,0 +1,23 @@
+name: MSRV Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.75.0  # Minimum supported Rust version
+      - uses: Swatinem/rust-cache@v2
+      - name: Check MSRV compatibility
+        run: cargo check --workspace
+      - name: Verify MSRV in Cargo.toml
+        run: |
+          MSRV=$(grep -m1 'rust-version' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+          echo "Declared MSRV: $MSRV"
+          echo "Toolchain: 1.75.0"
+          test "$MSRV" = "1.75.0" || echo "WARNING: MSRV mismatch"

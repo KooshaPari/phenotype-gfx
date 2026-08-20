@@ -12,6 +12,7 @@
 //! - [`terrain_lod`] — `TerrainLod` concrete impl.
 //! - [`materials`] — `TerrainMaterial`, `TerrainMaterialProperty` (+ type enum).
 //! - [`ports`] — `IMaterialRegistry` + `ISerializationPort` traits + adapters.
+//! - [`shaders`] — terrain shader types (heightmap, splatmap, LOD transition).
 
 pub mod chunk_mesh_builder;
 pub mod error;
@@ -19,4 +20,5 @@ pub mod height_field;
 pub mod lod;
 pub mod materials;
 pub mod ports;
+pub mod shaders;
 pub mod terrain_lod;

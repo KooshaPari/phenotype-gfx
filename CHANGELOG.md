@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Shader system expansion (terrain, lighting)
+- Example demos (terrain, water, postfx, full scene)
+- CI coverage reporting with cargo-tarpaulin
+- CI MSRV validation workflow
+- deny.toml for cargo-deny
+- CHANGELOG.md
+- Streaming module tests (68 tests)
+- Observability module tests (17 tests)
+- Cross-module integration tests (3 tests)
+- CODEOWNERS and Taskfile.yml governance files
+
+### Fixed
+- Trunk Check workflow failures
+- VERSION.toml alignment
+- Deprecated Bevy material annotations
+- Broken doc-tests in voxel module
+- MaterialPalette::add() error handling
+- crossbeam-epoch vulnerability (0.9.18 -> 0.9.20)
+- 56 clippy warnings
+- cargo fmt inconsistencies
+
 ## [0.2.0] - 2026-08-19
 
 ### Added
