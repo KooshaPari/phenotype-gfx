@@ -3,11 +3,20 @@
 //! Deprecated: in the C# layer this was a thin wrapper over `UnityEngine.Material`.
 //! In the single Rust core the material is a name + handle pair; actual
 //! shader / property assignment is the engine-side's responsibility.
+//!
+//! **Migration path:** These types are C# edge pass-throughs, *not* Bevy
+//! `Material` trait impls. When the project migrates to full Bevy ECS integration
+//! (target: Bevy 0.18+), replace with `impl bevy::pbr::Material for WaterMaterial`
+//! using `MaterialPlugin` from `bevy::pbr`. See TODO-PHENO-GFX-BEVY-MATERIAL.
 
 use super::water_shader::WaterShader;
 
 /// Handle for a water material in the registry. Deprecated: the actual
 /// material lives in the engine; this is a stable identity for the registry.
+///
+/// TODO-PHENO-GFX-BEVY-MATERIAL: Remove when C# edge is fully migrated.
+/// Replace with `impl bevy::pbr::Material for WaterMaterial` using `MaterialPlugin`
+/// from `bevy::pbr` (target: Bevy 0.18+).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[deprecated(
     note = "WaterMaterial is a name-only pass-through. Use the engine-side material at render time."

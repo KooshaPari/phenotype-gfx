@@ -7,6 +7,11 @@
 //! `phenotype-water`: kept as `#[deprecated]` pass-throughs. The real logic now
 //! lives in [`crate::postfx::post_stack`] and the individual pass files. The
 //! C# edge (in `unity/postfx/`) consumes the Rust core via P/Invoke.
+//!
+//! **Migration path:** These types are C# edge pass-throughs, *not* Bevy
+//! `Material` trait impls. When the project migrates to full Bevy ECS integration
+//! (target: Bevy 0.18+), replace with `impl bevy::pbr::Material for ...` using
+//! `MaterialPlugin` from `bevy::pbr`. See TODO-PHENO-GFX-BEVY-MATERIAL.
 
 /// Stable material handle (just an integer id).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -47,6 +52,11 @@ impl RenderTarget {
 /// `#[deprecated]` pass-through material type. Kept for C# edge compatibility.
 /// The real per-pass material config is now in [`crate::postfx::bloom_pass::BloomConfig`]
 /// and [`crate::postfx::ssao_pass::SsaoConfig`].
+///
+/// TODO-PHENO-GFX-BEVY-MATERIAL: Remove when C# edge is fully migrated to P/Invoke.
+/// Replace with `impl bevy::pbr::Material for PostFxMaterial` using `MaterialPlugin`
+/// from `bevy::pbr` (target: Bevy 0.18+). The current Bevy feature flag already
+/// pulls in `bevy::render::mesh`; extend it with `bevy_pbr` to get the Material trait.
 #[deprecated(
     since = "0.2.0",
     note = "Use the per-pass config types (BloomConfig, SsaoConfig, ...) directly; this type is a pass-through kept for C# edge compatibility."

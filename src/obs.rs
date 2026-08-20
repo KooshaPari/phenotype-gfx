@@ -9,14 +9,14 @@
 //!
 //! Install a subscriber before calling kernel code:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! // Example: log to stderr with tracing-subscriber
+//! // Add `tracing-subscriber` as a dev-dependency to run this example.
 //! use tracing_subscriber::EnvFilter;
 //! tracing_subscriber::fmt()
 //!     .with_env_filter(EnvFilter::from_default_env())
 //!     .init();
 //! ```
-//!
 //! Install a metrics recorder to export counters/gauges:
 //!
 //! ```rust,no_run

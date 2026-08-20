@@ -120,7 +120,9 @@ impl MaterialRegistry for InMemoryMaterialRegistry {
                 "material name must not be empty".into(),
             ));
         }
-        let id = self.palette.add(material);
+        let id = self.palette.add(material).map_err(|e| {
+            MaterialError::Storage(e.to_string())
+        })?;
         Ok(id)
     }
 
@@ -192,7 +194,9 @@ impl MaterialRegistry for MockMaterialRegistry {
 
     fn add(&mut self, material: VoxelMaterial) -> MaterialResult<MaterialId> {
         self.calls.push(MockCall::Add(material.name.clone()));
-        let id = self.palette.add(material);
+        let id = self.palette.add(material).map_err(|e| {
+            MaterialError::Storage(e.to_string())
+        })?;
         Ok(id)
     }
 

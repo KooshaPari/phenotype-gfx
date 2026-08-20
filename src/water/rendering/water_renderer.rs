@@ -3,6 +3,10 @@
 //! Deprecated: the renderer was a thin orchestrator in C#. In the single
 //! Rust core, callers compose the [`GerstnerWaveBank`], [`WaterLod`], and
 //! [`super::fluid_mesh::build`] directly.
+//!
+//! TODO-PHENO-GFX-BEVY-MATERIAL: Remove when C# edge is fully migrated.
+//! The Bevy ECS integration should use `bevy::pbr::MaterialPlugin` with
+//! custom `Material` impls for water surfaces (target: Bevy 0.18+).
 
 use super::fluid_mesh::{self, MeshData};
 use super::water_lod::WaterLod;

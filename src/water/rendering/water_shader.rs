@@ -5,6 +5,9 @@
 //! engine-side binding is the consumer's responsibility. Kept as a struct so
 //! the C# edge (and the registry tests) can still pass a stable identity
 //! through the port.
+//!
+//! TODO-PHENO-GFX-BEVY-MATERIAL: Remove when C# edge is fully migrated.
+//! Bevy consumers should use `Handle<Shader>` directly (target: Bevy 0.18+).
 
 /// Thin pass-through for a Unity shader name. Deprecated; consumers should
 /// rely on the engine-side shader lookup at render time.

@@ -61,7 +61,7 @@ pub use cubic_mesher::{CubicMesher, CubicVoxel};
 pub use delta::{DirtyChunkEvent, WriteSeq};
 pub use greedy_mesher::GreedyMesher;
 pub use lod::{select_lod, LodLevel, LodPolicy, VoxelScaleMultiplier};
-pub use material::{MaterialId, MaterialPalette, VoxelMaterial};
+pub use material::{MaterialId, MaterialPalette, PaletteError, VoxelMaterial};
 pub use mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
 pub use octree::{OctreeNode, VoxelOctree};
 pub use ports::{

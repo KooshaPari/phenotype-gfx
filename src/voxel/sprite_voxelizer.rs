@@ -19,7 +19,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use phenotype_voxel::sprite_voxelizer::{VoxelizeConfig, voxelize_image};
+//! use phenotype_gfx::voxel::sprite_voxelizer::{VoxelizeConfig, voxelize_image};
 //!
 //! // 2×2 fully-opaque image, RGBA8
 //! let pixels: Vec<[u8; 4]> = vec![[255, 0, 0, 255]; 4];

@@ -14,7 +14,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use phenotype_voxel::shape_hints::{ShapeHint, ShapeHintRegistry};
+//! use phenotype_gfx::voxel::shape_hints::{ShapeHint, ShapeHintRegistry};
 //!
 //! let reg = ShapeHintRegistry::with_wsm3d_defaults();
 //! assert_eq!(reg.get("tree_oak"), ShapeHint::Cylinder);
