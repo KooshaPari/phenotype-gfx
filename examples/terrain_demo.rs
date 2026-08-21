@@ -4,9 +4,9 @@
 //! LOD-aware mesh generation, and basic camera-plane setup.
 
 use anyhow::Result;
+use phenotype_gfx::lod::select_mesh_detail_level;
 use phenotype_gfx::terrain::chunk_mesh_builder::{ChunkMeshBuilder, MeshData};
 use phenotype_gfx::terrain::height_field::HeightField;
-use phenotype_gfx::lod::select_mesh_detail_level;
 use phenotype_gfx::{LodPolicy, VoxelScaleMultiplier};
 
 /// Simple Perlin-like noise approximation using sine/cosine.

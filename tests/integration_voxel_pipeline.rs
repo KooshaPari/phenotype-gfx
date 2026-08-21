@@ -48,7 +48,11 @@ fn voxelworld_write_to_cubic_mesh_pipeline() {
 
     // Verify dirty events were produced.
     let dirty = world.drain_dirty();
-    assert_eq!(dirty.len(), 3, "three writes should produce three dirty events");
+    assert_eq!(
+        dirty.len(),
+        3,
+        "three writes should produce three dirty events"
+    );
 
     // Extract the chunk and mesh it.
     let chunk_coord = ChunkCoord {
@@ -85,9 +89,8 @@ fn voxelworld_write_to_cubic_mesh_pipeline() {
 
     // All normals must be unit-length axis-aligned vectors.
     for v in &mesh.vertices {
-        let len_sq = v.normal[0] * v.normal[0]
-            + v.normal[1] * v.normal[1]
-            + v.normal[2] * v.normal[2];
+        let len_sq =
+            v.normal[0] * v.normal[0] + v.normal[1] * v.normal[1] + v.normal[2] * v.normal[2];
         assert!(
             (len_sq - 1.0).abs() < 1e-6,
             "normal must be unit-length, got len²={len_sq}"
@@ -236,8 +239,8 @@ fn full_pipeline_write_dirty_lod_mesh_determinism() {
         voxels: &chunk.voxels,
     };
 
-    let mesh1 = GreedyMesher::<MaterialId>::mesh_greedy(view, lod)
-        .expect("greedy mesh should succeed");
+    let mesh1 =
+        GreedyMesher::<MaterialId>::mesh_greedy(view, lod).expect("greedy mesh should succeed");
 
     // Mesh again to verify determinism.
     let mesh2 = GreedyMesher::<MaterialId>::mesh_greedy(view, lod)

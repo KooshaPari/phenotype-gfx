@@ -1,23 +1,43 @@
 # cargo-deny configuration for phenotype-gfx
-# https://embarkstududios.github.io/cargo-deny/
-
-[graph]
-all-features = true
+# https://embarkstudios.github.io/cargo-deny/
+#
+# Run locally with: `cargo deny check`
 
 [advisories]
-vulnerability = 'deny'
-unmaintained = 'warn'
-yanked = 'warn'
-notice = 'warn'
-
-[licenses]
-allow = ['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC', 'Unicode-3.0', 'Unicode-DFS-2016', 'Zlib']
-unlicensed = 'deny'
+db-path = "$CARGO_HOME/advisory-db"
+# Report unmaintained direct workspace dependencies only.
+unmaintained = "workspace"
+# Ignore advisories that do not have a patched version yet.
+ignore = []
 
 [bans]
-multiple-versions = 'warn'
-wildcards = 'allow'
+multiple-versions = "warn"
+wildcards = "warn"
+highlight = "all"
+skip = []
+deny = []
+allow = []
+skip-tree = []
+
+[licenses]
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "0BSD",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+]
+confidence-threshold = 1.0
+
+[licenses.private]
+ignore = true
 
 [sources]
-unknown-registry = 'deny'
-unknown-git = 'deny'
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

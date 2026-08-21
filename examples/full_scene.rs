@@ -4,13 +4,13 @@
 //! voxel terrain meshing, water surface animation, and post-processing.
 
 use anyhow::Result;
-use phenotype_gfx::voxel::{Chunk, ChunkId, ChunkView, CHUNK_EDGE, MaterialId};
+use phenotype_gfx::lod::{LodRingPlan, MvpResidentConfig};
+use phenotype_gfx::postfx::{PostStack, PostStackConfig};
 use phenotype_gfx::voxel::cubic_mesher::CubicMesher;
 use phenotype_gfx::voxel::lod::LodLevel;
 use phenotype_gfx::voxel::mesh::Mesher;
+use phenotype_gfx::voxel::{Chunk, ChunkId, ChunkView, MaterialId, CHUNK_EDGE};
 use phenotype_gfx::water::gerstner_wave_bank::GerstnerWaveBank;
-use phenotype_gfx::postfx::{PostStack, PostStackConfig};
-use phenotype_gfx::lod::{MvpResidentConfig, LodRingPlan};
 use std::time::Instant;
 
 fn main() -> Result<()> {
@@ -37,7 +37,11 @@ fn main() -> Result<()> {
     // 2. Mesh the voxel terrain
     let mesher: CubicMesher<MaterialId> = CubicMesher::new();
     let mesh = mesher.mesh_chunk(view, LodLevel(0))?;
-    println!("Terrain: {} vertices, {} indices", mesh.vertex_count(), mesh.index_count());
+    println!(
+        "Terrain: {} vertices, {} indices",
+        mesh.vertex_count(),
+        mesh.index_count()
+    );
 
     // 3. Set up water surface
     let water_bank = GerstnerWaveBank::create_ocean_preset();
@@ -51,14 +55,23 @@ fn main() -> Result<()> {
         ..PostStackConfig::default()
     };
     let mut postfx = PostStack::new(post_config);
-    postfx.validate_shader_variants(&phenotype_gfx::postfx::ports::shader_availability::DefaultPostFxShaderAvailability);
-    println!("PostFX: SSAO supported={}, Bloom supported={}", postfx.ssao_supported(), postfx.bloom_supported());
+    postfx.validate_shader_variants(
+        &phenotype_gfx::postfx::ports::shader_availability::DefaultPostFxShaderAvailability,
+    );
+    println!(
+        "PostFX: SSAO supported={}, Bloom supported={}",
+        postfx.ssao_supported(),
+        postfx.bloom_supported()
+    );
 
     // 5. System stats / performance metrics
     let mvp = MvpResidentConfig::MVP;
     let ring_plan = LodRingPlan::default();
     println!("MVP world side: {}m", mvp.mvp_world_side_m());
-    println!("LOD ring inner chunks per side: {}", ring_plan.inner_side_chunks());
+    println!(
+        "LOD ring inner chunks per side: {}",
+        ring_plan.inner_side_chunks()
+    );
 
     let elapsed = start.elapsed();
     println!("\nScene initialization completed in {:?}", elapsed);

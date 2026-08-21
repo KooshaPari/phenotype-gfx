@@ -13,7 +13,9 @@ pub enum PaletteError {
 impl std::fmt::Display for PaletteError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PaletteError::Overflow => write!(f, "palette overflow: too many materials (u16::MAX limit)"),
+            PaletteError::Overflow => {
+                write!(f, "palette overflow: too many materials (u16::MAX limit)")
+            }
         }
     }
 }
@@ -51,8 +53,7 @@ pub struct MaterialPalette {
 impl MaterialPalette {
     /// Append a new material. Returns its newly-assigned [`MaterialId`].
     pub fn add(&mut self, material: VoxelMaterial) -> Result<MaterialId, PaletteError> {
-        let id =
-            u16::try_from(self.materials.len()).map_err(|_| PaletteError::Overflow)?;
+        let id = u16::try_from(self.materials.len()).map_err(|_| PaletteError::Overflow)?;
         self.materials.push(material);
         Ok(MaterialId(id))
     }

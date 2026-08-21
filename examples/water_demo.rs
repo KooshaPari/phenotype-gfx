@@ -30,7 +30,10 @@ fn main() -> Result<()> {
         println!("  t={time:.1}:");
         for pt in &points {
             let disp = bank.sample_displacement(*pt, *time);
-            println!("    [{pt:?}] -> ({:.3}, {:.3}, {:.3})", disp.x, disp.y, disp.z);
+            println!(
+                "    [{pt:?}] -> ({:.3}, {:.3}, {:.3})",
+                disp.x, disp.y, disp.z
+            );
         }
     }
 
@@ -38,7 +41,10 @@ fn main() -> Result<()> {
     println!("\nSurface Normals:");
     for time in &times {
         let normal = bank.sample_normal(glam::Vec2::ZERO, *time);
-        println!("  t={time:.1}: ({:.3}, {:.3}, {:.3})", normal.x, normal.y, normal.z);
+        println!(
+            "  t={time:.1}: ({:.3}, {:.3}, {:.3})",
+            normal.x, normal.y, normal.z
+        );
     }
 
     // 4. Flow direction configuration

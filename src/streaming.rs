@@ -478,7 +478,9 @@ mod tests {
 
     #[test]
     fn chunk_state_fading_ticks_remaining_255() {
-        let s = ChunkState::Fading { ticks_remaining: 255 };
+        let s = ChunkState::Fading {
+            ticks_remaining: 255,
+        };
         assert!(s.has_mesh());
         assert!(s.is_resident());
     }
@@ -502,7 +504,10 @@ mod tests {
         let policy = WindowPolicy::default(); // fade_ticks=0, mesh_ring=1, seam_chunks=1
         let anchor = default_anchor();
         // ring=2 → mesh_ring(1)+seam_chunks(1)=2 → seam zone → Resident (fade_ticks=0)
-        assert_eq!(policy.classify(coord(2, 0, 0), anchor), ChunkState::Resident);
+        assert_eq!(
+            policy.classify(coord(2, 0, 0), anchor),
+            ChunkState::Resident
+        );
     }
 
     #[test]
@@ -510,7 +515,10 @@ mod tests {
         let policy = WindowPolicy::default(); // mesh_ring=1, seam_chunks=1
         let anchor = default_anchor();
         // ring=5 → well beyond mesh_ring+seam_chunks=2 → Unloaded
-        assert_eq!(policy.classify(coord(5, 0, 0), anchor), ChunkState::Unloaded);
+        assert_eq!(
+            policy.classify(coord(5, 0, 0), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     #[test]
@@ -551,9 +559,15 @@ mod tests {
         };
         let anchor = default_anchor();
         // ring=4 → mesh_ring(2)+seam_chunks(2)=4 → seam edge → Resident
-        assert_eq!(policy.classify(coord(4, 0, 0), anchor), ChunkState::Resident);
+        assert_eq!(
+            policy.classify(coord(4, 0, 0), anchor),
+            ChunkState::Resident
+        );
         // ring=5 → beyond seam → Unloaded
-        assert_eq!(policy.classify(coord(5, 0, 0), anchor), ChunkState::Unloaded);
+        assert_eq!(
+            policy.classify(coord(5, 0, 0), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     #[test]
@@ -568,7 +582,10 @@ mod tests {
         // ring=2 → meshed (≤ mesh_ring)
         assert_eq!(policy.classify(coord(2, 0, 0), anchor), ChunkState::Meshed);
         // ring=3 → beyond mesh_ring+0 → Unloaded (no seam)
-        assert_eq!(policy.classify(coord(3, 0, 0), anchor), ChunkState::Unloaded);
+        assert_eq!(
+            policy.classify(coord(3, 0, 0), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     #[test]
@@ -583,7 +600,10 @@ mod tests {
         // dy=1, vy_weight=2 → ring=2 ≤ mesh_ring(4) → Meshed
         assert_eq!(policy.classify(coord(0, 1, 0), anchor), ChunkState::Meshed);
         // dy=3, vy_weight=2 → ring=6 > mesh_ring(4)+seam(1)=5 → Unloaded
-        assert_eq!(policy.classify(coord(0, 3, 0), anchor), ChunkState::Unloaded);
+        assert_eq!(
+            policy.classify(coord(0, 3, 0), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     // ========================================================================
@@ -604,7 +624,10 @@ mod tests {
     fn sim_cohort_same_chunk_is_full_sim() {
         let policy = WindowPolicy::default();
         let anchor = default_anchor();
-        assert_eq!(policy.sim_cohort(coord(0, 0, 0), anchor), SimCohort::FullSim);
+        assert_eq!(
+            policy.sim_cohort(coord(0, 0, 0), anchor),
+            SimCohort::FullSim
+        );
     }
 
     #[test]
@@ -622,10 +645,7 @@ mod tests {
     fn sim_cohort_frozen_outside_coarse_ring() {
         let policy = WindowPolicy::default(); // coarse_ring=2
         let anchor = default_anchor();
-        assert_eq!(
-            policy.sim_cohort(coord(3, 0, 0), anchor),
-            SimCohort::Frozen
-        );
+        assert_eq!(policy.sim_cohort(coord(3, 0, 0), anchor), SimCohort::Frozen);
     }
 
     #[test]
@@ -1068,7 +1088,10 @@ mod tests {
         // ring=0 → mesh_ring(0) → Meshed for same chunk
         assert_eq!(policy.classify(coord(0, 0, 0), anchor), ChunkState::Meshed);
         // ring=1 → >0 → Unloaded
-        assert_eq!(policy.classify(coord(1, 0, 0), anchor), ChunkState::Unloaded);
+        assert_eq!(
+            policy.classify(coord(1, 0, 0), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     #[test]
@@ -1080,7 +1103,10 @@ mod tests {
         };
         let anchor = default_anchor();
         // Huge offset → ring=1000 → Unloaded
-        assert_eq!(policy.classify(coord(1000, 500, 1000), anchor), ChunkState::Unloaded);
+        assert_eq!(
+            policy.classify(coord(1000, 500, 1000), anchor),
+            ChunkState::Unloaded
+        );
     }
 
     #[test]

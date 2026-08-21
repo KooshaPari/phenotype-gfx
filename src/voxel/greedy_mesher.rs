@@ -193,7 +193,9 @@ impl<V: CubicVoxel> GreedyMesher<V> {
 
                             // Face is visible only when the outward neighbour is air.
                             mask[mu + mv * size_u] = if !neighbour_solid {
-                                let material = vox.expect("voxel must exist when mask cell is Some").material();
+                                let material = vox
+                                    .expect("voxel must exist when mask cell is Some")
+                                    .material();
                                 // Compute 4-corner AO using CubicMesher's helper.
                                 // face_ao expects the voxel (x,y,z) coordinates and
                                 // the face_id matching cubic's face encoding.

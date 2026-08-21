@@ -6,11 +6,11 @@
 use phenotype_gfx::lod::{plan_chunk_render, ChunkRenderPlan, LodRingPlan, RingRole};
 use phenotype_gfx::streaming::{ring_distance, ChunkState, EvictionKey, WindowPolicy};
 use phenotype_gfx::voxel::chunk::{Chunk, ChunkId, ChunkView, CHUNK_EDGE};
+use phenotype_gfx::voxel::coord::ChunkCoord;
 use phenotype_gfx::voxel::greedy_mesher::GreedyMesher;
 use phenotype_gfx::voxel::lod::LodLevel;
 use phenotype_gfx::voxel::material::MaterialId;
 use phenotype_gfx::voxel::mesh::Mesher;
-use phenotype_gfx::voxel::coord::ChunkCoord;
 
 fn idx(x: i32, y: i32, z: i32) -> usize {
     x as usize + y as usize * CHUNK_EDGE + z as usize * CHUNK_EDGE * CHUNK_EDGE
@@ -55,7 +55,11 @@ fn voxel_to_streaming_pipeline() {
     // 4. Verify the chunk is correctly classified by the streaming window.
     // A chunk at ring 0 should be Meshed.
     let state = policy.classify(chunk_coord, anchor);
-    assert_eq!(state, ChunkState::Meshed, "chunk at ring 0 should be Meshed");
+    assert_eq!(
+        state,
+        ChunkState::Meshed,
+        "chunk at ring 0 should be Meshed"
+    );
     assert!(state.has_mesh(), "Meshed state should have mesh");
     assert!(state.is_resident(), "Meshed state should be resident");
 }
@@ -73,7 +77,10 @@ fn streaming_eviction_ordering() {
     let key_near = EvictionKey::new(near_chunk, anchor, vy_weight, 0);
     let key_far = EvictionKey::new(far_chunk, anchor, vy_weight, 0);
 
-    assert!(key_far < key_near, "far chunk should be evicted before near chunk");
+    assert!(
+        key_far < key_near,
+        "far chunk should be evicted before near chunk"
+    );
 
     // Verify chunk states
     let policy = WindowPolicy::default();

@@ -4,11 +4,9 @@
 //! variant validation, and pass descriptors.
 
 use anyhow::Result;
-use phenotype_gfx::postfx::{
-    BloomConfig, PostStack, PostStackConfig, SsaoConfig,
-};
 use phenotype_gfx::postfx::ports::post_fx_pass::PassQuality;
 use phenotype_gfx::postfx::ports::shader_availability::DefaultPostFxShaderAvailability;
+use phenotype_gfx::postfx::{BloomConfig, PostStack, PostStackConfig, SsaoConfig};
 
 fn main() -> Result<()> {
     println!("=== PostFX Demo ===");
@@ -28,12 +26,15 @@ fn main() -> Result<()> {
 
     // 2. Initialize the post-stack
     let mut stack = PostStack::new(config);
-    println!("Post-stack initialized with {} samples SSAO", stack.config().ssao_samples);
+    println!(
+        "Post-stack initialized with {} samples SSAO",
+        stack.config().ssao_samples
+    );
 
     // 3. Validate shader availability
     let provider = DefaultPostFxShaderAvailability;
     stack.validate_shader_variants(&provider);
-    
+
     println!("Shader Support:");
     println!("  SSAO: {}", stack.ssao_supported());
     println!("  Bloom: {}", stack.bloom_supported());
@@ -62,7 +63,10 @@ fn main() -> Result<()> {
         intensity: 1.5,
         ..SsaoConfig::default()
     };
-    println!("SSAO Config: radius={:.1}, intensity={:.1}", ssao.radius, ssao.intensity);
+    println!(
+        "SSAO Config: radius={:.1}, intensity={:.1}",
+        ssao.radius, ssao.intensity
+    );
 
     println!("\nPostFX demo completed successfully.");
     Ok(())
