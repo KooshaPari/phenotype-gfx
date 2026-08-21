@@ -74,10 +74,22 @@ macro_rules! gfx_error {
     ($($arg:tt)*) => { ::tracing::error!($($arg)*) };
 }
 
+/// Increment a named counter metric.  No-op when no recorder is installed.
+///
+/// Usage: `gfx_count!("phenotype_gfx.lod_plan_calls")`
+#[macro_export]
+macro_rules! gfx_count {
+    ($name:expr) => {
+        ::metrics::counter!($name).increment(1)
+    };
+    ($name:expr, $n:expr) => {
+        ::metrics::counter!($name).increment($n)
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gfx_count;
 
     // ======================================================================
     // tracing subscriber init
@@ -198,17 +210,4 @@ mod tests {
         gfx_count!("phenotype_gfx.test_gfx_count");
         gfx_count!("phenotype_gfx.test_gfx_count_batch", 5);
     }
-}
-
-/// Increment a named counter metric.  No-op when no recorder is installed.
-///
-/// Usage: `gfx_count!("phenotype_gfx.lod_plan_calls")`
-#[macro_export]
-macro_rules! gfx_count {
-    ($name:expr) => {
-        ::metrics::counter!($name).increment(1)
-    };
-    ($name:expr, $n:expr) => {
-        ::metrics::counter!($name).increment($n)
-    };
 }

@@ -943,7 +943,7 @@ mod tests {
     #[test]
     fn eviction_key_sort_order_is_eviction_priority() {
         let anchor = default_anchor();
-        let mut keys = vec![
+        let mut keys = [
             EvictionKey::new(coord(1, 0, 0), anchor, 1, 10), // ring=1, lru=10
             EvictionKey::new(coord(5, 0, 0), anchor, 1, 0),  // ring=5, lru=0
             EvictionKey::new(coord(3, 0, 0), anchor, 1, 5),  // ring=3, lru=5
@@ -1060,7 +1060,7 @@ mod tests {
         // Simulate multiple chunks competing for eviction under memory pressure.
         let anchor = default_anchor();
         let vy_weight = 2;
-        let mut keys = vec![
+        let mut keys = [
             EvictionKey::new(coord(8, 0, 0), anchor, vy_weight, 100), // ring=8, lru=100
             EvictionKey::new(coord(3, 0, 0), anchor, vy_weight, 0),   // ring=3, lru=0 (cold)
             EvictionKey::new(coord(3, 0, 0), anchor, vy_weight, 50),  // ring=3, lru=50 (warm)
@@ -1118,7 +1118,7 @@ mod tests {
         assert_eq!(k1, k2);
         assert_eq!(k1.cmp(&k2), core::cmp::Ordering::Equal);
         // Sorting multiple identical keys is stable
-        let mut v = vec![k1, k2, k1];
+        let mut v = [k1, k2, k1];
         v.sort();
         assert!(v.windows(2).all(|w| w[0] == w[1]));
     }
