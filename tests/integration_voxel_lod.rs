@@ -10,7 +10,6 @@ use phenotype_gfx::voxel::coord::ChunkCoord;
 use phenotype_gfx::voxel::greedy_mesher::GreedyMesher;
 use phenotype_gfx::voxel::lod::LodLevel;
 use phenotype_gfx::voxel::material::MaterialId;
-use phenotype_gfx::voxel::mesh::Mesher; // used by trait bounds in tests
 
 fn idx(x: i32, y: i32, z: i32) -> usize {
     x as usize + y as usize * CHUNK_EDGE + z as usize * CHUNK_EDGE * CHUNK_EDGE
