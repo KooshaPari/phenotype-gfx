@@ -20,6 +20,12 @@
 // full metric catalogue and setup examples.
 pub mod obs;
 
+/// OTLP trace export and Prometheus metrics HTTP endpoint.
+///
+/// All functionality here is feature-gated behind `otlp` / `prometheus` /
+/// `full-obs` features.  When the features are disabled this module is empty.
+pub mod otlp;
+
 // ALGORITHM MODULES (all real logic lives here, exactly once)
 
 /// Voxel kernel: storage, meshing, chunk management; PBR material policy.
@@ -45,6 +51,9 @@ pub mod terrain;
 
 /// Lighting system: SSAO, directional light, point light, shadow mapping.
 pub mod lighting;
+
+/// Compute shader framework for GPU-accelerated voxel processing.
+pub mod compute;
 
 // Re-export the absorbed voxel kernel at the crate root so consumers that rename
 // `phenotype-gfx` to `phenotype-voxel` keep the old `phenotype_voxel::Chunk` API.

@@ -34,6 +34,14 @@ tracing = { version = "0.1", default-features = false, features = ["std", "attri
 # metrics facade — no-op when no recorder is installed; consumers opt-in to prometheus/statsd.
 metrics = { version = "0.24", default-features = false }
 
+# OTLP + Prometheus observability (feature-gated)
+opentelemetry = { version = "0.28", optional = true }
+opentelemetry_sdk = { version = "0.28", features = ["rt-tokio"], optional = true }
+opentelemetry-otlp = { version = "0.28", features = ["grpc-tonic"], optional = true }
+opentelemetry-prometheus = { version = "0.28", optional = true }
+prometheus = { version = "0.13", optional = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
+
 # Bevy adapter is optional — only pulled in when consumers need ECS integration
 bevy = { version = "0.18.1", default-features = false, features = ["bevy_asset", "bevy_mesh"], optional = true }
 
@@ -88,3 +96,7 @@ default = []
 bevy = ["dep:bevy"]
 # Enable criterion-backed benches in `cargo bench --features bench`
 bench = ["dep:criterion"]
+# OTLP + Prometheus observability stack
+otlp = ["dep:opentelemetry", "dep:opentelemetry_sdk", "dep:opentelemetry-otlp", "dep:tokio"]
+prometheus = ["dep:opentelemetry-prometheus", "dep:prometheus"]
+full-obs = ["otlp", "prometheus"]
