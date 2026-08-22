@@ -91,6 +91,14 @@ path = "examples/postfx_demo.rs"
 name = "full_scene"
 path = "examples/full_scene.rs"
 
+[[example]]
+name = "networking_demo"
+path = "examples/networking_demo.rs"
+
+[[example]]
+name = "ecs_integration"
+path = "examples/ecs_integration.rs"
+
 [features]
 default = []
 bevy = ["dep:bevy"]
@@ -100,3 +108,5 @@ bench = ["dep:criterion"]
 otlp = ["dep:opentelemetry", "dep:opentelemetry_sdk", "dep:opentelemetry-otlp", "dep:tokio"]
 prometheus = ["dep:opentelemetry-prometheus", "dep:prometheus"]
 full-obs = ["otlp", "prometheus"]
+# SIMD-accelerated voxel meshing (SSE2 on x86_64, scalar fallback elsewhere)
+simd = []
