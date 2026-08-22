@@ -1,0 +1,39 @@
+name: Cosign Release Signing
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+
+      - name: Sign release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          # List release assets
+          ASSETS=$(gh release view "${{ github.event.release.tag_name }}" --json assets -q '.assets[].name')
+          
+          for asset in $ASSETS; do
+            echo "Signing asset: $asset"
+            # Download the asset
+            gh release download "${{ github.event.release.tag_name }}" -p "$asset"
+            
+            # Sign the asset (keyless via Sigstore)
+            cosign sign-blob --yes --output-signature "${asset}.sig" --output-certificate "${asset}.cert" "$asset"
+            
+            # Upload the signature and certificate back to the release
+            gh release upload "${{ github.event.release.tag_name }}" "${asset}.sig" "${asset}.cert"
+          done

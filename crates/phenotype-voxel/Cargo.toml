@@ -8,5 +8,9 @@ repository = "https://github.com/KooshaPari/phenotype-gfx"
 readme = "README.md"
 publish = false
 
+[features]
+default = ["simd"]
+simd = []
+
 [dependencies]
 phenotype-gfx = { path = "../..", package = "phenotype-gfx" }

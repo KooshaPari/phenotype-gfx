@@ -29,7 +29,7 @@
 //! `phenotype-voxel` crate is now archived. Consumers should depend on
 //! `phenotype-gfx` and import from `phenotype_gfx::voxel::...`.
 
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(missing_docs)]
 
 pub mod adapters;
@@ -49,6 +49,7 @@ pub mod octree;
 pub mod ports;
 pub mod serial;
 pub mod shape_hints;
+pub mod simd;
 pub mod sprite_voxelizer;
 pub mod world;
 
@@ -75,6 +76,7 @@ pub use sprite_voxelizer::{
     VoxelizeConfig, DEFAULT_DEPTH,
 };
 pub use world::VoxelWorld;
+pub use simd::{simd_normals_batch, simd_aabb_center_batch};
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes
 /// so consumers can detect API drift in `.civreplay` / serialized voxel diffs.

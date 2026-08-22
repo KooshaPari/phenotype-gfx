@@ -55,6 +55,9 @@ pub mod lighting;
 /// Compute shader framework for GPU-accelerated voxel processing.
 pub mod compute;
 
+/// Runtime plugin loading system: traits, context, and plugin manager.
+pub mod plugin;
+
 // Re-export the absorbed voxel kernel at the crate root so consumers that rename
 // `phenotype-gfx` to `phenotype-voxel` keep the old `phenotype_voxel::Chunk` API.
 pub use voxel as kernel;
