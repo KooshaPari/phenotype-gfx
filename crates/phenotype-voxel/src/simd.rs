@@ -56,10 +56,8 @@ mod x86_impl {
     /// Caller must ensure SSE2 is available (always true on x86_64).
     #[target_feature(enable = "sse2")]
     unsafe fn normalize4_sse2(v0: [f32; 3], v1: [f32; 3], v2: [f32; 3], v3: [f32; 3]) -> [[f32; 3]; 4] {
-        let zero = _mm_setzero_ps();
-        let eps = _mm_set1_ps(f32::EPSILON);
-        let half = _mm_set1_ps(0.5);
         let one = _mm_set1_ps(1.0);
+        let eps = _mm_set1_ps(f32::EPSILON);
 
         // Load xyz for each vector into 128-bit registers (3 floats each,
         // last lane unused).
