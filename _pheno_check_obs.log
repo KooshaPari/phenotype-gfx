@@ -1,0 +1,45 @@
+[1m[92m Downloading[0m crates ...
+[1m[92m  Downloaded[0m prometheus v0.13.4
+[1m[92m  Downloaded[0m opentelemetry-http v0.28.0
+[1m[92m  Downloaded[0m opentelemetry-prometheus v0.28.0
+[1m[92m  Downloaded[0m opentelemetry-otlp v0.28.0
+[1m[92m  Downloaded[0m opentelemetry v0.28.0
+[1m[92m  Downloaded[0m protobuf v2.28.0
+[1m[92m  Downloaded[0m opentelemetry-proto v0.28.0
+[1m[92m  Downloaded[0m opentelemetry_sdk v0.28.0
+[1m[92m    Checking[0m bytes v1.12.1
+[1m[92m    Checking[0m memchr v2.8.3
+[1m[92m    Checking[0m windows-sys v0.61.2
+[1m[92m    Checking[0m writeable v0.6.4
+[1m[92m    Checking[0m litemap v0.8.3
+[1m[92m   Compiling[0m zerocopy v0.8.56
+[1m[92m   Compiling[0m icu_normalizer_data v2.3.0
+[1m[92m   Compiling[0m icu_properties_data v2.3.0
+[1m[92m   Compiling[0m syn v3.0.3
+[1m[92m   Compiling[0m syn v2.0.119
+[1m[92m   Compiling[0m libc v0.2.189
+[1m[92m    Checking[0m ipnet v2.12.1
+[1m[92m   Compiling[0m anyhow v1.0.104
+[1m[92m   Compiling[0m either v1.18.0
+[1m[92m   Compiling[0m protobuf v2.28.0
+[1m[92m    Checking[0m bitflags v2.13.1
+[1m[92m    Checking[0m glob v0.3.4
+[1m[92m    Checking[0m log v0.4.33
+[1m[92m   Compiling[0m prometheus v0.13.4
+[1m[92m    Checking[0m http v1.5.0
+[1m[92m   Compiling[0m itertools v0.14.0
+[1m[92m    Checking[0m serde_json v1.0.151
+[1m[91merror[0m: failed to run custom build command for `libc v0.2.189`
+
+Caused by:
+  process didn't exit successfully: `C:\temp\wt-proto-mcp-target\debug\build\libc-2ec12f79aa93fbf8\build-script-build` (exit code: 101)
+  --- stdout
+  cargo:rerun-if-changed=build.rs
+  cargo:rerun-if-env-changed=LIBC_BUILD_VERBOSE
+
+  --- stderr
+
+  thread 'main' (179296) panicked at C:\Users\koosh\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libc-0.2.189\build.rs:261:31:
+  Failed to get rustc version: Error { kind: NotFound, message: "program not found" }
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[1m[93mwarning[0m: build failed, waiting for other jobs to finish...
