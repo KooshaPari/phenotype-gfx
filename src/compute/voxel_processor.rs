@@ -75,18 +75,12 @@ impl VoxelProcessConfig {
 /// Implements [`ComputeShader`] to provide embedded WGSL source and dispatch
 /// configuration for GPU-accelerated voxel processing.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct VoxelComputeShader {
     /// Configuration controlling grid size, operation type, and parameters.
     pub config: VoxelProcessConfig,
 }
 
-impl Default for VoxelComputeShader {
-    fn default() -> Self {
-        Self {
-            config: VoxelProcessConfig::default(),
-        }
-    }
-}
 
 impl VoxelComputeShader {
     /// Create a new voxel compute shader with default configuration.

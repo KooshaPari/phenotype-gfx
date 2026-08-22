@@ -69,18 +69,12 @@ impl MeshGenConfig {
 /// triangle meshes on the GPU. Each voxel is processed independently; face
 /// culling removes internal faces to produce an efficient mesh.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct MeshComputeShader {
     /// Configuration controlling grid size and buffer capacities.
     pub config: MeshGenConfig,
 }
 
-impl Default for MeshComputeShader {
-    fn default() -> Self {
-        Self {
-            config: MeshGenConfig::default(),
-        }
-    }
-}
 
 impl MeshComputeShader {
     /// Create a new mesh compute shader with default configuration.

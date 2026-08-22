@@ -9,7 +9,7 @@
 //!
 //! Install a subscriber before calling kernel code:
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! // Example: log to stderr with tracing-subscriber
 //! // Add `tracing-subscriber` as a dev-dependency to run this example.
 //! use tracing_subscriber::EnvFilter;

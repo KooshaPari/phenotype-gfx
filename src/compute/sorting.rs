@@ -56,7 +56,7 @@ impl Default for SortingConfig {
 impl SortingConfig {
     /// Number of radix digits needed for the full key width.
     pub fn digit_count(&self) -> u32 {
-        (self.key_bits + self.bits_per_digit - 1) / self.bits_per_digit
+        self.key_bits.div_ceil(self.bits_per_digit)
     }
 
     /// Number of radix values per digit (e.g. 16 for 4-bit digits).
@@ -74,7 +74,7 @@ impl SortingConfig {
         if workgroup_size == 0 {
             0
         } else {
-            (self.element_count + workgroup_size - 1) / workgroup_size
+            self.element_count.div_ceil(workgroup_size)
         }
     }
 
@@ -90,18 +90,12 @@ impl SortingConfig {
 /// performs one digit pass of radix sort per dispatch. The engine re-dispatches
 /// this shader once per radix digit, alternating input/output buffers.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct SortingComputeShader {
     /// Configuration controlling element count and radix parameters.
     pub config: SortingConfig,
 }
 
-impl Default for SortingComputeShader {
-    fn default() -> Self {
-        Self {
-            config: SortingConfig::default(),
-        }
-    }
-}
 
 impl SortingComputeShader {
     /// Create a new sorting compute shader with default configuration.

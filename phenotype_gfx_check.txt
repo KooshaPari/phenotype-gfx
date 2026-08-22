@@ -1,0 +1,11 @@
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on build directory
+[1m[92m    Checking[0m phenotype-gfx v0.2.0 (C:\Users\koosh\phenotype-gfx)
+[1m[91merror[0m: could not compile `phenotype-gfx` (lib)
+  could not execute process `C:\Users\koosh\.rustup\toolchains\stable-x86_64-pc-windows-msvc\bin\rustc.exe --crate-name phenotype_gfx --edition=2021 src\lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --crate-type rlib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 --cfg "feature=\"default\"" --check-cfg cfg(docsrs,test) --check-cfg "cfg(feature, values(\"bench\", \"bevy\", \"default\", \"full-obs\", \"otlp\", \"prometheus\"))" -C metadata=2e7b0faea7254068 -C extra-filename=-93951fd1e7b786da --out-dir C:\temp\wt-proto-mcp-target\debug\deps -C incremental=C:\temp\wt-proto-mcp-target\debug\incremental -L dependency=C:\temp\wt-proto-mcp-target\debug\deps --extern bytemuck=C:\temp\wt-proto-mcp-target\debug\deps\libbytemuck-2b80c2557b258a74.rmeta --extern glam=C:\temp\wt-proto-mcp-target\debug\deps\libglam-b2af531794977f8c.rmeta --extern metrics=C:\temp\wt-proto-mcp-target\debug\deps\libmetrics-6b33c9d17571abd8.rmeta --extern serde=C:\temp\wt-proto-mcp-target\debug\deps\libserde-07336b5a40a4cfc1.rmeta --extern serde_json=C:\temp\wt-proto-mcp-target\debug\deps\libserde_json-0f7c10da53008861.rmeta --extern thiserror=C:\temp\wt-proto-mcp-target\debug\deps\libthiserror-0d4b457dcd04673f.rmeta --extern tracing=C:\temp\wt-proto-mcp-target\debug\deps\libtracing-40a5e5154fc24c0c.rmeta --extern uuid=C:\temp\wt-proto-mcp-target\debug\deps\libuuid-bb845c6c7f1e6122.rmeta` (never executed)
+  The device is not ready. (os error 21)
+
+thread 'main' (101272) has overflowed its stack

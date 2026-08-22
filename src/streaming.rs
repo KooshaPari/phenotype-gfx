@@ -522,7 +522,7 @@ mod tests {
     }
 
     #[test]
-    fn classify_with_fade_ticks_returns_fading() {
+    fn classify_with_fade_ticks_returns_fading() -> anyhow::Result<()> {
         let policy = WindowPolicy {
             mesh_ring: 1,
             seam_chunks: 1,
@@ -532,8 +532,11 @@ mod tests {
         let anchor = default_anchor();
         // ring=2 → seam zone, fade_ticks>0 → Fading
         match policy.classify(coord(2, 0, 0), anchor) {
-            ChunkState::Fading { ticks_remaining } => assert_eq!(ticks_remaining, 10),
-            other => panic!("expected Fading, got {other:?}"),
+            ChunkState::Fading { ticks_remaining } => {
+                assert_eq!(ticks_remaining, 10);
+                Ok(())
+            }
+            other => anyhow::bail!("expected Fading, got {other:?}"),
         }
     }
 
@@ -631,13 +634,16 @@ mod tests {
     }
 
     #[test]
-    fn sim_cohort_coarse_band() {
+    fn sim_cohort_coarse_band() -> anyhow::Result<()> {
         let policy = WindowPolicy::default(); // sim_ring=1, coarse_ring=2
         let anchor = default_anchor();
         // ring=2 → >sim_ring(1), ≤coarse_ring(2) → CoarseSim
         match policy.sim_cohort(coord(2, 0, 0), anchor) {
-            SimCohort::CoarseSim { step_multiplier } => assert_eq!(step_multiplier, 2),
-            other => panic!("expected CoarseSim, got {other:?}"),
+            SimCohort::CoarseSim { step_multiplier } => {
+                assert_eq!(step_multiplier, 2);
+                Ok(())
+            }
+            other => anyhow::bail!("expected CoarseSim, got {other:?}"),
         }
     }
 
@@ -664,7 +670,7 @@ mod tests {
     }
 
     #[test]
-    fn sim_cohort_boundary_exactly_at_coarse_ring() {
+    fn sim_cohort_boundary_exactly_at_coarse_ring() -> anyhow::Result<()> {
         let policy = WindowPolicy {
             sim_ring: 3,
             coarse_ring: 6,
@@ -674,13 +680,16 @@ mod tests {
         let anchor = default_anchor();
         // ring=6 → CoarseSim
         match policy.sim_cohort(coord(6, 0, 0), anchor) {
-            SimCohort::CoarseSim { step_multiplier } => assert_eq!(step_multiplier, 4),
-            other => panic!("expected CoarseSim at coarse_ring boundary, got {other:?}"),
+            SimCohort::CoarseSim { step_multiplier } => {
+                assert_eq!(step_multiplier, 4);
+                Ok(())
+            }
+            other => anyhow::bail!("expected CoarseSim at coarse_ring boundary, got {other:?}"),
         }
     }
 
     #[test]
-    fn sim_cohort_custom_step_multiplier() {
+    fn sim_cohort_custom_step_multiplier() -> anyhow::Result<()> {
         let policy = WindowPolicy {
             sim_ring: 1,
             coarse_ring: 3,
@@ -689,8 +698,11 @@ mod tests {
         };
         let anchor = default_anchor();
         match policy.sim_cohort(coord(2, 0, 0), anchor) {
-            SimCohort::CoarseSim { step_multiplier } => assert_eq!(step_multiplier, 8),
-            other => panic!("expected CoarseSim with step=8, got {other:?}"),
+            SimCohort::CoarseSim { step_multiplier } => {
+                assert_eq!(step_multiplier, 8);
+                Ok(())
+            }
+            other => anyhow::bail!("expected CoarseSim with step=8, got {other:?}"),
         }
     }
 

@@ -106,7 +106,7 @@ impl DispatchConfig {
             if group == 0 {
                 0
             } else {
-                (total + group - 1) / group
+                total.div_ceil(group)
             }
         };
         let count_1d = ceil_div(self.element_count, ws.x);
