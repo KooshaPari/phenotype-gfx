@@ -62,6 +62,8 @@ mod x86_impl {
         let one = _mm_set1_ps(1.0);
         let eps = _mm_set1_ps(f32::EPSILON);
 
+        // Load xyz for each vector into 128-bit registers (3 floats each,
+        // last lane unused).
         let a = _mm_set_ps(0.0, v0[2], v0[1], v0[0]);
         let b = _mm_set_ps(0.0, v1[2], v1[1], v1[0]);
         let c = _mm_set_ps(0.0, v2[2], v2[1], v2[0]);
