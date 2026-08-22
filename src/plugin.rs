@@ -121,17 +121,18 @@ impl PluginManager {
     }
 
     /// Register a plugin.  Returns an error if a plugin with the same name is
-    /// already registered.
+    /// already registered.  Note: this only adds the plugin; call
+    /// [`execute_all`](Self::execute_all) to initialise and run all registered
+    /// plugins.
     pub fn register<P: Plugin + 'static>(
         &mut self,
-        mut plugin: P,
+        plugin: P,
         info: PluginInfo,
     ) -> Result<(), PluginError> {
         let name = plugin.name().to_owned();
         if self.plugins.iter().any(|p| p.name() == name) {
             return Err(PluginError::AlreadyRegistered(name));
         }
-        plugin.init(&mut PluginContext::new())?;
         self.plugins.push(Box::new(plugin));
         self.infos.push(info);
         Ok(())

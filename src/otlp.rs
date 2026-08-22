@@ -95,8 +95,8 @@ impl PrometheusMetrics {
         let encoder = prometheus::TextEncoder::new();
         let metric_families = self.registry.gather();
         let mut buffer = Vec::new();
-        encoder.encode(&metric_families, &mut buffer).unwrap();
-        String::from_utf8(buffer).unwrap()
+        encoder.encode(&metric_families, &mut buffer).expect("prometheus encode should not fail");
+        String::from_utf8(buffer).expect("utf8 should be valid after prometheus encode")
     }
 }
 

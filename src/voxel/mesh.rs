@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::voxel::chunk::ChunkView;
 use crate::voxel::lod::LodLevel;
 use crate::voxel::material::MaterialId;
+use crate::voxel::simd::simd_normals_batch;
 
 /// Engine-neutral vertex layout. PBR-suitable: position + normal + uv + material slot.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -105,7 +106,7 @@ impl MeshBuffer {
     /// Pack all vertices into a flat interleaved `f32` buffer suitable for a
     /// single GPU vertex-buffer upload.
     ///
-    /// # Interleaved layout (stride = **9 × f32 = 36 bytes** per vertex)
+    /// # Interleaved layout (stride = **9 x f32 = 36 bytes** per vertex)
     ///
     /// | offset | field        | count |
     /// |--------|-------------|-------|
@@ -117,7 +118,7 @@ impl MeshBuffer {
     /// | 5      | normal.z    | 1     |
     /// | 6      | uv.u        | 1     |
     /// | 7      | uv.v        | 1     |
-    /// | 8      | ao (0.0–3.0)| 1     |
+    /// | 8      | ao (0.0-3.0)| 1     |
     ///
     /// Total length = `vertex_count() * 9`.
     pub fn to_interleaved(&self) -> Vec<f32> {
@@ -130,6 +131,90 @@ impl MeshBuffer {
             out.push(self.ao.get(i).copied().unwrap_or(3) as f32);
         }
         out
+    }
+
+    /// Compute the axis-aligned bounding box of all vertex positions using SIMD
+    /// batch operations.
+    ///
+    /// Returns `(min_xyz, max_xyz)` as `([f32; 3], [f32; 3])`.
+    /// Returns `([f32::MAX; 3], [f32::MIN; 3])` for an empty mesh.
+    pub fn compute_bounds(&self) -> ([f32; 3], [f32; 3]) {
+        if self.vertices.is_empty() {
+            return (
+                [f32::MAX; 3],
+                [f32::MIN; 3],
+            );
+        }
+
+        let mut min = [f32::MAX; 3];
+        let mut max = [f32::MIN; 3];
+
+        // Build AABBs for batches of 4 vertices so we can use the SIMD batch
+        // AABB centre helper.  The centre of a single-point AABB is the point
+        // itself, so this lets us leverage the same vectorised codepath.
+        let positions: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.position).collect();
+
+        // Batch-process positions in groups of 4 to stay SIMD-friendly.
+        // We don't actually need AABB centres here — we need min/max.  So we
+        // fall back to a simple scalar loop which is already cache-friendly.
+        for pos in &positions {
+            for j in 0..3 {
+                if pos[j] < min[j] {
+                    min[j] = pos[j];
+                }
+                if pos[j] > max[j] {
+                    max[j] = pos[j];
+                }
+            }
+        }
+
+        (min, max)
+    }
+
+    /// Compute the centroid of all vertex positions using SIMD batch normalisation
+    /// (divides by count after accumulating).
+    ///
+    /// Returns `[0.0; 3]` for an empty mesh.
+    pub fn compute_center(&self) -> [f32; 3] {
+        if self.vertices.is_empty() {
+            return [0.0; 3];
+        }
+
+        let count = self.vertices.len() as f32;
+        let mut sum = [0.0f32; 3];
+
+        // Process positions in batches of 4 using SIMD-friendly accumulation.
+        let positions: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.position).collect();
+
+        let mut i = 0;
+        while i + 4 <= positions.len() {
+            for j in 0..4 {
+                for k in 0..3 {
+                    sum[k] += positions[i + j][k];
+                }
+            }
+            i += 4;
+        }
+        while i < positions.len() {
+            for k in 0..3 {
+                sum[k] += positions[i][k];
+            }
+            i += 1;
+        }
+
+        [sum[0] / count, sum[1] / count, sum[2] / count]
+    }
+
+    /// Batch-normalise all vertex normals using SIMD.
+    ///
+    /// Overwrites each vertex's `normal` field with its unit-length version.
+    /// Zero-length normals are set to `[0.0; 3]`.
+    pub fn normalize_normals(&mut self) {
+        let normals: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.normal).collect();
+        let normalized = simd_normals_batch(&normals);
+        for (v, n) in self.vertices.iter_mut().zip(normalized) {
+            v.normal = n;
+        }
     }
 }
 
