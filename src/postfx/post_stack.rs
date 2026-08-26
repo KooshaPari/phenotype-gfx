@@ -204,6 +204,7 @@ impl PostStack {
     /// inspector / dispatcher without referring to the concrete `BloomPass`
     /// / `SsaoPass` types.
     pub fn describe_passes() -> Vec<PassDescriptor> {
+        metrics::counter!("phenotype_gfx.postfx_stack_runs").increment(1);
         vec![SsaoConfig::descriptor(), BloomConfig::descriptor()]
     }
 

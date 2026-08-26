@@ -36,6 +36,7 @@ impl ChunkMeshBuilder {
     /// edge length. The output has `(resolution + 1)²` vertices and
     /// `resolution² * 6` indices.
     pub fn build_mesh(&self, resolution: i32, size: f32) -> TerrainResult<MeshData> {
+        metrics::counter!("phenotype_gfx.terrain_mesh_builds").increment(1);
         if resolution <= 0 {
             return Err(TerrainError::InvalidResolution { value: resolution });
         }
@@ -97,6 +98,7 @@ impl ChunkMeshBuilder {
         resolution: i32,
         size: f32,
     ) -> TerrainResult<MeshData> {
+        metrics::counter!("phenotype_gfx.terrain_mesh_builds").increment(1);
         if resolution <= 0 {
             return Err(TerrainError::InvalidResolution { value: resolution });
         }

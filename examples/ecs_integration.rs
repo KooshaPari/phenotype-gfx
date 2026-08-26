@@ -3,14 +3,20 @@
 //! This example shows how to wrap `VoxelWorld` as a Resource and create
 //! a query system for loading chunks based on a player's position.
 
-use phenotype_gfx::voxel::chunk::Chunk;
 use phenotype_gfx::voxel::coord::{ChunkCoord, WorldCoord, FIXED_SCALE, to_chunk_coord};
 use phenotype_gfx::voxel::world::VoxelWorld;
 
 /// A mock Resource that holds the voxel world state.
-#[derive(Default)]
 struct VoxelResource {
     world: VoxelWorld<u8>,
+}
+
+impl Default for VoxelResource {
+    fn default() -> Self {
+        Self {
+            world: VoxelWorld::new(64),
+        }
+    }
 }
 
 /// A mock Component representing the player's position.

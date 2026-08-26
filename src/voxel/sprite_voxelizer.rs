@@ -130,6 +130,7 @@ pub fn voxelize_image(
     height: u32,
     cfg: &VoxelizeConfig,
 ) -> Vec<SpriteVoxel> {
+    metrics::counter!("phenotype_gfx.voxelizer_runs").increment(1);
     let depth = cfg.depth.max(1);
     let z_center = depth / 2;
 
@@ -271,6 +272,7 @@ pub fn voxelize_to_chunk(
     depth: u32,
     pixel_to_material: impl Fn([u8; 4]) -> MaterialId,
 ) -> Chunk<MaterialId> {
+    metrics::counter!("phenotype_gfx.voxelizer_runs").increment(1);
     let mut chunk = Chunk::<MaterialId>::default();
     let edge = CHUNK_EDGE as u32;
     let clamped_width = width.min(edge);

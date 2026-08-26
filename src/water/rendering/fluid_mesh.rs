@@ -45,6 +45,7 @@ pub fn build(
     size: f32,
     time: f32,
 ) -> Result<MeshData, WaterError> {
+    metrics::counter!("phenotype_gfx.water_mesh_builds").increment(1);
     if resolution < 1 {
         return Err(WaterError::OutOfBounds {
             msg: "resolution must be >= 1".to_string(),

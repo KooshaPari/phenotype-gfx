@@ -219,11 +219,13 @@ impl WindowPolicy {
 
     /// Classify a chunk's lifecycle state (pure function of coord, anchor, policy).
     #[must_use]
-    pub const fn classify(&self, coord: ChunkCoord, anchor: ChunkCoord) -> ChunkState {
+    pub fn classify(&self, coord: ChunkCoord, anchor: ChunkCoord) -> ChunkState {
         let ring = ring_distance(coord, anchor, self.vy_weight);
         if ring <= self.mesh_ring as u32 {
+            metrics::counter!("phenotype_gfx.streaming_load").increment(1);
             ChunkState::Meshed
         } else if ring <= (self.mesh_ring as u32).saturating_add(self.seam_chunks as u32) {
+            metrics::counter!("phenotype_gfx.streaming_load").increment(1);
             if self.fade_ticks == 0 {
                 ChunkState::Resident
             } else {
@@ -232,6 +234,7 @@ impl WindowPolicy {
                 }
             }
         } else {
+            metrics::counter!("phenotype_gfx.streaming_unload").increment(1);
             ChunkState::Unloaded
         }
     }
