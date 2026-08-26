@@ -27,17 +27,25 @@
 //!
 //! Upstream: <https://github.com/KooshaPari/phenotype-postfx>.
 
+pub mod aces_pass;
 pub mod bloom_pass;
+pub mod chromatic_pass;
 pub mod error;
+pub mod lut_pass;
 pub mod ports;
 pub mod post_fx_pass_registry;
 pub mod post_stack;
 pub mod rendering;
 pub mod shaders;
+pub mod ssgi_pass;
 pub mod ssao_pass;
+pub mod vignette_pass;
 
+pub use aces_pass::AcesConfig;
 pub use bloom_pass::BloomConfig;
+pub use chromatic_pass::ChromaticConfig;
 pub use error::{PostFxError, PostFxResult};
+pub use lut_pass::LutConfig;
 pub use ports::{
     lut_pipeline::{LutData, LutFormat},
     material_registry::{
@@ -53,4 +61,6 @@ pub use post_fx_pass_registry::{BlitPassDescriptor, PostFxPassDescriptor, PostFx
 pub use post_stack::{PostStack, PostStackConfig, DEFAULT_POSTFX_STACK};
 #[allow(deprecated)]
 pub use rendering::{PostFxMaterial, PostFxRenderer, PostFxShader, RenderTarget};
+pub use ssgi_pass::SsgiConfig;
 pub use ssao_pass::SsaoConfig;
+pub use vignette_pass::VignetteConfig;

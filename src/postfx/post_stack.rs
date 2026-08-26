@@ -14,11 +14,16 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::postfx::aces_pass::AcesConfig;
 use crate::postfx::bloom_pass::BloomConfig;
+use crate::postfx::chromatic_pass::ChromaticConfig;
+use crate::postfx::lut_pass::LutConfig;
 use crate::postfx::ports::post_fx_pass::{PassDescriptor, PassQuality};
 use crate::postfx::ports::shader_availability::PostFxShaderAvailability;
 use crate::postfx::post_fx_pass_registry::PostFxPassRegistry;
 use crate::postfx::ssao_pass::SsaoConfig;
+use crate::postfx::ssgi_pass::SsgiConfig;
+use crate::postfx::vignette_pass::VignetteConfig;
 
 /// All post-fx configuration. Engine-agnostic: carries only logical state,
 /// not Unity references.
@@ -205,7 +210,15 @@ impl PostStack {
     /// / `SsaoPass` types.
     pub fn describe_passes() -> Vec<PassDescriptor> {
         metrics::counter!("phenotype_gfx.postfx_stack_runs").increment(1);
-        vec![SsaoConfig::descriptor(), BloomConfig::descriptor()]
+        vec![
+            SsaoConfig::descriptor(),
+            SsgiConfig::descriptor(),
+            BloomConfig::descriptor(),
+            AcesConfig::descriptor(),
+            VignetteConfig::descriptor(),
+            ChromaticConfig::descriptor(),
+            LutConfig::descriptor(),
+        ]
     }
 
     /// Audits each effect against the availability provider and updates the
@@ -280,10 +293,18 @@ mod tests {
     }
 
     #[test]
-    fn describe_passes_includes_built_ins() {
+    fn describe_passes_includes_all_built_ins() {
         let descs = PostStack::describe_passes();
-        assert!(descs.iter().any(|d| d.effect == PassEffect::Bloom));
+        assert_eq!(descs.len(), 7);
         assert!(descs.iter().any(|d| d.effect == PassEffect::Ssao));
+        assert!(descs.iter().any(|d| d.effect == PassEffect::Ssgi));
+        assert!(descs.iter().any(|d| d.effect == PassEffect::Bloom));
+        assert!(descs.iter().any(|d| d.effect == PassEffect::Aces));
+        assert!(descs.iter().any(|d| d.effect == PassEffect::Vignette));
+        assert!(descs
+            .iter()
+            .any(|d| d.effect == PassEffect::ChromaticAberration));
+        assert!(descs.iter().any(|d| d.effect == PassEffect::Lut));
     }
 
     #[test]
