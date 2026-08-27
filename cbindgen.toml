@@ -5,10 +5,6 @@ tab_width = 4
 style = "both"
 cpp_compat = true
 
-[defines]
-# Feature-gated FFI functions only compiled when `c_api` feature is on.
-"feature = \"c_api\"" = "PHENOTYPE_GFX_FFI"
-
 [export]
 # Only export the #[no_mangle] FFI functions and opaque handle types.
 include = [
