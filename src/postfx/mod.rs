@@ -37,8 +37,8 @@ pub mod post_fx_pass_registry;
 pub mod post_stack;
 pub mod rendering;
 pub mod shaders;
-pub mod ssgi_pass;
 pub mod ssao_pass;
+pub mod ssgi_pass;
 pub mod vignette_pass;
 
 pub use aces_pass::AcesConfig;
@@ -61,6 +61,6 @@ pub use post_fx_pass_registry::{BlitPassDescriptor, PostFxPassDescriptor, PostFx
 pub use post_stack::{PostStack, PostStackConfig, DEFAULT_POSTFX_STACK};
 #[allow(deprecated)]
 pub use rendering::{PostFxMaterial, PostFxRenderer, PostFxShader, RenderTarget};
-pub use ssgi_pass::SsgiConfig;
 pub use ssao_pass::SsaoConfig;
+pub use ssgi_pass::SsgiConfig;
 pub use vignette_pass::VignetteConfig;

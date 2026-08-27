@@ -15,7 +15,9 @@ use phenotype_gfx::voxel::{
     greedy_mesher::GreedyMesher,
     lod::LodLevel,
     material::MaterialId,
-    simd::{simd_aabb_center_batch, simd_conditional_mix_batch, simd_dot_batch, simd_normals_batch},
+    simd::{
+        simd_aabb_center_batch, simd_conditional_mix_batch, simd_dot_batch, simd_normals_batch,
+    },
 };
 
 // ---------------------------------------------------------------------------

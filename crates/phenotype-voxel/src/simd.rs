@@ -55,7 +55,12 @@ mod x86_impl {
     /// # Safety
     /// Caller must ensure SSE2 is available (always true on x86_64).
     #[target_feature(enable = "sse2")]
-    unsafe fn normalize4_sse2(v0: [f32; 3], v1: [f32; 3], v2: [f32; 3], v3: [f32; 3]) -> [[f32; 3]; 4] {
+    unsafe fn normalize4_sse2(
+        v0: [f32; 3],
+        v1: [f32; 3],
+        v2: [f32; 3],
+        v3: [f32; 3],
+    ) -> [[f32; 3]; 4] {
         let one = _mm_set1_ps(1.0);
         let eps = _mm_set1_ps(f32::EPSILON);
 
@@ -158,9 +163,8 @@ mod x86_impl {
         // Process 4 at a time with SSE2.
         while i + 4 <= verts.len() {
             // SAFETY: SSE2 is always available on x86_64.
-            let batch = unsafe {
-                normalize4_sse2(verts[i], verts[i + 1], verts[i + 2], verts[i + 3])
-            };
+            let batch =
+                unsafe { normalize4_sse2(verts[i], verts[i + 1], verts[i + 2], verts[i + 3]) };
             out.extend_from_slice(&batch);
             i += 4;
         }
@@ -382,14 +386,14 @@ mod tests {
     #[test]
     fn aabb_center_batch_of_eight() {
         let bounds: &[[f32; 6]] = &[
-            [0.0, 0.0, 0.0, 2.0, 2.0, 2.0],   // center (1,1,1)
-            [-1.0, -1.0, -1.0, 1.0, 1.0, 1.0], // center (0,0,0)
+            [0.0, 0.0, 0.0, 2.0, 2.0, 2.0],       // center (1,1,1)
+            [-1.0, -1.0, -1.0, 1.0, 1.0, 1.0],    // center (0,0,0)
             [10.0, 20.0, 30.0, 12.0, 24.0, 36.0], // center (11,22,33)
-            [5.0, 5.0, 5.0, 5.0, 5.0, 5.0],    // degenerate: centre = (5,5,5)
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],    // zero-size box
-            [-100.0, 0.0, 0.0, 100.0, 0.0, 0.0], // flat box
-            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],    // center (2.5, 3.5, 4.5)
-            [-1.0, -2.0, -3.0, 1.0, 2.0, 3.0],  // center (0,0,0)
+            [5.0, 5.0, 5.0, 5.0, 5.0, 5.0],       // degenerate: centre = (5,5,5)
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],       // zero-size box
+            [-100.0, 0.0, 0.0, 100.0, 0.0, 0.0],  // flat box
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],       // center (2.5, 3.5, 4.5)
+            [-1.0, -2.0, -3.0, 1.0, 2.0, 3.0],    // center (0,0,0)
         ];
         let out = simd_aabb_center_batch(bounds);
         assert_eq!(out.len(), 8);

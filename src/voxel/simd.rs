@@ -206,10 +206,14 @@ mod x86_impl {
     /// Dot products of 4 pairs of vectors using SSE2.
     #[target_feature(enable = "sse2")]
     unsafe fn dot4_sse2(
-        a0: [f32; 3], b0: [f32; 3],
-        a1: [f32; 3], b1: [f32; 3],
-        a2: [f32; 3], b2: [f32; 3],
-        a3: [f32; 3], b3: [f32; 3],
+        a0: [f32; 3],
+        b0: [f32; 3],
+        a1: [f32; 3],
+        b1: [f32; 3],
+        a2: [f32; 3],
+        b2: [f32; 3],
+        a3: [f32; 3],
+        b3: [f32; 3],
     ) -> [f32; 4] {
         let dot_h = |va: __m128, vb: __m128| -> f32 {
             let mul = _mm_mul_ps(va, vb);
@@ -238,9 +242,7 @@ mod x86_impl {
     /// # Safety
     /// Caller must ensure AVX2 is available (checked via `is_x86_feature_detected!`).
     #[target_feature(enable = "avx2")]
-    unsafe fn normalize8_avx2(
-        v: &[[f32; 3]; 8],
-    ) -> [[f32; 3]; 8] {
+    unsafe fn normalize8_avx2(v: &[[f32; 3]; 8]) -> [[f32; 3]; 8] {
         let one = _mm256_set1_ps(1.0);
         let eps = _mm256_set1_ps(f32::EPSILON);
 
@@ -354,10 +356,7 @@ mod x86_impl {
     /// # Safety
     /// Caller must ensure AVX2 is available.
     #[target_feature(enable = "avx2")]
-    unsafe fn dot8_avx2(
-        a: &[[f32; 3]; 8],
-        b: &[[f32; 3]; 8],
-    ) -> [f32; 8] {
+    unsafe fn dot8_avx2(a: &[[f32; 3]; 8], b: &[[f32; 3]; 8]) -> [f32; 8] {
         let mut ax = [0.0f32; 8];
         let mut ay = [0.0f32; 8];
         let mut az = [0.0f32; 8];
@@ -488,9 +487,8 @@ mod x86_impl {
 
         // SSE2 path: process remaining 4 at a time
         while i + 4 <= verts.len() {
-            let batch = unsafe {
-                normalize4_sse2(verts[i], verts[i + 1], verts[i + 2], verts[i + 3])
-            };
+            let batch =
+                unsafe { normalize4_sse2(verts[i], verts[i + 1], verts[i + 2], verts[i + 3]) };
             out.extend_from_slice(&batch);
             i += 4;
         }
@@ -560,10 +558,14 @@ mod x86_impl {
         while i + 4 <= a.len() {
             let batch = unsafe {
                 dot4_sse2(
-                    a[i], b[i],
-                    a[i + 1], b[i + 1],
-                    a[i + 2], b[i + 2],
-                    a[i + 3], b[i + 3],
+                    a[i],
+                    b[i],
+                    a[i + 1],
+                    b[i + 1],
+                    a[i + 2],
+                    b[i + 2],
+                    a[i + 3],
+                    b[i + 3],
                 )
             };
             out.extend_from_slice(&batch);
@@ -583,8 +585,16 @@ mod x86_impl {
         b: &[[f32; 3]],
         mask: &[[f32; 3]],
     ) -> Vec<[f32; 3]> {
-        assert_eq!(a.len(), b.len(), "conditional_mix_batch: a/b lengths must match");
-        assert_eq!(a.len(), mask.len(), "conditional_mix_batch: a/mask lengths must match");
+        assert_eq!(
+            a.len(),
+            b.len(),
+            "conditional_mix_batch: a/b lengths must match"
+        );
+        assert_eq!(
+            a.len(),
+            mask.len(),
+            "conditional_mix_batch: a/mask lengths must match"
+        );
         let mut out = Vec::with_capacity(a.len());
         let mut i = 0;
 
@@ -674,9 +684,8 @@ mod neon_impl {
         v2: [f32; 3],
         v3: [f32; 3],
     ) -> [[f32; 3]; 4] {
-        let load3 = |src: [f32; 3]| -> float32x4_t {
-            vld1q_f32([src[0], src[1], src[2], 0.0].as_ptr())
-        };
+        let load3 =
+            |src: [f32; 3]| -> float32x4_t { vld1q_f32([src[0], src[1], src[2], 0.0].as_ptr()) };
 
         let dot_h = |v: float32x4_t| -> float32x4_t {
             let mul = vmulq_f32(v, v);
@@ -748,10 +757,14 @@ mod neon_impl {
     /// Dot products of 4 pairs of vectors using NEON.
     #[target_feature(enable = "neon")]
     unsafe fn dot4_neon(
-        a0: [f32; 3], b0: [f32; 3],
-        a1: [f32; 3], b1: [f32; 3],
-        a2: [f32; 3], b2: [f32; 3],
-        a3: [f32; 3], b3: [f32; 3],
+        a0: [f32; 3],
+        b0: [f32; 3],
+        a1: [f32; 3],
+        b1: [f32; 3],
+        a2: [f32; 3],
+        b2: [f32; 3],
+        a3: [f32; 3],
+        b3: [f32; 3],
     ) -> [f32; 4] {
         let dot_h = |va: float32x4_t, vb: float32x4_t| -> f32 {
             let mul = vmulq_f32(va, vb);
@@ -775,9 +788,8 @@ mod neon_impl {
         let mut i = 0;
         while i + 4 <= verts.len() {
             // SAFETY: NEON is always available on aarch64.
-            let batch = unsafe {
-                normalize4_neon(verts[i], verts[i + 1], verts[i + 2], verts[i + 3])
-            };
+            let batch =
+                unsafe { normalize4_neon(verts[i], verts[i + 1], verts[i + 2], verts[i + 3]) };
             out.extend_from_slice(&batch);
             i += 4;
         }
@@ -812,10 +824,14 @@ mod neon_impl {
         while i + 4 <= a.len() {
             let batch = unsafe {
                 dot4_neon(
-                    a[i], b[i],
-                    a[i + 1], b[i + 1],
-                    a[i + 2], b[i + 2],
-                    a[i + 3], b[i + 3],
+                    a[i],
+                    b[i],
+                    a[i + 1],
+                    b[i + 1],
+                    a[i + 2],
+                    b[i + 2],
+                    a[i + 3],
+                    b[i + 3],
                 )
             };
             out.extend_from_slice(&batch);
@@ -857,7 +873,10 @@ mod fallback_impl {
     }
 
     pub(super) fn dot_batch(a: &[[f32; 3]], b: &[[f32; 3]]) -> Vec<f32> {
-        a.iter().zip(b.iter()).map(|(&av, &bv)| super::dot3(av, bv)).collect()
+        a.iter()
+            .zip(b.iter())
+            .map(|(&av, &bv)| super::dot3(av, bv))
+            .collect()
     }
 
     pub(super) fn conditional_mix_batch(
@@ -1254,8 +1273,18 @@ mod tests {
     /// NEON-001 -- dot4 matches scalar for 4 pairs.
     #[test]
     fn neon_dot4_matches_scalar() {
-        let a: &[[f32; 3]] = &[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
-        let b: &[[f32; 3]] = &[[7.0, 8.0, 9.0], [1.0, 1.0, 1.0], [5.0, 5.0, 5.0], [0.0, 1.0, 0.0]];
+        let a: &[[f32; 3]] = &[
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+        ];
+        let b: &[[f32; 3]] = &[
+            [7.0, 8.0, 9.0],
+            [1.0, 1.0, 1.0],
+            [5.0, 5.0, 5.0],
+            [0.0, 1.0, 0.0],
+        ];
         let out = simd_dot_batch(a, b);
         assert_eq!(out.len(), 4);
         for i in 0..4 {

@@ -68,13 +68,11 @@ impl MeshGenConfig {
 /// Implements [`ComputeShader`] to provide embedded WGSL source for generating
 /// triangle meshes on the GPU. Each voxel is processed independently; face
 /// culling removes internal faces to produce an efficient mesh.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct MeshComputeShader {
     /// Configuration controlling grid size and buffer capacities.
     pub config: MeshGenConfig,
 }
-
 
 impl MeshComputeShader {
     /// Create a new mesh compute shader with default configuration.
@@ -91,7 +89,6 @@ impl MeshComputeShader {
             },
         }
     }
-
 }
 
 impl ComputeShader for MeshComputeShader {

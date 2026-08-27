@@ -211,8 +211,7 @@ mod tests {
 
     #[test]
     fn dispatch_config_with_label() {
-        let cfg = DispatchConfig::one_d(256, 64)
-            .with_label("voxel-fill");
+        let cfg = DispatchConfig::one_d(256, 64).with_label("voxel-fill");
         assert_eq!(cfg.label.as_deref(), Some("voxel-fill"));
     }
 

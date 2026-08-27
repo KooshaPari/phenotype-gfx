@@ -3,7 +3,7 @@
 //! This example shows how to wrap `VoxelWorld` as a Resource and create
 //! a query system for loading chunks based on a player's position.
 
-use phenotype_gfx::voxel::coord::{ChunkCoord, WorldCoord, FIXED_SCALE, to_chunk_coord};
+use phenotype_gfx::voxel::coord::{to_chunk_coord, ChunkCoord, WorldCoord, FIXED_SCALE};
 use phenotype_gfx::voxel::world::VoxelWorld;
 
 /// A mock Resource that holds the voxel world state.
@@ -53,7 +53,11 @@ fn chunk_loader_system(resource: &VoxelResource, player: &Transform) {
                 match resource.world.chunk(target) {
                     Some(chunk) => {
                         // In a real ECS, we might check if a Mesh component needs updating
-                        println!("  [Update] Chunk {:?} is loaded ({} voxels)", target, chunk.voxels.len());
+                        println!(
+                            "  [Update] Chunk {:?} is loaded ({} voxels)",
+                            target,
+                            chunk.voxels.len()
+                        );
                     }
                     None => {
                         // 4. If not, we might trigger a generation or network request
@@ -67,14 +71,25 @@ fn chunk_loader_system(resource: &VoxelResource, player: &Transform) {
 
 fn main() {
     let mut resource = VoxelResource::default();
-    
+
     // Populate a few chunks for the demo
     resource.world.write(WorldCoord { x: 0, y: 0, z: 0 }, 1);
-    resource.world.write(WorldCoord { x: 16 * FIXED_SCALE, y: 0, z: 0 }, 1);
+    resource.world.write(
+        WorldCoord {
+            x: 16 * FIXED_SCALE,
+            y: 0,
+            z: 0,
+        },
+        1,
+    );
     resource.world.drain_dirty(); // Clear events
 
     let player = Transform {
-        position: WorldCoord { x: 5 * FIXED_SCALE, y: 0, z: 0 },
+        position: WorldCoord {
+            x: 5 * FIXED_SCALE,
+            y: 0,
+            z: 0,
+        },
     };
 
     println!("--- ECS Integration Demo ---");

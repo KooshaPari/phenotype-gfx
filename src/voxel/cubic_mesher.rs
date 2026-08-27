@@ -15,7 +15,7 @@ use crate::voxel::chunk::{ChunkView, CHUNK_EDGE};
 use crate::voxel::lod::LodLevel;
 use crate::voxel::material::MaterialId;
 use crate::voxel::mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
-use crate::voxel::simd::{simd_aabb_center_batch, get_simd_level, SimdLevel};
+use crate::voxel::simd::{get_simd_level, simd_aabb_center_batch, SimdLevel};
 
 /// Trait that voxel value types must implement to feed a [`CubicMesher`]. The
 /// mesher needs to know whether a voxel is "solid" (face-emitting) and what

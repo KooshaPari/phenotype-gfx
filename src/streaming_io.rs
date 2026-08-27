@@ -49,7 +49,11 @@ impl std::fmt::Display for ChunkStorageError {
             Self::Serde(msg) => write!(f, "Serde error: {msg}"),
             Self::Compression(msg) => write!(f, "Compression error: {msg}"),
             Self::NotFound(coord) => {
-                write!(f, "Chunk not found at ({}, {}, {})", coord.cx, coord.cy, coord.cz)
+                write!(
+                    f,
+                    "Chunk not found at ({}, {}, {})",
+                    coord.cx, coord.cy, coord.cz
+                )
             }
         }
     }
@@ -115,9 +119,8 @@ impl DiskChunkStorage {
     ) -> Result<Self, ChunkStorageError> {
         let base = base_dir.into();
         let chunks_dir = base.join("chunks");
-        std::fs::create_dir_all(&chunks_dir).map_err(|e| {
-            ChunkStorageError::Io(format!("Failed to create chunks dir: {e}"))
-        })?;
+        std::fs::create_dir_all(&chunks_dir)
+            .map_err(|e| ChunkStorageError::Io(format!("Failed to create chunks dir: {e}")))?;
         Ok(Self {
             base_dir: base,
             compression_level,
@@ -166,12 +169,10 @@ impl ChunkStorage for DiskChunkStorage {
         // Write atomically: write to .tmp then rename
         let path = self.chunk_path(payload.coord);
         let tmp_path = path.with_extension("bin.tmp");
-        std::fs::write(&tmp_path, &compressed).map_err(|e| {
-            ChunkStorageError::Io(format!("Failed to write chunk file: {e}"))
-        })?;
-        std::fs::rename(&tmp_path, &path).map_err(|e| {
-            ChunkStorageError::Io(format!("Failed to rename chunk file: {e}"))
-        })?;
+        std::fs::write(&tmp_path, &compressed)
+            .map_err(|e| ChunkStorageError::Io(format!("Failed to write chunk file: {e}")))?;
+        std::fs::rename(&tmp_path, &path)
+            .map_err(|e| ChunkStorageError::Io(format!("Failed to rename chunk file: {e}")))?;
 
         Ok(())
     }
@@ -182,9 +183,8 @@ impl ChunkStorage for DiskChunkStorage {
             return Err(ChunkStorageError::NotFound(coord));
         }
 
-        let compressed = std::fs::read(&path).map_err(|e| {
-            ChunkStorageError::Io(format!("Failed to read chunk file: {e}"))
-        })?;
+        let compressed = std::fs::read(&path)
+            .map_err(|e| ChunkStorageError::Io(format!("Failed to read chunk file: {e}")))?;
 
         let raw = self.decompress(&compressed)?;
 
@@ -197,9 +197,8 @@ impl ChunkStorage for DiskChunkStorage {
     fn delete_chunk(&self, coord: ChunkCoord) -> Result<(), ChunkStorageError> {
         let path = self.chunk_path(coord);
         if path.exists() {
-            std::fs::remove_file(&path).map_err(|e| {
-                ChunkStorageError::Io(format!("Failed to delete chunk file: {e}"))
-            })?;
+            std::fs::remove_file(&path)
+                .map_err(|e| ChunkStorageError::Io(format!("Failed to delete chunk file: {e}")))?;
         }
         Ok(())
     }
@@ -470,7 +469,10 @@ mod tests {
         assert_eq!(mgr.resident_count(), 1);
 
         // Should be on disk
-        let loaded = mgr.storage().load_chunk(coord(1, 0, 0)).expect("load from disk");
+        let loaded = mgr
+            .storage()
+            .load_chunk(coord(1, 0, 0))
+            .expect("load from disk");
         assert_eq!(loaded.data, p1.data);
 
         // Cleanup
@@ -538,9 +540,7 @@ mod tests {
         storage.save_chunk(&payload).expect("save");
 
         let path = dir.join("chunks").join("0_0_0.bin");
-        let file_size = std::fs::metadata(&path)
-            .expect("metadata")
-            .len();
+        let file_size = std::fs::metadata(&path).expect("metadata").len();
 
         assert!(
             file_size < big_data.len() as u64,
@@ -666,7 +666,10 @@ mod tests {
         let storage2 = Box::new(DiskChunkStorage::new(&dir).expect("create storage2"));
         let mut mgr2 = StreamingManager::new(storage2, 3);
         let loaded = mgr2.request_chunk(coord(10, 20, 30)).expect("request");
-        assert!(loaded.is_some(), "chunk should be loadable from disk after eviction");
+        assert!(
+            loaded.is_some(),
+            "chunk should be loadable from disk after eviction"
+        );
         assert_eq!(loaded.unwrap().data, payload.data);
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -732,7 +735,10 @@ mod tests {
 
         let mut mgr = StreamingManager::new_disk(&dir, 5).expect("new_disk");
         assert!(dir.exists(), "new_disk should create the directory");
-        assert!(dir.join("chunks").exists(), "chunks sub-directory should exist");
+        assert!(
+            dir.join("chunks").exists(),
+            "chunks sub-directory should exist"
+        );
 
         let payload = sample_payload(1, 1, 1);
         mgr.insert_chunk(payload).expect("insert");
@@ -807,8 +813,7 @@ mod tests {
                 // directly through the ChunkStorage trait via MemoryChunkStorage
                 // wrapped in Arc. This test verifies no panics from concurrent
                 // disk reads/writes to distinct chunk files.
-                let mgr_storage = DiskChunkStorage::new(&base)
-                    .expect("create storage per-thread");
+                let mgr_storage = DiskChunkStorage::new(&base).expect("create storage per-thread");
                 let mut mgr = StreamingManager::new(Box::new(mgr_storage), 5);
 
                 for i in 0..10u32 {

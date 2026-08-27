@@ -89,13 +89,11 @@ impl SortingConfig {
 /// Implements [`ComputeShader`] with an embedded WGSL compute shader that
 /// performs one digit pass of radix sort per dispatch. The engine re-dispatches
 /// this shader once per radix digit, alternating input/output buffers.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct SortingComputeShader {
     /// Configuration controlling element count and radix parameters.
     pub config: SortingConfig,
 }
-
 
 impl SortingComputeShader {
     /// Create a new sorting compute shader with default configuration.
@@ -123,7 +121,6 @@ impl SortingComputeShader {
             },
         }
     }
-
 }
 
 impl ComputeShader for SortingComputeShader {

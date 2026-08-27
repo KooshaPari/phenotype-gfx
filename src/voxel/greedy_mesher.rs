@@ -40,7 +40,7 @@ use crate::voxel::cubic_mesher::face_ao;
 use crate::voxel::lod::LodLevel;
 use crate::voxel::material::MaterialId;
 use crate::voxel::mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
-use crate::voxel::simd::{simd_normals_batch, get_simd_level, SimdLevel};
+use crate::voxel::simd::{get_simd_level, simd_normals_batch, SimdLevel};
 
 pub use crate::voxel::cubic_mesher::CubicVoxel;
 
@@ -302,11 +302,7 @@ fn batch_normalize_normals(buf: &mut MeshBuffer) {
             // SIMD path: collect normals, batch-normalise, write back.
             let normals: Vec<[f32; 3]> = buf.vertices.iter().map(|v| v.normal).collect();
             let normalized = simd_normals_batch(&normals);
-            for (v, n) in buf
-                .vertices
-                .iter_mut()
-                .zip(normalized.into_iter())
-            {
+            for (v, n) in buf.vertices.iter_mut().zip(normalized.into_iter()) {
                 v.normal = n;
             }
         }

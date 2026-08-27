@@ -38,8 +38,8 @@ fn test_metrics_render_output_is_valid_utf8() {
     let metrics = PrometheusMetrics::new(reg);
     let rendered = metrics.render();
     // Smoke: just make sure render doesn't panic and returns valid UTF-8.
-    let _ = String::from_utf8(rendered.into_bytes())
-        .expect("rendered metrics should be valid UTF-8");
+    let _ =
+        String::from_utf8(rendered.into_bytes()).expect("rendered metrics should be valid UTF-8");
 }
 
 #[cfg(feature = "otlp")]
@@ -52,7 +52,10 @@ async fn test_tracing_init() {
         Ok(_provider) => {}
         Err(e) => {
             // If the collector isn't running, this is expected.
-            eprintln!("OTLP init returned error (collector likely not running): {}", e);
+            eprintln!(
+                "OTLP init returned error (collector likely not running): {}",
+                e
+            );
         }
     }
 }

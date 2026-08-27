@@ -209,14 +209,14 @@ pub unsafe extern "C" fn phenotype_gfx_voxel_mesh_build(
                 let fz = z as f32;
                 // 8 vertices of a unit cube
                 let positions = [
-                    [fx,     fy,     fz    ],
-                    [fx + 1.0, fy,     fz    ],
-                    [fx + 1.0, fy + 1.0, fz    ],
-                    [fx,     fy + 1.0, fz    ],
-                    [fx,     fy,     fz + 1.0],
-                    [fx + 1.0, fy,     fz + 1.0],
+                    [fx, fy, fz],
+                    [fx + 1.0, fy, fz],
+                    [fx + 1.0, fy + 1.0, fz],
+                    [fx, fy + 1.0, fz],
+                    [fx, fy, fz + 1.0],
+                    [fx + 1.0, fy, fz + 1.0],
                     [fx + 1.0, fy + 1.0, fz + 1.0],
-                    [fx,     fy + 1.0, fz + 1.0],
+                    [fx, fy + 1.0, fz + 1.0],
                 ];
                 for pos in &positions {
                     vertices.push(MeshVertex {
@@ -228,12 +228,18 @@ pub unsafe extern "C" fn phenotype_gfx_voxel_mesh_build(
                 }
                 // 12 triangles (6 faces)
                 let faces: [[u32; 3]; 12] = [
-                    [0,1,2], [0,2,3], // front
-                    [4,6,5], [4,7,6], // back
-                    [0,4,5], [0,5,1], // bottom
-                    [2,6,7], [2,7,3], // top
-                    [0,3,7], [0,7,4], // left
-                    [1,5,6], [1,6,2], // right
+                    [0, 1, 2],
+                    [0, 2, 3], // front
+                    [4, 6, 5],
+                    [4, 7, 6], // back
+                    [0, 4, 5],
+                    [0, 5, 1], // bottom
+                    [2, 6, 7],
+                    [2, 7, 3], // top
+                    [0, 3, 7],
+                    [0, 7, 4], // left
+                    [1, 5, 6],
+                    [1, 6, 2], // right
                 ];
                 for face in &faces {
                     for &vi in face {
@@ -320,7 +326,10 @@ pub unsafe extern "C" fn phenotype_gfx_voxel_indices(
 #[no_mangle]
 pub unsafe extern "C" fn phenotype_gfx_voxel_vertex_count(handle: *const MeshBufferHandle) -> u32 {
     // SAFETY: Caller guarantees non-null valid handle.
-    assert!(!handle.is_null(), "null handle passed to voxel_vertex_count");
+    assert!(
+        !handle.is_null(),
+        "null handle passed to voxel_vertex_count"
+    );
     let h = unsafe { &*handle };
     h.mesh.vertex_count() as u32
 }
@@ -380,7 +389,10 @@ pub unsafe extern "C" fn phenotype_gfx_material_set_property(
     // SAFETY: Caller guarantees `handle` is non-null and valid, and `name` is
     // a valid null-terminated C string. We copy the CStr into a Rust String
     // before the palette takes ownership.
-    assert!(!handle.is_null(), "null handle passed to material_set_property");
+    assert!(
+        !handle.is_null(),
+        "null handle passed to material_set_property"
+    );
     assert!(!name.is_null(), "null name passed to material_set_property");
     let h = unsafe { &mut *handle };
     // SAFETY: `name` is guaranteed to be a valid null-terminated C string.

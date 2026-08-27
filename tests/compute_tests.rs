@@ -25,7 +25,10 @@ fn test_voxel_compute_fill() {
 
     // WGSL source must contain the fill kernel.
     let src = shader.source();
-    assert!(src.contains("fn fill("), "WGSL must contain fill entry point");
+    assert!(
+        src.contains("fn fill("),
+        "WGSL must contain fill entry point"
+    );
 
     // Dispatch should cover all voxels with 64-thread workgroups.
     let cfg = DispatchConfig::one_d(shader.config.voxel_count(), 64);
@@ -43,7 +46,10 @@ fn test_voxel_compute_carve() {
     assert_eq!(shader.config.material_id, 3);
 
     let src = shader.source();
-    assert!(src.contains("fn carve("), "WGSL must contain carve entry point");
+    assert!(
+        src.contains("fn carve("),
+        "WGSL must contain carve entry point"
+    );
 }
 
 #[test]
@@ -54,7 +60,10 @@ fn test_voxel_compute_smooth() {
     assert_eq!(shader.config.voxel_count(), 512);
 
     let src = shader.source();
-    assert!(src.contains("fn smooth("), "WGSL must contain smooth entry point");
+    assert!(
+        src.contains("fn smooth("),
+        "WGSL must contain smooth entry point"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +77,10 @@ fn test_mesh_compute_generate() {
     assert_eq!(shader.config.voxel_count(), 4096);
 
     let src = shader.source();
-    assert!(src.contains("fn generate("), "WGSL must contain generate entry point");
+    assert!(
+        src.contains("fn generate("),
+        "WGSL must contain generate entry point"
+    );
     assert!(
         src.contains("fn emit_face("),
         "WGSL must contain emit_face helper"

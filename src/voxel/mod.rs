@@ -71,16 +71,16 @@ pub use ports::{
 };
 pub use serial::{load_chunk, save_chunk};
 pub use shape_hints::{ShapeHint, ShapeHintRegistry};
+pub use simd::{
+    dispatch_aabb_centers, dispatch_conditional_mix_batch, dispatch_dot_batch,
+    dispatch_normalize_normals, get_simd_level, simd_aabb_center_batch, simd_conditional_mix_batch,
+    simd_dot_batch, simd_normals_batch, SimdLevel,
+};
 pub use sprite_voxelizer::{
     compute_manhattan_dist_to_air, voxelize_image, voxelize_to_chunk, ExtrusionMode, SpriteVoxel,
     VoxelizeConfig, DEFAULT_DEPTH,
 };
 pub use world::VoxelWorld;
-pub use simd::{
-    get_simd_level, dispatch_aabb_centers, dispatch_conditional_mix_batch, dispatch_dot_batch,
-    dispatch_normalize_normals, simd_aabb_center_batch, simd_conditional_mix_batch,
-    simd_dot_batch, simd_normals_batch, SimdLevel,
-};
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes
 /// so consumers can detect API drift in `.civreplay` / serialized voxel diffs.

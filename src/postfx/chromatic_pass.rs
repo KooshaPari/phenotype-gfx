@@ -170,10 +170,7 @@ mod tests {
     fn descriptor_is_stable() {
         let d = ChromaticConfig::descriptor();
         assert_eq!(d.effect, PassEffect::ChromaticAberration);
-        assert_eq!(
-            d.shader_name,
-            "Hidden/Phenotype/ChromaticAberrationPass"
-        );
+        assert_eq!(d.shader_name, "Hidden/Phenotype/ChromaticAberrationPass");
         assert!(!d.default_enabled);
     }
 

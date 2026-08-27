@@ -219,14 +219,20 @@ mod tests {
 
     #[test]
     fn identity_lut_size() {
-        let cfg = LutConfig { lut_size: 8, ..LutConfig::default() };
+        let cfg = LutConfig {
+            lut_size: 8,
+            ..LutConfig::default()
+        };
         let lut = cfg.identity_lut();
         assert_eq!(lut.len(), 8 * 8 * 8 * 3);
     }
 
     #[test]
     fn identity_lut_preserves_color() {
-        let cfg = LutConfig { lut_size: 8, ..LutConfig::default() };
+        let cfg = LutConfig {
+            lut_size: 8,
+            ..LutConfig::default()
+        };
         let lut = cfg.identity_lut();
         let (r, g, b) = cfg.apply_pixel(0.5, 0.5, 0.5, &lut);
         assert!((r - 0.5).abs() < 0.1, "r={r}");
@@ -246,7 +252,10 @@ mod tests {
 
     #[test]
     fn flat_index_is_unique() {
-        let cfg = LutConfig { lut_size: 4, ..LutConfig::default() };
+        let cfg = LutConfig {
+            lut_size: 4,
+            ..LutConfig::default()
+        };
         let mut indices = std::collections::HashSet::new();
         for b in 0..4u32 {
             for g in 0..4u32 {

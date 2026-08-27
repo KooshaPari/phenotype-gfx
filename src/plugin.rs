@@ -145,9 +145,8 @@ impl PluginManager {
     pub fn load_from_dir(&self, path: &str) -> Result<Vec<String>, PluginError> {
         use std::fs;
 
-        let entries = fs::read_dir(path).map_err(|e| {
-            PluginError::IoError(format!("failed to read directory '{path}': {e}"))
-        })?;
+        let entries = fs::read_dir(path)
+            .map_err(|e| PluginError::IoError(format!("failed to read directory '{path}': {e}")))?;
 
         let mut files = Vec::new();
         for entry in entries.flatten() {
@@ -162,10 +161,7 @@ impl PluginManager {
     /// Initialise and execute every registered plugin with the given context.
     ///
     /// Returns a list of `(name, Ok(()))` or `(name, Err(message))` pairs.
-    pub fn execute_all(
-        &mut self,
-        ctx: &mut PluginContext,
-    ) -> Vec<(String, Result<(), String>)> {
+    pub fn execute_all(&mut self, ctx: &mut PluginContext) -> Vec<(String, Result<(), String>)> {
         let mut results = Vec::with_capacity(self.plugins.len());
         for plugin in self.plugins.iter_mut() {
             let name = plugin.name().to_owned();
@@ -255,12 +251,18 @@ mod tests {
     fn register_and_list_plugins() {
         let mut mgr = PluginManager::new();
         mgr.register(
-            DummyPlugin { name: "a", version: "1.0" },
+            DummyPlugin {
+                name: "a",
+                version: "1.0",
+            },
             dummy_info("a"),
         )
         .unwrap();
         mgr.register(
-            DummyPlugin { name: "b", version: "2.0" },
+            DummyPlugin {
+                name: "b",
+                version: "2.0",
+            },
             dummy_info("b"),
         )
         .unwrap();
@@ -275,14 +277,20 @@ mod tests {
     fn duplicate_register_returns_error() {
         let mut mgr = PluginManager::new();
         mgr.register(
-            DummyPlugin { name: "dup", version: "1" },
+            DummyPlugin {
+                name: "dup",
+                version: "1",
+            },
             dummy_info("dup"),
         )
         .unwrap();
 
         let err = mgr
             .register(
-                DummyPlugin { name: "dup", version: "2" },
+                DummyPlugin {
+                    name: "dup",
+                    version: "2",
+                },
                 dummy_info("dup"),
             )
             .unwrap_err();
@@ -296,10 +304,22 @@ mod tests {
     #[test]
     fn execute_all_runs_all_plugins() {
         let mut mgr = PluginManager::new();
-        mgr.register(DummyPlugin { name: "x", version: "1" }, dummy_info("x"))
-            .unwrap();
-        mgr.register(DummyPlugin { name: "y", version: "1" }, dummy_info("y"))
-            .unwrap();
+        mgr.register(
+            DummyPlugin {
+                name: "x",
+                version: "1",
+            },
+            dummy_info("x"),
+        )
+        .unwrap();
+        mgr.register(
+            DummyPlugin {
+                name: "y",
+                version: "1",
+            },
+            dummy_info("y"),
+        )
+        .unwrap();
 
         let results = mgr.execute_all(&mut PluginContext::new());
         assert_eq!(results.len(), 2);
@@ -310,7 +330,10 @@ mod tests {
     fn execute_all_propagates_init_failure() {
         let mut mgr = PluginManager::new();
         mgr.register(
-            DummyPlugin { name: "ok", version: "1" },
+            DummyPlugin {
+                name: "ok",
+                version: "1",
+            },
             dummy_info("ok"),
         )
         .unwrap();
@@ -333,8 +356,14 @@ mod tests {
         assert!(mgr.is_empty());
         assert_eq!(mgr.len(), 0);
 
-        mgr.register(DummyPlugin { name: "one", version: "1" }, dummy_info("one"))
-            .unwrap();
+        mgr.register(
+            DummyPlugin {
+                name: "one",
+                version: "1",
+            },
+            dummy_info("one"),
+        )
+        .unwrap();
         assert!(!mgr.is_empty());
         assert_eq!(mgr.len(), 1);
     }

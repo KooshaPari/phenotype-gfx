@@ -140,10 +140,7 @@ impl MeshBuffer {
     /// Returns `([f32::MAX; 3], [f32::MIN; 3])` for an empty mesh.
     pub fn compute_bounds(&self) -> ([f32; 3], [f32; 3]) {
         if self.vertices.is_empty() {
-            return (
-                [f32::MAX; 3],
-                [f32::MIN; 3],
-            );
+            return ([f32::MAX; 3], [f32::MIN; 3]);
         }
 
         let mut min = [f32::MAX; 3];

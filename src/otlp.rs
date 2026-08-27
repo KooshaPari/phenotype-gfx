@@ -55,12 +55,10 @@ impl PrometheusMetrics {
     /// Create a new metrics set and register it with the given
     /// [`prometheus::Registry`].
     pub fn new(registry: prometheus::Registry) -> Self {
-        let requests_total = prometheus::IntCounter::with_opts(
-            prometheus::Opts::new(
-                "phenotype_gfx_requests_total",
-                "Total number of requests served by the gfx pipeline",
-            ),
-        )
+        let requests_total = prometheus::IntCounter::with_opts(prometheus::Opts::new(
+            "phenotype_gfx_requests_total",
+            "Total number of requests served by the gfx pipeline",
+        ))
         .expect("failed to create requests_total counter");
 
         let latency_histogram = prometheus::Histogram::with_opts(
@@ -95,7 +93,9 @@ impl PrometheusMetrics {
         let encoder = prometheus::TextEncoder::new();
         let metric_families = self.registry.gather();
         let mut buffer = Vec::new();
-        encoder.encode(&metric_families, &mut buffer).expect("prometheus encode should not fail");
+        encoder
+            .encode(&metric_families, &mut buffer)
+            .expect("prometheus encode should not fail");
         String::from_utf8(buffer).expect("utf8 should be valid after prometheus encode")
     }
 }
