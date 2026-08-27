@@ -63,6 +63,10 @@ pub mod plugin;
 pub use voxel as kernel;
 pub use voxel::*;
 
-// FUTURE: FFI EDGES (thin bindings, NOT logic)
-// pub mod c_api;   // C-ABI via cbindgen → C# P/Invoke shim (WSM3D)
-// pub mod wasm;    // wasm-bindgen → TS/npm (web)
+// FFI EDGES (thin bindings, NOT logic) — feature-gated
+/// C-ABI via cbindgen -> C# P/Invoke shim (WSM3D). Opaque handles wrap the Rust core.
+#[cfg(feature = "c_api")]
+#[path = "../bindings/c_api.rs"]
+pub mod c_api;
+
+// FUTURE: pub mod wasm;    // wasm-bindgen -> TS/npm (web)

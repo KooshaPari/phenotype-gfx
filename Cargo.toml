@@ -110,3 +110,5 @@ prometheus = ["dep:opentelemetry-prometheus", "dep:prometheus"]
 full-obs = ["otlp", "prometheus"]
 # SIMD-accelerated voxel meshing (SSE2 on x86_64, scalar fallback elsewhere)
 simd = []
+# C-ABI layer for C# P/Invoke / Unity interop
+c_api = []
