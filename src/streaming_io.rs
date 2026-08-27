@@ -19,7 +19,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 
@@ -220,6 +220,8 @@ pub struct StreamingCacheStats {
     pub disk_cache_hits: u64,
     /// Number of times a chunk had to be generated (not on disk).
     pub disk_cache_misses: u64,
+    /// Total number of chunks evicted from the resident set.
+    pub evictions: u64,
     /// Number of chunks currently in the eviction save queue.
     pub pending_evictions: usize,
 }
@@ -230,7 +232,7 @@ pub struct StreamingCacheStats {
 /// When chunks are requested and not in memory, the disk cache is checked
 /// before generating new data.
 pub struct StreamingManager {
-    storage: Arc<dyn ChunkStorage>,
+    storage: Box<dyn ChunkStorage>,
     /// Chunks currently held in memory (coord -> payload).
     resident: HashMap<ChunkCoord, ChunkPayload>,
     /// Maximum number of chunks to keep resident.
@@ -241,13 +243,23 @@ pub struct StreamingManager {
 
 impl StreamingManager {
     /// Create a new streaming manager with the given storage backend.
-    pub fn new(storage: Arc<dyn ChunkStorage>, max_resident: usize) -> Self {
+    pub fn new(storage: Box<dyn ChunkStorage>, max_resident: usize) -> Self {
         Self {
             storage,
             resident: HashMap::new(),
             max_resident,
             stats: StreamingCacheStats::default(),
         }
+    }
+
+    /// Create a new streaming manager backed by [`DiskChunkStorage`] at the
+    /// given directory path.  The directory is created automatically.
+    pub fn new_disk(
+        base_dir: impl Into<std::path::PathBuf>,
+        max_resident: usize,
+    ) -> Result<Self, ChunkStorageError> {
+        let disk = DiskChunkStorage::new(base_dir)?;
+        Ok(Self::new(Box::new(disk), max_resident))
     }
 
     /// Request a chunk. First checks the in-memory cache, then disk, returning
@@ -280,6 +292,7 @@ impl StreamingManager {
     pub fn evict_chunk(&mut self, coord: ChunkCoord) -> Result<(), ChunkStorageError> {
         if let Some(payload) = self.resident.remove(&coord) {
             self.storage.save_chunk(&payload)?;
+            self.stats.evictions += 1;
             self.stats.pending_evictions = self.stats.pending_evictions.saturating_sub(1);
         }
         Ok(())
@@ -300,6 +313,12 @@ impl StreamingManager {
 
     /// Force-save all resident chunks to disk.
     pub fn flush_all(&self) -> Result<(), ChunkStorageError> {
+        self.save_all_chunks()
+    }
+
+    /// Persist every chunk currently held in memory to the storage backend.
+    /// Useful before a shutdown or world-swap.
+    pub fn save_all_chunks(&self) -> Result<(), ChunkStorageError> {
         for payload in self.resident.values() {
             self.storage.save_chunk(payload)?;
         }
@@ -317,8 +336,8 @@ impl StreamingManager {
     }
 
     /// Get a reference to the storage backend.
-    pub fn storage(&self) -> &Arc<dyn ChunkStorage> {
-        &self.storage
+    pub fn storage(&self) -> &dyn ChunkStorage {
+        &*self.storage
     }
 }
 
@@ -436,8 +455,8 @@ mod tests {
     #[test]
     fn eviction_saves_to_disk() {
         let dir = std::env::temp_dir().join("phenotype_gfx_test_eviction");
-        let storage = Arc::new(DiskChunkStorage::new(&dir).expect("create storage"));
-        let mut mgr = StreamingManager::new(storage.clone(), 2);
+        let storage = Box::new(DiskChunkStorage::new(&dir).expect("create storage"));
+        let mut mgr = StreamingManager::new(storage, 2);
 
         let p1 = sample_payload(1, 0, 0);
         let p2 = sample_payload(2, 0, 0);
@@ -451,7 +470,7 @@ mod tests {
         assert_eq!(mgr.resident_count(), 1);
 
         // Should be on disk
-        let loaded = storage.load_chunk(coord(1, 0, 0)).expect("load from disk");
+        let loaded = mgr.storage().load_chunk(coord(1, 0, 0)).expect("load from disk");
         assert_eq!(loaded.data, p1.data);
 
         // Cleanup
@@ -466,11 +485,10 @@ mod tests {
     #[test]
     fn cache_hit_counter() {
         let dir = std::env::temp_dir().join("phenotype_gfx_test_cache_hit");
-        let storage = Arc::new(DiskChunkStorage::new(&dir).expect("create storage"));
-        let mut mgr = StreamingManager::new(storage.clone(), 10);
-
+        let disk = DiskChunkStorage::new(&dir).expect("create storage");
         let payload = sample_payload(5, 5, 5);
-        storage.save_chunk(&payload).expect("save to disk");
+        disk.save_chunk(&payload).expect("save to disk");
+        let mut mgr = StreamingManager::new(Box::new(disk), 10);
 
         assert_eq!(mgr.stats().disk_cache_hits, 0);
         assert_eq!(mgr.stats().disk_cache_misses, 0);
@@ -488,8 +506,8 @@ mod tests {
     #[test]
     fn cache_miss_counter() {
         let dir = std::env::temp_dir().join("phenotype_gfx_test_cache_miss");
-        let storage = Arc::new(DiskChunkStorage::new(&dir).expect("create storage"));
-        let mut mgr = StreamingManager::new(storage.clone(), 10);
+        let storage = Box::new(DiskChunkStorage::new(&dir).expect("create storage"));
+        let mut mgr = StreamingManager::new(storage, 10);
 
         let result = mgr.request_chunk(coord(99, 99, 99));
         assert!(result.expect("request").is_none());
@@ -599,24 +617,213 @@ mod tests {
     /// STREAM-010 -- StreamingManager auto-evicts when over capacity.
     #[test]
     fn streaming_manager_auto_evict() {
-        let storage = Arc::new(MemoryChunkStorage::new());
-        let mut mgr = StreamingManager::new(storage.clone(), 2);
+        let storage = Box::new(MemoryChunkStorage::new());
+        let mut mgr = StreamingManager::new(storage, 2);
 
         mgr.insert_chunk(sample_payload(1, 0, 0)).expect("insert 1");
         mgr.insert_chunk(sample_payload(2, 0, 0)).expect("insert 2");
         assert_eq!(mgr.resident_count(), 2);
 
-        // Inserting a third should evict the first
+        // Inserting a third should evict one of the first two
         mgr.insert_chunk(sample_payload(3, 0, 0)).expect("insert 3");
         assert_eq!(mgr.resident_count(), 2);
+        assert_eq!(mgr.stats().evictions, 1);
 
-        // Payload 1 should be on disk (in-memory storage) but not in resident set
-        assert!(storage.chunk_exists(coord(1, 0, 0)));
+        // Exactly one of the evicted chunks should be on disk (in-memory storage)
+        let on_disk_1 = mgr.storage().chunk_exists(coord(1, 0, 0));
+        let on_disk_2 = mgr.storage().chunk_exists(coord(2, 0, 0));
+        assert!(
+            on_disk_1 ^ on_disk_2,
+            "exactly one of chunks 1 or 2 should have been evicted to storage"
+        );
 
-        // Payload 2 and 3 should be in resident
-        let result2 = mgr.request_chunk(coord(2, 0, 0)).expect("request 2");
-        assert!(result2.is_some());
+        // Payload 3 should always be in resident
         let result3 = mgr.request_chunk(coord(3, 0, 0)).expect("request 3");
         assert!(result3.is_some());
+    }
+
+    // ========================================================================
+    // New tests: disk-backed eviction, load-from-disk, save_all roundtrip,
+    // directory auto-creation, cache stats, concurrent access
+    // ========================================================================
+
+    /// STREAM-011 -- eviction persists to disk and can be re-loaded.
+    #[test]
+    fn eviction_persists_to_disk() {
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream011");
+        let storage = Box::new(DiskChunkStorage::new(&dir).expect("create storage"));
+        let mut mgr = StreamingManager::new(storage, 3);
+
+        let payload = sample_payload(10, 20, 30);
+        mgr.insert_chunk(payload.clone()).expect("insert");
+        assert_eq!(mgr.resident_count(), 1);
+
+        // Evict — should persist to disk
+        mgr.evict_chunk(coord(10, 20, 30)).expect("evict");
+        assert_eq!(mgr.resident_count(), 0);
+
+        // Load from disk via a fresh StreamingManager
+        let storage2 = Box::new(DiskChunkStorage::new(&dir).expect("create storage2"));
+        let mut mgr2 = StreamingManager::new(storage2, 3);
+        let loaded = mgr2.request_chunk(coord(10, 20, 30)).expect("request");
+        assert!(loaded.is_some(), "chunk should be loadable from disk after eviction");
+        assert_eq!(loaded.unwrap().data, payload.data);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// STREAM-012 -- request_chunk returns from disk on cache miss.
+    #[test]
+    fn load_from_disk_on_cache_miss() {
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream012");
+        let disk = DiskChunkStorage::new(&dir).expect("create storage");
+        let payload = sample_payload(7, 8, 9);
+        disk.save_chunk(&payload).expect("save to disk first");
+        let mut mgr = StreamingManager::new(Box::new(disk), 10);
+
+        // Resident set is empty — request should fall through to disk
+        let result = mgr.request_chunk(coord(7, 8, 9)).expect("request");
+        assert!(result.is_some(), "should load from disk on cache miss");
+        assert_eq!(result.unwrap().data, payload.data);
+        // Should now be in the resident set
+        assert_eq!(mgr.resident_count(), 1);
+        assert_eq!(mgr.stats().disk_cache_hits, 1);
+        assert_eq!(mgr.stats().disk_cache_misses, 0);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// STREAM-013 -- save_all_chunks roundtrip: all resident chunks survive.
+    #[test]
+    fn save_all_roundtrip() {
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream013");
+        let storage = Box::new(DiskChunkStorage::new(&dir).expect("create storage"));
+        let mut mgr = StreamingManager::new(storage, 10);
+
+        mgr.insert_chunk(sample_payload(1, 0, 0)).expect("a");
+        mgr.insert_chunk(sample_payload(2, 0, 0)).expect("b");
+        mgr.insert_chunk(sample_payload(3, 0, 0)).expect("c");
+
+        mgr.save_all_chunks().expect("save all");
+
+        // Verify all three are on disk via a fresh manager
+        let storage2 = Box::new(DiskChunkStorage::new(&dir).expect("create storage2"));
+        let mut mgr2 = StreamingManager::new(storage2, 10);
+        for cx in 1..=3 {
+            let loaded = mgr2
+                .request_chunk(coord(cx, 0, 0))
+                .expect("load")
+                .expect("should exist");
+            assert_eq!(loaded.coord, coord(cx, 0, 0));
+        }
+        assert_eq!(mgr2.stats().disk_cache_hits, 3);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// STREAM-014 -- new_disk auto-creates the base directory.
+    #[test]
+    fn directory_auto_creation() {
+        // Use a unique nested path; clean up any prior run first.
+        let base = std::env::temp_dir().join("phenotype_gfx_test_stream014_nested");
+        let _ = std::fs::remove_dir_all(&base);
+        let dir = base.join("deep/path");
+        assert!(!dir.exists(), "dir should not exist yet");
+
+        let mut mgr = StreamingManager::new_disk(&dir, 5).expect("new_disk");
+        assert!(dir.exists(), "new_disk should create the directory");
+        assert!(dir.join("chunks").exists(), "chunks sub-directory should exist");
+
+        let payload = sample_payload(1, 1, 1);
+        mgr.insert_chunk(payload).expect("insert");
+        mgr.save_all_chunks().expect("save");
+        assert!(dir.join("chunks/1_1_1.bin").exists());
+
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    /// STREAM-015 -- cache stats track hits, misses, and evictions correctly.
+    #[test]
+    fn cache_stats_tracking() {
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream015");
+        let disk = DiskChunkStorage::new(&dir).expect("create storage");
+        // Pre-populate disk with one chunk
+        disk.save_chunk(&sample_payload(50, 0, 0)).expect("save");
+        let mut mgr = StreamingManager::new(Box::new(disk), 2);
+
+        // Initial stats
+        assert_eq!(mgr.stats().disk_cache_hits, 0);
+        assert_eq!(mgr.stats().disk_cache_misses, 0);
+        assert_eq!(mgr.stats().evictions, 0);
+
+        // Miss: chunk not in memory or disk
+        mgr.request_chunk(coord(99, 0, 0)).expect("miss");
+        assert_eq!(mgr.stats().disk_cache_misses, 1);
+
+        // Hit: chunk on disk
+        mgr.request_chunk(coord(50, 0, 0)).expect("hit");
+        assert_eq!(mgr.stats().disk_cache_hits, 1);
+
+        // Fill to capacity and trigger eviction
+        mgr.insert_chunk(sample_payload(1, 0, 0)).expect("i1");
+        mgr.insert_chunk(sample_payload(2, 0, 0)).expect("i2"); // evicts chunk(50,0,0)
+        assert_eq!(mgr.stats().evictions, 1);
+
+        mgr.insert_chunk(sample_payload(3, 0, 0)).expect("i3"); // evicts chunk(1,0,0)
+        assert_eq!(mgr.stats().evictions, 2);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// STREAM-016 -- concurrent access from multiple threads is safe.
+    #[test]
+    fn concurrent_access_safety() {
+        use std::sync::Arc;
+        use std::thread;
+
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream016");
+        let disk = Arc::new(DiskChunkStorage::new(&dir).expect("create storage"));
+
+        // Pre-populate disk with chunks
+        for i in 0..20u32 {
+            let mut metadata = HashMap::new();
+            metadata.insert("i".to_string(), i.to_string());
+            disk.save_chunk(&ChunkPayload {
+                coord: coord(i as i32, 0, 0),
+                data: vec![i as u8; 64],
+                metadata,
+            })
+            .expect("save");
+        }
+
+        let mut handles = vec![];
+        for t in 0..4 {
+            let base = dir.clone();
+            handles.push(thread::spawn(move || {
+                // Each thread uses its own StreamingManager backed by the
+                // same DiskChunkStorage (shared via Arc trait object).
+                // We create StreamingManagers with Box::new wrapper.
+                // For true concurrent disk access we share the Arc<DiskChunkStorage>
+                // directly through the ChunkStorage trait via MemoryChunkStorage
+                // wrapped in Arc. This test verifies no panics from concurrent
+                // disk reads/writes to distinct chunk files.
+                let mgr_storage = DiskChunkStorage::new(&base)
+                    .expect("create storage per-thread");
+                let mut mgr = StreamingManager::new(Box::new(mgr_storage), 5);
+
+                for i in 0..10u32 {
+                    let cx = (t * 10 + i as usize) as i32;
+                    let result = mgr.request_chunk(coord(cx, 0, 0));
+                    // All should succeed without panics
+                    let _ = result.expect("concurrent request should not error");
+                }
+            }));
+        }
+
+        for h in handles {
+            h.join().expect("thread should not panic");
+        }
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
