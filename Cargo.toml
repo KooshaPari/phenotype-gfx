@@ -33,6 +33,8 @@ uuid = { version = "1", features = ["v4", "serde"] }
 tracing = { version = "0.1", default-features = false, features = ["std", "attributes"] }
 # metrics facade — no-op when no recorder is installed; consumers opt-in to prometheus/statsd.
 metrics = { version = "0.24", default-features = false }
+# Zstd compression for streaming chunk persistence
+zstd = "0.13"
 
 # OTLP + Prometheus observability (feature-gated)
 opentelemetry = { version = "0.28", optional = true }
@@ -40,7 +42,7 @@ opentelemetry_sdk = { version = "0.32", features = ["rt-tokio"], optional = true
 opentelemetry-otlp = { version = "0.28", features = ["grpc-tonic"], optional = true }
 opentelemetry-prometheus = { version = "0.28", optional = true }
 prometheus = { version = "0.13", optional = true }
-tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "io-util"], optional = true }
 
 # Bevy adapter is optional — only pulled in when consumers need ECS integration
 bevy = { version = "0.18.1", default-features = false, features = ["bevy_asset", "bevy_mesh"], optional = true }
@@ -110,5 +112,8 @@ prometheus = ["dep:opentelemetry-prometheus", "dep:prometheus"]
 full-obs = ["otlp", "prometheus"]
 # SIMD-accelerated voxel meshing (SSE2 on x86_64, scalar fallback elsewhere)
 simd = []
+
 # C-ABI layer for C# P/Invoke / Unity interop
 c_api = []
+# Zstd-compressed disk chunk persistence for streaming
+zstd-storage = ["dep:tokio"]

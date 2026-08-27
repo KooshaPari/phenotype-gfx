@@ -37,6 +37,9 @@ pub mod lod;
 /// Streaming window policy: ring-based chunk lifecycle, eviction ordering.
 pub mod streaming;
 
+/// Disk-based chunk persistence with zstd compression for streaming I/O.
+pub mod streaming_io;
+
 /// Post-processing pipeline: SSAO, SSGI, Bloom, ACES, LUT, vignette, CA.
 pub mod postfx;
 
