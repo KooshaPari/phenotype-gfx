@@ -957,6 +957,37 @@ pub fn simd_conditional_mix_batch(
     }
 }
 
+/// Runtime-dispatched normal normalisation.  Checks CPU features once and
+/// delegates to the best available batch path (AVX2 > SSE2 > NEON > scalar).
+/// Modifies `normals` in-place.
+#[inline]
+pub fn dispatch_normalize_normals(normals: &mut [[f32; 3]]) {
+    let normalized = simd_normals_batch(normals);
+    for (v, n) in normals.iter_mut().zip(normalized) {
+        *v = n;
+    }
+}
+
+/// Runtime-dispatched AABB centre computation.  Returns the centre of each
+/// bounding box in the input slice, using the best available batch path.
+pub fn dispatch_aabb_centers(bounds: &[[f32; 6]]) -> Vec<[f32; 3]> {
+    simd_aabb_center_batch(bounds)
+}
+
+/// Runtime-dispatched batch dot product.
+pub fn dispatch_dot_batch(a: &[[f32; 3]], b: &[[f32; 3]]) -> Vec<f32> {
+    simd_dot_batch(a, b)
+}
+
+/// Runtime-dispatched batch conditional mix.
+pub fn dispatch_conditional_mix_batch(
+    a: &[[f32; 3]],
+    b: &[[f32; 3]],
+    mask: &[[f32; 3]],
+) -> Vec<[f32; 3]> {
+    simd_conditional_mix_batch(a, b, mask)
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------

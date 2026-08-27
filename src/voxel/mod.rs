@@ -76,7 +76,11 @@ pub use sprite_voxelizer::{
     VoxelizeConfig, DEFAULT_DEPTH,
 };
 pub use world::VoxelWorld;
-pub use simd::{simd_normals_batch, simd_aabb_center_batch, simd_dot_batch, simd_conditional_mix_batch, get_simd_level, SimdLevel};
+pub use simd::{
+    get_simd_level, dispatch_aabb_centers, dispatch_conditional_mix_batch, dispatch_dot_batch,
+    dispatch_normalize_normals, simd_aabb_center_batch, simd_conditional_mix_batch,
+    simd_dot_batch, simd_normals_batch, SimdLevel,
+};
 
 /// Schema version of the public `phenotype-voxel` types. Bumped on breaking changes
 /// so consumers can detect API drift in `.civreplay` / serialized voxel diffs.

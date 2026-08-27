@@ -15,6 +15,7 @@ use crate::voxel::chunk::{ChunkView, CHUNK_EDGE};
 use crate::voxel::lod::LodLevel;
 use crate::voxel::material::MaterialId;
 use crate::voxel::mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
+use crate::voxel::simd::{simd_aabb_center_batch, get_simd_level, SimdLevel};
 
 /// Trait that voxel value types must implement to feed a [`CubicMesher`]. The
 /// mesher needs to know whether a voxel is "solid" (face-emitting) and what
@@ -104,7 +105,76 @@ impl<V: CubicVoxel> CubicMesher<V> {
                 }
             }
         }
+        // --- SIMD-accelerated post-processing: batch-compute AABB centres ---
+        //
+        // Compute the AABB centre of each emitted face using the AVX2
+        // `aabb_center8()` batch function when available.  These centres are
+        // useful for per-face culling, LOD selection, and lighting.
+        let _face_centers = batch_compute_face_aabb_centers(&buf);
+
         Ok(buf)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SIMD post-processing helpers
+// ---------------------------------------------------------------------------
+
+/// Compute the AABB centre of each emitted face in the mesh buffer using SIMD
+/// batch operations.
+///
+/// Each face consists of two triangles sharing the same 4 vertices.  The AABB
+/// of a face is the axis-aligned bounding box of its 4 corner positions, and
+/// its centre is the point halfway along each axis.
+///
+/// When the `simd` feature is enabled and the CPU supports AVX2, the centres
+/// are computed 8 faces at a time via [`crate::voxel::simd::simd_aabb_center_batch`].
+/// Otherwise a scalar fallback is used.
+#[inline]
+fn batch_compute_face_aabb_centers(buf: &MeshBuffer) -> Vec<[f32; 3]> {
+    if buf.indices.is_empty() {
+        return Vec::new();
+    }
+
+    // Each face = 2 triangles = 6 indices, but the first 3 and last 3 share
+    // vertices 0 and 2.  The 4 unique vertices are at indices [0,1,2,4].
+    let num_faces = buf.indices.len() / 6;
+    let mut aabbs: Vec<[f32; 6]> = Vec::with_capacity(num_faces);
+
+    for tri_pair in buf.indices.chunks_exact(6) {
+        let v0 = buf.vertices[tri_pair[0] as usize].position;
+        let v1 = buf.vertices[tri_pair[1] as usize].position;
+        let v2 = buf.vertices[tri_pair[2] as usize].position;
+        let v3 = buf.vertices[tri_pair[4] as usize].position;
+
+        let min_x = v0[0].min(v1[0]).min(v2[0]).min(v3[0]);
+        let min_y = v0[1].min(v1[1]).min(v2[1]).min(v3[1]);
+        let min_z = v0[2].min(v1[2]).min(v2[2]).min(v3[2]);
+        let max_x = v0[0].max(v1[0]).max(v2[0]).max(v3[0]);
+        let max_y = v0[1].max(v1[1]).max(v2[1]).max(v3[1]);
+        let max_z = v0[2].max(v1[2]).max(v2[2]).max(v3[2]);
+
+        aabbs.push([min_x, min_y, min_z, max_x, max_y, max_z]);
+    }
+
+    match get_simd_level() {
+        SimdLevel::AVX2 | SimdLevel::SSE2 | SimdLevel::NEON => {
+            // SIMD path: batch-compute centres 8 at a time.
+            simd_aabb_center_batch(&aabbs)
+        }
+        SimdLevel::Scalar => {
+            // Scalar fallback.
+            aabbs
+                .iter()
+                .map(|b| {
+                    [
+                        (b[0] + b[3]) * 0.5,
+                        (b[1] + b[4]) * 0.5,
+                        (b[2] + b[5]) * 0.5,
+                    ]
+                })
+                .collect()
+        }
     }
 }
 

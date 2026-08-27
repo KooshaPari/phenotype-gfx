@@ -4,5 +4,55 @@ include_guard = "PHENOTYPE_GFX_H"
 tab_width = 4
 style = "both"
 cpp_compat = true
+
+[defines]
+# Feature-gated FFI functions only compiled when `c_api` feature is on.
+"feature = \"c_api\"" = "PHENOTYPE_GFX_FFI"
+
+[export]
+# Only export the #[no_mangle] FFI functions and opaque handle types.
+include = [
+    "phenotype_gfx_voxel_create",
+    "phenotype_gfx_voxel_destroy",
+    "phenotype_gfx_voxel_set",
+    "phenotype_gfx_voxel_get",
+    "phenotype_gfx_voxel_chunk_count",
+    "phenotype_gfx_voxel_mesh_build",
+    "phenotype_gfx_voxel_mesh_destroy",
+    "phenotype_gfx_voxel_vertices",
+    "phenotype_gfx_voxel_indices",
+    "phenotype_gfx_voxel_vertex_count",
+    "phenotype_gfx_material_create",
+    "phenotype_gfx_material_destroy",
+    "phenotype_gfx_material_set_property",
+    "phenotype_gfx_material_get_property",
+    "phenotype_gfx_material_count",
+    "phenotype_gfx_streaming_create",
+    "phenotype_gfx_streaming_destroy",
+    "phenotype_gfx_streaming_load",
+    "phenotype_gfx_streaming_unload",
+    "phenotype_gfx_streaming_loaded_count",
+    "phenotype_gfx_streaming_evict_oldest",
+    "phenotype_gfx_obs_init",
+    "phenotype_gfx_obs_counter_inc",
+    "phenotype_gfx_obs_gauge_set",
+    "VoxelWorldHandle",
+    "MeshBufferHandle",
+    "MaterialPaletteHandle",
+    "StreamingManagerHandle",
+]
+
+# Exclude Rust test code and internal helpers from the header.
+exclude = [
+    "tests",
+    "rust_string_to_c",
+    "StreamingCoord",
+    "StreamingManager",
+    "OBS_COUNTER",
+]
+
 [parse]
 parse_deps = false
+# Tell cbindgen to expand items gated behind the `c_api` feature.
+[parse.expand]
+features = ["c_api"]

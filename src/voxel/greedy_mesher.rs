@@ -40,6 +40,7 @@ use crate::voxel::cubic_mesher::face_ao;
 use crate::voxel::lod::LodLevel;
 use crate::voxel::material::MaterialId;
 use crate::voxel::mesh::{MeshBuffer, MeshError, MeshResult, MeshVertex, Mesher};
+use crate::voxel::simd::{simd_normals_batch, get_simd_level, SimdLevel};
 
 pub use crate::voxel::cubic_mesher::CubicVoxel;
 
@@ -269,7 +270,59 @@ impl<V: CubicVoxel> GreedyMesher<V> {
             }
         }
 
+        // --- SIMD-accelerated post-processing: batch-normalize vertex normals ---
+        //
+        // Even though axis-aligned face normals are already unit vectors, we
+        // normalise through the SIMD batch path so that any future smooth or
+        // interpolated normals are guaranteed unit-length.  The cost is
+        // negligible relative to the meshing pass itself.
+        batch_normalize_normals(&mut buf);
+
         Ok(buf)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SIMD post-processing helpers
+// ---------------------------------------------------------------------------
+
+/// Batch-normalise all vertex normals in the mesh buffer.
+///
+/// When the `simd` feature is enabled, uses AVX2 `normalize8()` (via
+/// [`crate::voxel::simd::simd_normals_batch`]) when the CPU supports it,
+/// falling back to SSE2 / scalar as needed.  Without the feature, a pure
+/// scalar loop is used.
+#[inline]
+fn batch_normalize_normals(buf: &mut MeshBuffer) {
+    if buf.vertices.is_empty() {
+        return;
+    }
+    match get_simd_level() {
+        SimdLevel::AVX2 | SimdLevel::SSE2 | SimdLevel::NEON => {
+            // SIMD path: collect normals, batch-normalise, write back.
+            let normals: Vec<[f32; 3]> = buf.vertices.iter().map(|v| v.normal).collect();
+            let normalized = simd_normals_batch(&normals);
+            for (v, n) in buf
+                .vertices
+                .iter_mut()
+                .zip(normalized.into_iter())
+            {
+                v.normal = n;
+            }
+        }
+        SimdLevel::Scalar => {
+            for v in buf.vertices.iter_mut() {
+                let len = (v.normal[0].powi(2) + v.normal[1].powi(2) + v.normal[2].powi(2)).sqrt();
+                if len > f32::EPSILON {
+                    let inv = 1.0 / len;
+                    v.normal[0] *= inv;
+                    v.normal[1] *= inv;
+                    v.normal[2] *= inv;
+                } else {
+                    v.normal = [0.0; 3];
+                }
+            }
+        }
     }
 }
 
