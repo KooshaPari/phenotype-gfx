@@ -23,6 +23,7 @@ use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 
+use crate::lod_priority::{self, CameraVelocity, PriorityScore};
 use crate::voxel::ChunkCoord;
 
 // ---------------------------------------------------------------------------
@@ -223,6 +224,8 @@ pub struct StreamingCacheStats {
     pub evictions: u64,
     /// Number of chunks currently in the eviction save queue.
     pub pending_evictions: usize,
+    /// Number of chunks loaded via prefetch this frame.
+    pub prefetch_hits: u64,
 }
 
 /// Manages the lifecycle of chunks in the streaming window with disk persistence.
@@ -230,6 +233,10 @@ pub struct StreamingCacheStats {
 /// When chunks are evicted from the resident set, they are saved to disk.
 /// When chunks are requested and not in memory, the disk cache is checked
 /// before generating new data.
+///
+/// Eviction is priority-based: chunks closest to the camera, at the highest
+/// LOD detail, and most recently accessed are evicted LAST. Chunks far away,
+/// at low LOD detail, and not recently accessed are evicted FIRST.
 pub struct StreamingManager {
     storage: Box<dyn ChunkStorage>,
     /// Chunks currently held in memory (coord -> payload).
@@ -238,16 +245,82 @@ pub struct StreamingManager {
     max_resident: usize,
     /// Cache statistics.
     stats: StreamingCacheStats,
+    /// Per-chunk LOD level (higher = coarser detail).
+    lod_levels: HashMap<ChunkCoord, u8>,
+    /// Per-chunk last-access tick (for recency scoring).
+    last_access: HashMap<ChunkCoord, u32>,
+    /// Current tick counter (incremented each frame).
+    current_tick: u32,
+    /// Camera anchor chunk coordinate. `None` if no camera has been set.
+    camera_anchor: Option<ChunkCoord>,
+    /// Camera velocity for predictive prefetch.
+    camera_velocity: CameraVelocity,
+    /// Vertical weight for ring-distance metric.
+    vy_weight: u8,
+    /// Maximum LOD level in the system.
+    max_lod_level: u8,
+    /// Recency decay in ticks (accesses older than this score 0 recency).
+    recency_decay_ticks: u32,
+    /// Maximum number of chunks to prefetch per frame.
+    prefetch_budget: usize,
+    /// Mesh ring from WindowPolicy (chunks within this ring are always meshed).
+    mesh_ring: u8,
+    /// Prefetch ring extension past mesh_ring.
+    prefetch_ring: u8,
 }
 
 impl StreamingManager {
     /// Create a new streaming manager with the given storage backend.
+    ///
+    /// Uses default LOD parameters (max_lod_level=4, vy_weight=2, etc.).
     pub fn new(storage: Box<dyn ChunkStorage>, max_resident: usize) -> Self {
         Self {
             storage,
             resident: HashMap::new(),
             max_resident,
             stats: StreamingCacheStats::default(),
+            lod_levels: HashMap::new(),
+            last_access: HashMap::new(),
+            current_tick: 0,
+            camera_anchor: None,
+            camera_velocity: CameraVelocity::default(),
+            vy_weight: 2,
+            max_lod_level: 4,
+            recency_decay_ticks: 60,
+            prefetch_budget: lod_priority::DEFAULT_PREFETCH_BUDGET,
+            mesh_ring: 1,
+            prefetch_ring: 3,
+        }
+    }
+
+    /// Create a new streaming manager with full LOD priority configuration.
+    #[allow(clippy::too_many_arguments)]
+    pub fn with_lod_config(
+        storage: Box<dyn ChunkStorage>,
+        max_resident: usize,
+        vy_weight: u8,
+        max_lod_level: u8,
+        recency_decay_ticks: u32,
+        prefetch_budget: usize,
+        mesh_ring: u8,
+        prefetch_ring: u8,
+    ) -> Self {
+        Self {
+            storage,
+            resident: HashMap::new(),
+            max_resident,
+            stats: StreamingCacheStats::default(),
+            lod_levels: HashMap::new(),
+            last_access: HashMap::new(),
+            current_tick: 0,
+            camera_anchor: None,
+            camera_velocity: CameraVelocity::default(),
+            vy_weight,
+            max_lod_level,
+            recency_decay_ticks,
+            prefetch_budget,
+            mesh_ring,
+            prefetch_ring,
         }
     }
 
@@ -261,14 +334,94 @@ impl StreamingManager {
         Ok(Self::new(Box::new(disk), max_resident))
     }
 
+    // --------------------------------------------------------------------
+    // Camera & LOD state management
+    // --------------------------------------------------------------------
+
+    /// Set the camera anchor chunk coordinate.
+    pub fn set_camera_anchor(&mut self, anchor: ChunkCoord) {
+        self.camera_anchor = Some(anchor);
+    }
+
+    /// Get the current camera anchor, if set.
+    pub fn camera_anchor(&self) -> Option<ChunkCoord> {
+        self.camera_anchor
+    }
+
+    /// Set the camera velocity for predictive prefetch.
+    pub fn set_camera_velocity(&mut self, velocity: CameraVelocity) {
+        self.camera_velocity = velocity;
+    }
+
+    /// Get the current camera velocity.
+    pub fn camera_velocity(&self) -> CameraVelocity {
+        self.camera_velocity
+    }
+
+    /// Advance the tick counter. Call once per frame.
+    pub fn advance_tick(&mut self) {
+        self.current_tick = self.current_tick.saturating_add(1);
+    }
+
+    /// Get the current tick.
+    pub fn current_tick(&self) -> u32 {
+        self.current_tick
+    }
+
+    /// Set the LOD level for a specific chunk.
+    pub fn set_lod_level(&mut self, coord: ChunkCoord, lod_level: u8) {
+        self.lod_levels.insert(coord, lod_level);
+    }
+
+    /// Get the LOD level for a chunk (defaults to max_lod_level if unknown).
+    pub fn get_lod_level(&self, coord: ChunkCoord) -> u8 {
+        self.lod_levels.get(&coord).copied().unwrap_or(self.max_lod_level)
+    }
+
+    /// Compute the priority score for a resident chunk.
+    fn chunk_priority(&self, coord: ChunkCoord) -> PriorityScore {
+        let anchor = self.camera_anchor.unwrap_or(coord);
+        let lod = self.get_lod_level(coord);
+        let last_access = self.last_access.get(&coord).copied().unwrap_or(0);
+        lod_priority::compute_priority(
+            coord,
+            anchor,
+            self.vy_weight,
+            lod,
+            self.max_lod_level,
+            last_access,
+            self.current_tick,
+            self.recency_decay_ticks,
+        )
+    }
+
+    /// Find the lowest-priority resident chunk for eviction.
+    fn lowest_priority_coord(&self) -> Option<ChunkCoord> {
+        self.resident
+            .keys()
+            .min_by(|&a, &b| {
+                let pa = self.chunk_priority(*a);
+                let pb = self.chunk_priority(*b);
+                pa.weighted()
+                    .partial_cmp(&pb.weighted())
+                    .unwrap_or(core::cmp::Ordering::Equal)
+            })
+            .copied()
+    }
+
+    // --------------------------------------------------------------------
+    // Core chunk lifecycle
+    // --------------------------------------------------------------------
+
     /// Request a chunk. First checks the in-memory cache, then disk, returning
     /// `None` if it must be generated fresh.
     pub fn request_chunk(
         &mut self,
         coord: ChunkCoord,
     ) -> Result<Option<&ChunkPayload>, ChunkStorageError> {
-        // Check in-memory first
+        // Check in-memory first — boost recency on hit
         if self.resident.contains_key(&coord) {
+            self.last_access.insert(coord, self.current_tick);
             return Ok(self.resident.get(&coord));
         }
 
@@ -276,6 +429,8 @@ impl StreamingManager {
         match self.storage.load_chunk(coord) {
             Ok(payload) => {
                 self.stats.disk_cache_hits += 1;
+                // Disk-load priority boost: mark as recently accessed
+                self.last_access.insert(coord, self.current_tick);
                 self.resident.insert(coord, payload.clone());
                 Ok(self.resident.get(&coord))
             }
@@ -293,22 +448,103 @@ impl StreamingManager {
             self.storage.save_chunk(&payload)?;
             self.stats.evictions += 1;
             self.stats.pending_evictions = self.stats.pending_evictions.saturating_sub(1);
+            self.lod_levels.remove(&coord);
+            self.last_access.remove(&coord);
         }
         Ok(())
     }
 
+    /// Insert a chunk into the resident set with a given LOD level.
+    ///
+    /// If over capacity, the **lowest-priority** chunk is evicted first
+    /// (priority-based eviction, not FIFO).
+    pub fn insert_chunk_with_lod(
+        &mut self,
+        payload: ChunkPayload,
+        lod_level: u8,
+    ) -> Result<(), ChunkStorageError> {
+        self.lod_levels.insert(payload.coord, lod_level);
+        self.last_access.insert(payload.coord, self.current_tick);
+        self.insert_chunk(payload)
+    }
+
     /// Insert a chunk into the resident set. If over capacity, evicts the
-    /// oldest chunk (first key in the HashMap -- not LRU, but deterministic).
+    /// lowest-priority chunk (distance + LOD + recency), not FIFO.
     pub fn insert_chunk(&mut self, payload: ChunkPayload) -> Result<(), ChunkStorageError> {
-        // If at capacity, evict one chunk
+        // If at capacity, evict the lowest-priority chunk
         if self.resident.len() >= self.max_resident {
-            if let Some(&oldest) = self.resident.keys().next() {
-                self.evict_chunk(oldest)?;
+            if let Some(victim) = self.lowest_priority_coord() {
+                self.evict_chunk(victim)?;
             }
         }
+        self.last_access
+            .entry(payload.coord)
+            .or_insert(self.current_tick);
         self.resident.insert(payload.coord, payload);
         Ok(())
     }
+
+    // --------------------------------------------------------------------
+    // Predictive prefetching
+    // --------------------------------------------------------------------
+
+    /// Predict and pre-load chunks likely needed next frame.
+    ///
+    /// Uses the current camera anchor and velocity to forecast which chunks
+    /// will enter the streaming window. Loads up to `prefetch_budget` chunks
+    /// from disk into the resident cache.
+    ///
+    /// Returns the number of chunks actually prefetched.
+    pub fn prefetch_next_frame(&mut self) -> Result<usize, ChunkStorageError> {
+        let anchor = match self.camera_anchor {
+            Some(a) => a,
+            None => return Ok(0),
+        };
+
+        let predicted = lod_priority::predict_chunks(
+            anchor,
+            self.camera_velocity,
+            self.vy_weight,
+            self.mesh_ring,
+            self.prefetch_ring,
+            self.prefetch_budget,
+        );
+
+        let mut prefetched = 0usize;
+        for coord in predicted {
+            if self.resident.contains_key(&coord) {
+                continue; // already resident
+            }
+            if prefetched >= self.prefetch_budget {
+                break;
+            }
+            // Load from disk if available
+            match self.storage.load_chunk(coord) {
+                Ok(payload) => {
+                    // Evict lowest-priority if at capacity
+                    if self.resident.len() >= self.max_resident {
+                        if let Some(victim) = self.lowest_priority_coord() {
+                            self.evict_chunk(victim)?;
+                        }
+                    }
+                    self.last_access.insert(coord, self.current_tick);
+                    self.resident.insert(coord, payload);
+                    self.stats.prefetch_hits += 1;
+                    prefetched += 1;
+                }
+                Err(ChunkStorageError::NotFound(_)) => {
+                    // Not on disk — skip (caller should generate)
+                }
+                Err(e) => return Err(e),
+            }
+        }
+
+        Ok(prefetched)
+    }
+
+    // --------------------------------------------------------------------
+    // Flush / persistence
+    // --------------------------------------------------------------------
 
     /// Force-save all resident chunks to disk.
     pub fn flush_all(&self) -> Result<(), ChunkStorageError> {
@@ -337,6 +573,11 @@ impl StreamingManager {
     /// Get a reference to the storage backend.
     pub fn storage(&self) -> &dyn ChunkStorage {
         &*self.storage
+    }
+
+    /// Check if a chunk is currently held in the resident (in-memory) set.
+    pub fn is_resident(&self, coord: ChunkCoord) -> bool {
+        self.resident.contains_key(&coord)
     }
 }
 
@@ -806,20 +1047,12 @@ mod tests {
         for t in 0..4 {
             let base = dir.clone();
             handles.push(thread::spawn(move || {
-                // Each thread uses its own StreamingManager backed by the
-                // same DiskChunkStorage (shared via Arc trait object).
-                // We create StreamingManagers with Box::new wrapper.
-                // For true concurrent disk access we share the Arc<DiskChunkStorage>
-                // directly through the ChunkStorage trait via MemoryChunkStorage
-                // wrapped in Arc. This test verifies no panics from concurrent
-                // disk reads/writes to distinct chunk files.
                 let mgr_storage = DiskChunkStorage::new(&base).expect("create storage per-thread");
                 let mut mgr = StreamingManager::new(Box::new(mgr_storage), 5);
 
                 for i in 0..10u32 {
                     let cx = (t * 10 + i as usize) as i32;
                     let result = mgr.request_chunk(coord(cx, 0, 0));
-                    // All should succeed without panics
                     let _ = result.expect("concurrent request should not error");
                 }
             }));
@@ -830,5 +1063,226 @@ mod tests {
         }
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ========================================================================
+    // LOD priority integration tests
+    // ========================================================================
+
+    /// STREAM-017 (test b): Eviction respects priority — close chunk is kept,
+    /// far chunk is evicted first.
+    #[test]
+    fn eviction_respects_priority_close_kept_far_evicted() {
+        let storage = Box::new(MemoryChunkStorage::new());
+        let mut mgr = StreamingManager::with_lod_config(
+            storage, 2,
+            2,  // vy_weight
+            4,  // max_lod_level
+            60, // recency_decay_ticks
+            4,  // prefetch_budget
+            1,  // mesh_ring
+            3,  // prefetch_ring
+        );
+
+        // Set camera at origin
+        mgr.set_camera_anchor(coord(0, 0, 0));
+
+        // Insert a CLOSE chunk (ring=1) and a FAR chunk (ring=10)
+        let close = sample_payload(1, 0, 0);
+        let far = sample_payload(10, 0, 0);
+        mgr.insert_chunk(close).expect("insert close");
+        mgr.insert_chunk(far).expect("insert far");
+        assert_eq!(mgr.resident_count(), 2);
+
+        // Insert a third chunk — should evict the FAR chunk (lowest priority)
+        let third = sample_payload(20, 0, 0);
+        mgr.insert_chunk(third).expect("insert third");
+
+        assert_eq!(mgr.resident_count(), 2);
+        // The close chunk (1,0,0) should still be in the resident set
+        assert!(
+            mgr.is_resident(coord(1, 0, 0)),
+            "close chunk should survive eviction"
+        );
+        // The far chunk (10,0,0) should have been evicted from the resident set
+        assert!(
+            !mgr.is_resident(coord(10, 0, 0)),
+            "far chunk should be evicted first"
+        );
+        // The far chunk should have been saved to disk
+        assert!(
+            mgr.storage().chunk_exists(coord(10, 0, 0)),
+            "evicted far chunk should be on disk"
+        );
+        // The newly inserted chunk should be in memory
+        assert!(mgr.is_resident(coord(20, 0, 0)));
+    }
+
+    /// STREAM-018 (test f): Cache hit rate improvement with prefetch.
+    /// Pre-populate disk, run prefetch, then verify chunks are resident.
+    #[test]
+    fn prefetch_improves_cache_hit_rate() {
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream018_prefetch");
+        let _ = std::fs::remove_dir_all(&dir);
+        let disk = DiskChunkStorage::new(&dir).expect("create storage");
+
+        // Pre-populate disk with chunks at positions that will be predicted.
+        // Camera at (0,0,0), velocity dx=3, future anchor at (3,0,0).
+        // With mesh_ring=1, prefetch_ring=3, total_ring=4.
+        // Place disk chunks at ring=1 from future anchor (3,0,0):
+        //   (4,0,0), (2,0,0), (3,0,1), (3,0,-1)
+        // All are ring > mesh_ring(1) from current anchor (0,0,0).
+        let disk_chunks: Vec<ChunkCoord> = vec![
+            coord(4, 0, 0),
+            coord(2, 0, 0),
+            coord(3, 0, 1),
+            coord(3, 0, -1),
+        ];
+        for c in &disk_chunks {
+            disk.save_chunk(&sample_payload(c.cx, c.cy, c.cz)).expect("save");
+        }
+
+        let mut mgr = StreamingManager::with_lod_config(
+            Box::new(disk), 20,
+            2, 4, 60, 8, 1, 3,  // prefetch_budget=8 to ensure enough candidates
+        );
+
+        // Camera at origin, moving in +X direction
+        mgr.set_camera_anchor(coord(0, 0, 0));
+        mgr.set_camera_velocity(CameraVelocity { dx: 3, dy: 0, dz: 0 });
+
+        // Before prefetch, nothing should be resident
+        assert_eq!(mgr.resident_count(), 0);
+
+        // Run prefetch — should load chunks from disk that are in the predicted path
+        let prefetched = mgr.prefetch_next_frame().expect("prefetch");
+        assert!(
+            prefetched > 0,
+            "prefetch should have loaded at least 1 chunk from disk, got {}",
+            prefetched,
+        );
+        assert_eq!(mgr.stats().prefetch_hits as usize, prefetched);
+
+        // After prefetch, those chunks should be resident
+        // (request_chunk should hit in-memory, not disk)
+        let hits_before = mgr.stats().disk_cache_hits;
+        for c in &disk_chunks {
+            let _ = mgr.request_chunk(*c).expect("request");
+        }
+        let hits_after = mgr.stats().disk_cache_hits;
+        // At least some should have been in-memory hits (no additional disk reads)
+        assert!(
+            hits_after <= hits_before,
+            "prefetched chunks should be in memory (no additional disk reads)"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// STREAM-019 (test g): Disk load gives priority boost — a chunk loaded
+    /// from disk is marked as recently accessed and survives eviction over
+    /// an older chunk at the same distance.
+    #[test]
+    fn disk_load_gives_priority_boost() {
+        let dir = std::env::temp_dir().join("phenotype_gfx_test_stream019_boost");
+        let _ = std::fs::remove_dir_all(&dir);
+        let disk = DiskChunkStorage::new(&dir).expect("create storage");
+
+        // Save a chunk on disk at (5, 0, 5) — ring=5 from origin
+        disk.save_chunk(&sample_payload(5, 0, 5)).expect("save");
+
+        let mut mgr = StreamingManager::with_lod_config(
+            Box::new(DiskChunkStorage::new(&dir).expect("create storage2")),
+            2,  // max_resident = 2
+            2, 4, 60, 4, 1, 3,
+        );
+        mgr.set_camera_anchor(coord(0, 0, 0));
+
+        // Insert chunk A at (5, 0, 0) — ring=5, same distance as disk chunk
+        // at (5, 0, 5). Insert at tick 0 (older access).
+        let chunk_a = sample_payload(5, 0, 0);
+        mgr.insert_chunk(chunk_a).expect("insert A");
+
+        // Advance 5 ticks
+        for _ in 0..5 {
+            mgr.advance_tick();
+        }
+
+        // Load disk chunk at (5, 0, 5) — gets recency boost at tick 5
+        mgr.request_chunk(coord(5, 0, 5)).expect("load from disk");
+
+        // Cache is full: A (tick 0) and disk-loaded (tick 5).
+        // Insert a third — should evict chunk A (older access = lower recency)
+        let chunk_c = sample_payload(10, 0, 0);
+        mgr.insert_chunk(chunk_c).expect("insert C");
+
+        // Chunk A should be evicted (older access = lower recency = lower priority)
+        assert!(
+            !mgr.is_resident(coord(5, 0, 0)),
+            "chunk A (older access) should be evicted before disk-loaded chunk"
+        );
+        // Disk-loaded chunk should survive
+        assert!(
+            mgr.is_resident(coord(5, 0, 5)),
+            "disk-loaded chunk with priority boost should survive"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// STREAM-020 (test h): No camera position → fallback to FIFO-like behavior
+    /// where all chunks at the same distance get equal priority.
+    #[test]
+    fn no_camera_position_fallback_to_equal_priority() {
+        let storage = Box::new(MemoryChunkStorage::new());
+        let mut mgr = StreamingManager::with_lod_config(
+            storage, 2,
+            2, 4, 60, 4, 1, 3,
+        );
+
+        // Do NOT set camera anchor — camera_anchor is None
+        assert!(mgr.camera_anchor().is_none());
+
+        // Insert two chunks at equal distance from themselves (which is 0
+        // since anchor defaults to the chunk itself when None).
+        mgr.insert_chunk(sample_payload(1, 0, 0)).expect("insert 1");
+        mgr.insert_chunk(sample_payload(2, 0, 0)).expect("insert 2");
+
+        // Insert a third — should not panic, evicts one deterministically
+        mgr.insert_chunk(sample_payload(3, 0, 0)).expect("insert 3");
+        assert_eq!(mgr.resident_count(), 2);
+
+        // No panic = fallback works correctly
+    }
+
+    /// STREAM-021: LOD level affects eviction — high LOD (coarse) chunk is
+    /// evicted before low LOD (detailed) chunk at the same distance.
+    #[test]
+    fn high_lod_evicted_before_low_lod() {
+        let storage = Box::new(MemoryChunkStorage::new());
+        let mut mgr = StreamingManager::with_lod_config(
+            storage, 2,
+            2, 4, 60, 4, 1, 3,
+        );
+        mgr.set_camera_anchor(coord(0, 0, 0));
+
+        // Two chunks at the SAME ring distance (ring=5), different LOD levels.
+        // (5,0,0) has ring=5, (5,0,5) has ring=max(5,0,5)=5 with vy_weight=2.
+        let lod0_payload = sample_payload(5, 0, 0);
+        let lod4_payload = sample_payload(5, 0, 5);
+        mgr.insert_chunk_with_lod(lod0_payload, 0).expect("insert LOD 0");
+        mgr.insert_chunk_with_lod(lod4_payload, 4).expect("insert LOD 4");
+
+        // Insert a third — should evict the LOD 4 chunk (coarse = low priority)
+        mgr.insert_chunk(sample_payload(10, 0, 0)).expect("insert third");
+
+        assert!(
+            mgr.is_resident(coord(5, 0, 0)),
+            "LOD 0 chunk should survive (higher detail = higher priority)"
+        );
+        assert!(
+            !mgr.is_resident(coord(5, 0, 5)),
+            "LOD 4 chunk should be evicted first (coarser = lower priority)"
+        );
     }
 }

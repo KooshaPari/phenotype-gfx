@@ -37,6 +37,9 @@ pub mod lod;
 /// Streaming window policy: ring-based chunk lifecycle, eviction ordering.
 pub mod streaming;
 
+/// LOD-based chunk prioritization for streaming eviction and predictive prefetching.
+pub mod lod_priority;
+
 /// Disk-based chunk persistence with zstd compression for streaming I/O.
 pub mod streaming_io;
 
