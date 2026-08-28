@@ -63,9 +63,16 @@ pub fn plan_chunk_render(
     }
     metrics::counter!("phenotype_gfx.lod_plan_calls").increment(1);
     metrics::counter!("phenotype_gfx.lod_chunks_visible").increment(1);
+    let lod = select_mesh_detail_level(distance_metres, scale, policy);
+    crate::gfx_trace!(
+        "lod: plan_chunk_render id={:?} dist={:.1} lod={:?}",
+        chunk_id,
+        distance_metres,
+        lod
+    );
     Some(ChunkRenderPlan {
         chunk_id,
-        lod: select_mesh_detail_level(distance_metres, scale, policy),
+        lod,
         distance_metres,
     })
 }

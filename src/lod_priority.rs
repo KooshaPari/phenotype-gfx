@@ -101,11 +101,21 @@ pub fn compute_priority(
     let decay = recency_decay_ticks.max(1) as f32;
     let recency = (1.0 - ticks_since as f32 / decay).max(0.0);
 
-    PriorityScore {
+    let score = PriorityScore {
         distance,
         lod,
         recency,
-    }
+    };
+
+    crate::gfx_trace!(
+        "lod_priority: evict_key chunk={:?} ring={} lod={} score={:.4}",
+        coord,
+        ring,
+        lod_level,
+        score.weighted()
+    );
+
+    score
 }
 
 // ============================================================================

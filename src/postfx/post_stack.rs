@@ -210,7 +210,7 @@ impl PostStack {
     /// / `SsaoPass` types.
     pub fn describe_passes() -> Vec<PassDescriptor> {
         metrics::counter!("phenotype_gfx.postfx_stack_runs").increment(1);
-        vec![
+        let passes = vec![
             SsaoConfig::descriptor(),
             SsgiConfig::descriptor(),
             BloomConfig::descriptor(),
@@ -218,7 +218,9 @@ impl PostStack {
             VignetteConfig::descriptor(),
             ChromaticConfig::descriptor(),
             LutConfig::descriptor(),
-        ]
+        ];
+        crate::gfx_debug!("postfx: stack run pass_count={}", passes.len());
+        passes
     }
 
     /// Audits each effect against the availability provider and updates the

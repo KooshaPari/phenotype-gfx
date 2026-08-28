@@ -103,6 +103,13 @@ pub fn build(
         }
     }
 
+    crate::gfx_debug!(
+        "water: mesh build resolution={} size={:.1} verts={}",
+        resolution,
+        size,
+        verts
+    );
+
     Ok(MeshData {
         vertices,
         normals,

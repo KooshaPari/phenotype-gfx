@@ -151,12 +151,21 @@ impl ChunkMeshBuilder {
             }
         }
 
-        Ok(MeshData {
+        let mesh = MeshData {
             vertices,
             indices,
             uvs,
             normals,
-        })
+        };
+
+        crate::gfx_debug!(
+            "terrain: mesh build resolution={} size={:.1} verts={}",
+            resolution,
+            size,
+            mesh.vertices.len()
+        );
+
+        Ok(mesh)
     }
 }
 

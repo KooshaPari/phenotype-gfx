@@ -278,6 +278,13 @@ impl<V: CubicVoxel> GreedyMesher<V> {
         // negligible relative to the meshing pass itself.
         batch_normalize_normals(&mut buf);
 
+        crate::gfx_debug!(
+            "greedy_mesher: faces={}, verts={}, indices={}",
+            buf.indices.len() / 6,
+            buf.vertices.len(),
+            buf.indices.len()
+        );
+
         Ok(buf)
     }
 }

@@ -87,21 +87,25 @@ pub fn get_simd_level() -> SimdLevel {
     #[cfg(target_arch = "x86_64")]
     {
         // SAFETY: cpuid is safe on all x86_64 CPUs.
-        if is_x86_feature_detected!("avx2") {
+        let level = if is_x86_feature_detected!("avx2") {
             SimdLevel::AVX2
         } else if is_x86_feature_detected!("sse2") {
             SimdLevel::SSE2
         } else {
             SimdLevel::Scalar
-        }
+        };
+        crate::gfx_trace!("simd: dispatch path = {:?}", level);
+        level
     }
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is mandatory on aarch64.
+        crate::gfx_trace!("simd: dispatch path = NEON");
         SimdLevel::NEON
     }
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
     {
+        crate::gfx_trace!("simd: dispatch path = Scalar");
         SimdLevel::Scalar
     }
 }

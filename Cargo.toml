@@ -47,9 +47,6 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "io-util
 # Bevy adapter is optional — only pulled in when consumers need ECS integration
 bevy = { version = "0.18.1", default-features = false, features = ["bevy_asset", "bevy_mesh"], optional = true }
 
-# L5-110..112: ported C# terrain/water/postfx into Rust; criterion benches
-criterion = { version = "0.5", optional = true }
-
 [dev-dependencies]
 criterion = "0.5"
 proptest = "1.4"
@@ -104,8 +101,6 @@ path = "examples/ecs_integration.rs"
 [features]
 default = []
 bevy = ["dep:bevy"]
-# Enable criterion-backed benches in `cargo bench --features bench`
-bench = ["dep:criterion"]
 # OTLP + Prometheus observability stack
 otlp = ["dep:opentelemetry", "dep:opentelemetry_sdk", "dep:opentelemetry-otlp", "dep:tokio"]
 prometheus = ["dep:opentelemetry-prometheus", "dep:prometheus"]

@@ -223,6 +223,7 @@ impl WindowPolicy {
         let ring = ring_distance(coord, anchor, self.vy_weight);
         if ring <= self.mesh_ring as u32 {
             metrics::counter!("phenotype_gfx.streaming_load").increment(1);
+            crate::gfx_trace!("streaming: load chunk {:?} ring={}", coord, ring);
             ChunkState::Meshed
         } else if ring <= (self.mesh_ring as u32).saturating_add(self.seam_chunks as u32) {
             metrics::counter!("phenotype_gfx.streaming_load").increment(1);
@@ -235,6 +236,7 @@ impl WindowPolicy {
             }
         } else {
             metrics::counter!("phenotype_gfx.streaming_unload").increment(1);
+            crate::gfx_trace!("streaming: unload chunk {:?} ring={}", coord, ring);
             ChunkState::Unloaded
         }
     }

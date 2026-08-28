@@ -160,6 +160,11 @@ impl DiskChunkStorage {
 
 impl ChunkStorage for DiskChunkStorage {
     fn save_chunk(&self, payload: &ChunkPayload) -> Result<(), ChunkStorageError> {
+        crate::gfx_debug!(
+            "streaming_io: save chunk {:?} bytes={}",
+            payload.coord,
+            payload.data.len()
+        );
         // Serialize the payload to JSON
         let raw = serde_json::to_vec(payload)
             .map_err(|e| ChunkStorageError::Serde(format!("serde_json serialize: {e}")))?;
@@ -191,6 +196,12 @@ impl ChunkStorage for DiskChunkStorage {
 
         let payload: ChunkPayload = serde_json::from_slice(&raw)
             .map_err(|e| ChunkStorageError::Serde(format!("serde_json deserialize: {e}")))?;
+
+        crate::gfx_debug!(
+            "streaming_io: load chunk {:?} bytes={}",
+            coord,
+            payload.data.len()
+        );
 
         Ok(payload)
     }

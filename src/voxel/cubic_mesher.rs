@@ -112,6 +112,12 @@ impl<V: CubicVoxel> CubicMesher<V> {
         // useful for per-face culling, LOD selection, and lighting.
         let _face_centers = batch_compute_face_aabb_centers(&buf);
 
+        crate::gfx_debug!(
+            "cubic_mesher: verts={}, indices={}",
+            buf.vertices.len(),
+            buf.indices.len()
+        );
+
         Ok(buf)
     }
 }
