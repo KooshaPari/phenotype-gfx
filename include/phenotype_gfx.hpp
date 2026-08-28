@@ -215,6 +215,13 @@ const uint32_t *phenotype_gfx_voxel_indices(const MeshBufferHandle *handle);
 /// `handle` must be a valid, non-null pointer from `phenotype_gfx_voxel_mesh_build`.
 uint32_t phenotype_gfx_voxel_vertex_count(const MeshBufferHandle *handle);
 
+/// Return the number of indices in the mesh buffer.
+///
+/// # Safety
+///
+/// `handle` must be a valid, non-null pointer from `phenotype_gfx_voxel_mesh_build`.
+uint32_t phenotype_gfx_voxel_index_count(const MeshBufferHandle *handle);
+
 /// Create a new empty material palette.
 ///
 /// Returns an opaque handle, or null on allocation failure.

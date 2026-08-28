@@ -334,6 +334,22 @@ pub unsafe extern "C" fn phenotype_gfx_voxel_vertex_count(handle: *const MeshBuf
     h.mesh.vertex_count() as u32
 }
 
+/// Return the number of indices in the mesh buffer.
+///
+/// # Safety
+///
+/// `handle` must be a valid, non-null pointer from `phenotype_gfx_voxel_mesh_build`.
+#[no_mangle]
+pub unsafe extern "C" fn phenotype_gfx_voxel_index_count(handle: *const MeshBufferHandle) -> u32 {
+    // SAFETY: Caller guarantees non-null valid handle.
+    assert!(
+        !handle.is_null(),
+        "null handle passed to voxel_index_count"
+    );
+    let h = unsafe { &*handle };
+    h.mesh.index_count() as u32
+}
+
 // ---------------------------------------------------------------------------
 // Material API — 5 functions
 // ---------------------------------------------------------------------------
@@ -848,6 +864,34 @@ mod tests {
             // 8 vertices per cube
             assert_eq!(vc, 8);
             phenotype_gfx_voxel_mesh_destroy(mesh_h);
+            phenotype_gfx_voxel_destroy(h);
+        }
+    }
+
+    #[test]
+    fn voxel_index_count_matches_solid_chunk() {
+        let h = phenotype_gfx_voxel_create(1_000_000);
+        assert!(!h.is_null());
+        unsafe {
+            phenotype_gfx_voxel_set(h, 0, 0, 0, 1);
+            let mesh_h = phenotype_gfx_voxel_mesh_build(h, 0, 0, 0);
+            assert!(!mesh_h.is_null());
+            let ic = phenotype_gfx_voxel_index_count(mesh_h);
+            // A solid cube has 6 faces * 2 triangles/face * 3 indices/triangle = 36 indices
+            assert_eq!(ic, 36);
+            phenotype_gfx_voxel_mesh_destroy(mesh_h);
+            phenotype_gfx_voxel_destroy(h);
+        }
+    }
+
+    #[test]
+    fn voxel_index_count_empty_chunk_returns_zero() {
+        let h = phenotype_gfx_voxel_create(1_000_000);
+        assert!(!h.is_null());
+        unsafe {
+            // Build mesh for empty chunk (0,0,0) which doesn't exist yet
+            let mesh_h = phenotype_gfx_voxel_mesh_build(h, 0, 0, 0);
+            assert!(mesh_h.is_null(), "expected null for empty chunk");
             phenotype_gfx_voxel_destroy(h);
         }
     }
