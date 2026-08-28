@@ -160,6 +160,12 @@ impl DiskChunkStorage {
 
 impl ChunkStorage for DiskChunkStorage {
     fn save_chunk(&self, payload: &ChunkPayload) -> Result<(), ChunkStorageError> {
+        let started = std::time::Instant::now();
+        crate::gfx_trace!(
+            "streaming_io: save_chunk start chunk_id={:?} bytes={}",
+            payload.coord,
+            payload.data.len()
+        );
         crate::gfx_debug!(
             "streaming_io: save chunk {:?} bytes={}",
             payload.coord,
@@ -180,12 +186,29 @@ impl ChunkStorage for DiskChunkStorage {
         std::fs::rename(&tmp_path, &path)
             .map_err(|e| ChunkStorageError::Io(format!("Failed to rename chunk file: {e}")))?;
 
+        crate::gfx_trace!(
+            "streaming_io: save_chunk done chunk_id={:?} bytes_in={} compressed_bytes={} elapsed_ms={:.3}",
+            payload.coord,
+            payload.data.len(),
+            compressed.len(),
+            started.elapsed().as_secs_f64() * 1000.0
+        );
+
         Ok(())
     }
 
     fn load_chunk(&self, coord: ChunkCoord) -> Result<ChunkPayload, ChunkStorageError> {
+        let started = std::time::Instant::now();
+        crate::gfx_trace!(
+            "streaming_io: load_chunk start chunk_id={:?}",
+            coord
+        );
         let path = self.chunk_path(coord);
         if !path.exists() {
+            crate::gfx_debug!(
+                "streaming_io: cache miss (no file) chunk_id={:?}",
+                coord
+            );
             return Err(ChunkStorageError::NotFound(coord));
         }
 
@@ -201,6 +224,12 @@ impl ChunkStorage for DiskChunkStorage {
             "streaming_io: load chunk {:?} bytes={}",
             coord,
             payload.data.len()
+        );
+        crate::gfx_trace!(
+            "streaming_io: load_chunk done chunk_id={:?} bytes={} elapsed_ms={:.3}",
+            coord,
+            payload.data.len(),
+            started.elapsed().as_secs_f64() * 1000.0
         );
 
         Ok(payload)
@@ -450,6 +479,10 @@ impl StreamingManager {
             }
             Err(ChunkStorageError::NotFound(_)) => {
                 self.stats.disk_cache_misses += 1;
+                crate::gfx_debug!(
+                    "streaming_io: cache miss (not on disk) chunk_id={:?}",
+                    coord
+                );
                 Ok(None)
             }
             Err(e) => Err(e),
@@ -458,12 +491,23 @@ impl StreamingManager {
 
     /// Evict a chunk from memory, saving it to disk first.
     pub fn evict_chunk(&mut self, coord: ChunkCoord) -> Result<(), ChunkStorageError> {
+        let started = std::time::Instant::now();
+        crate::gfx_trace!(
+            "streaming_io: evict_chunk start chunk_id={:?}",
+            coord
+        );
         if let Some(payload) = self.resident.remove(&coord) {
             self.storage.save_chunk(&payload)?;
             self.stats.evictions += 1;
             self.stats.pending_evictions = self.stats.pending_evictions.saturating_sub(1);
             self.lod_levels.remove(&coord);
             self.last_access.remove(&coord);
+            crate::gfx_debug!(
+                "streaming_io: eviction triggered chunk_id={:?} bytes={} elapsed_ms={:.3}",
+                coord,
+                payload.data.len(),
+                started.elapsed().as_secs_f64() * 1000.0
+            );
         }
         Ok(())
     }
@@ -488,6 +532,11 @@ impl StreamingManager {
         // If at capacity, evict the lowest-priority chunk
         if self.resident.len() >= self.max_resident {
             if let Some(victim) = self.lowest_priority_coord() {
+                crate::gfx_debug!(
+                    "streaming_io: eviction triggered by insert chunk_id={:?} victim={:?}",
+                    payload.coord,
+                    victim
+                );
                 self.evict_chunk(victim)?;
             }
         }

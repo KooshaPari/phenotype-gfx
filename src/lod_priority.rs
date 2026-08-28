@@ -161,6 +161,14 @@ pub fn predict_chunks(
         return Vec::new();
     }
 
+    let started = std::time::Instant::now();
+    crate::gfx_trace!(
+        "lod_priority: predict_chunks start anchor={:?} vel={:?} budget={}",
+        anchor,
+        velocity,
+        max_predictions
+    );
+
     let future = ChunkCoord {
         cx: anchor.cx + velocity.dx,
         cy: anchor.cy + velocity.dy,
@@ -201,6 +209,13 @@ pub fn predict_chunks(
     // Sort by distance to future anchor (closest first)
     candidates.sort_by_key(|c| ring_distance(*c, future, vy_weight));
     candidates.truncate(max_predictions);
+
+    crate::gfx_trace!(
+        "lod_priority: predict_chunks done returned={} elapsed_ms={:.3}",
+        candidates.len(),
+        started.elapsed().as_secs_f64() * 1000.0
+    );
+
     candidates
 }
 

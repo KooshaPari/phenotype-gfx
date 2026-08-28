@@ -73,9 +73,21 @@ impl<V: CubicVoxel> CubicMesher<V> {
     /// merged-face geometry.
     #[instrument(level = "trace", skip(chunk), fields(lod = ?_lod))]
     pub fn mesh_cubic(chunk: ChunkView<'_, V>, _lod: LodLevel) -> MeshResult<MeshBuffer> {
+        let started = std::time::Instant::now();
+        crate::gfx_trace!(
+            "cubic_mesher: mesh_build start chunk_id={:?} lod={:?}",
+            chunk.id,
+            _lod
+        );
         metrics::counter!("phenotype_gfx.voxel_mesh_builds").increment(1);
         let expected = CHUNK_EDGE * CHUNK_EDGE * CHUNK_EDGE;
         if chunk.voxels.len() != expected {
+            crate::gfx_debug!(
+                "cubic_mesher: chunk too large chunk_id={:?} got={} expected={}",
+                chunk.id,
+                chunk.voxels.len(),
+                expected
+            );
             return Err(MeshError::BadChunkSize {
                 got: chunk.voxels.len(),
                 expected,
@@ -116,6 +128,13 @@ impl<V: CubicVoxel> CubicMesher<V> {
             "cubic_mesher: verts={}, indices={}",
             buf.vertices.len(),
             buf.indices.len()
+        );
+        crate::gfx_trace!(
+            "cubic_mesher: mesh_build done chunk_id={:?} verts={} indices={} elapsed_ms={:.3}",
+            chunk.id,
+            buf.vertices.len(),
+            buf.indices.len(),
+            started.elapsed().as_secs_f64() * 1000.0
         );
 
         Ok(buf)
