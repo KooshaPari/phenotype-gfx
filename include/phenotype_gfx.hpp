@@ -38,6 +38,9 @@ constexpr static const uint32_t DEFAULT_DEPTH = 8;
 /// Current schema version.
 constexpr static const uint16_t SimLodAggregator_SCHEMA_VERSION = 1;
 
+/// Maximum number of chunks to prefetch per frame.
+constexpr static const uintptr_t DEFAULT_PREFETCH_BUDGET = 4;
+
 /// Stable, hashable identifier for a chunk in the world. Encodes chunk-grid
 /// coordinates as a single `u64` so it can be used as a deterministic key without
 /// committing to a particular `HashMap` iteration order.

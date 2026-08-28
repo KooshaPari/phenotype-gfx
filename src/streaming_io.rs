@@ -375,7 +375,10 @@ impl StreamingManager {
 
     /// Get the LOD level for a chunk (defaults to max_lod_level if unknown).
     pub fn get_lod_level(&self, coord: ChunkCoord) -> u8 {
-        self.lod_levels.get(&coord).copied().unwrap_or(self.max_lod_level)
+        self.lod_levels
+            .get(&coord)
+            .copied()
+            .unwrap_or(self.max_lod_level)
     }
 
     /// Compute the priority score for a resident chunk.
@@ -1075,8 +1078,7 @@ mod tests {
     fn eviction_respects_priority_close_kept_far_evicted() {
         let storage = Box::new(MemoryChunkStorage::new());
         let mut mgr = StreamingManager::with_lod_config(
-            storage, 2,
-            2,  // vy_weight
+            storage, 2, 2,  // vy_weight
             4,  // max_lod_level
             60, // recency_decay_ticks
             4,  // prefetch_budget
@@ -1139,17 +1141,28 @@ mod tests {
             coord(3, 0, -1),
         ];
         for c in &disk_chunks {
-            disk.save_chunk(&sample_payload(c.cx, c.cy, c.cz)).expect("save");
+            disk.save_chunk(&sample_payload(c.cx, c.cy, c.cz))
+                .expect("save");
         }
 
         let mut mgr = StreamingManager::with_lod_config(
-            Box::new(disk), 20,
-            2, 4, 60, 8, 1, 3,  // prefetch_budget=8 to ensure enough candidates
+            Box::new(disk),
+            20,
+            2,
+            4,
+            60,
+            8,
+            1,
+            3, // prefetch_budget=8 to ensure enough candidates
         );
 
         // Camera at origin, moving in +X direction
         mgr.set_camera_anchor(coord(0, 0, 0));
-        mgr.set_camera_velocity(CameraVelocity { dx: 3, dy: 0, dz: 0 });
+        mgr.set_camera_velocity(CameraVelocity {
+            dx: 3,
+            dy: 0,
+            dz: 0,
+        });
 
         // Before prefetch, nothing should be resident
         assert_eq!(mgr.resident_count(), 0);
@@ -1193,8 +1206,13 @@ mod tests {
 
         let mut mgr = StreamingManager::with_lod_config(
             Box::new(DiskChunkStorage::new(&dir).expect("create storage2")),
-            2,  // max_resident = 2
-            2, 4, 60, 4, 1, 3,
+            2, // max_resident = 2
+            2,
+            4,
+            60,
+            4,
+            1,
+            3,
         );
         mgr.set_camera_anchor(coord(0, 0, 0));
 
@@ -1235,10 +1253,7 @@ mod tests {
     #[test]
     fn no_camera_position_fallback_to_equal_priority() {
         let storage = Box::new(MemoryChunkStorage::new());
-        let mut mgr = StreamingManager::with_lod_config(
-            storage, 2,
-            2, 4, 60, 4, 1, 3,
-        );
+        let mut mgr = StreamingManager::with_lod_config(storage, 2, 2, 4, 60, 4, 1, 3);
 
         // Do NOT set camera anchor — camera_anchor is None
         assert!(mgr.camera_anchor().is_none());
@@ -1260,21 +1275,21 @@ mod tests {
     #[test]
     fn high_lod_evicted_before_low_lod() {
         let storage = Box::new(MemoryChunkStorage::new());
-        let mut mgr = StreamingManager::with_lod_config(
-            storage, 2,
-            2, 4, 60, 4, 1, 3,
-        );
+        let mut mgr = StreamingManager::with_lod_config(storage, 2, 2, 4, 60, 4, 1, 3);
         mgr.set_camera_anchor(coord(0, 0, 0));
 
         // Two chunks at the SAME ring distance (ring=5), different LOD levels.
         // (5,0,0) has ring=5, (5,0,5) has ring=max(5,0,5)=5 with vy_weight=2.
         let lod0_payload = sample_payload(5, 0, 0);
         let lod4_payload = sample_payload(5, 0, 5);
-        mgr.insert_chunk_with_lod(lod0_payload, 0).expect("insert LOD 0");
-        mgr.insert_chunk_with_lod(lod4_payload, 4).expect("insert LOD 4");
+        mgr.insert_chunk_with_lod(lod0_payload, 0)
+            .expect("insert LOD 0");
+        mgr.insert_chunk_with_lod(lod4_payload, 4)
+            .expect("insert LOD 4");
 
         // Insert a third — should evict the LOD 4 chunk (coarse = low priority)
-        mgr.insert_chunk(sample_payload(10, 0, 0)).expect("insert third");
+        mgr.insert_chunk(sample_payload(10, 0, 0))
+            .expect("insert third");
 
         assert!(
             mgr.is_resident(coord(5, 0, 0)),

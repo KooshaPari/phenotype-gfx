@@ -124,7 +124,11 @@ pub struct CameraVelocity {
 
 impl Default for CameraVelocity {
     fn default() -> Self {
-        Self { dx: 0, dy: 0, dz: 0 }
+        Self {
+            dx: 0,
+            dy: 0,
+            dz: 0,
+        }
     }
 }
 
@@ -269,7 +273,11 @@ mod tests {
     #[test]
     fn predict_chunks_returns_chunks_in_direction_of_motion() {
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 3, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 3,
+            dy: 0,
+            dz: 0,
+        };
         let predicted = predict_chunks(anchor, velocity, 2, 1, 3, 20);
 
         // Should include chunks ahead of the camera (positive X)
@@ -290,22 +298,34 @@ mod tests {
             assert!(
                 future_ring <= 1 + 3,
                 "predicted chunk {:?} has future_ring {} > mesh+prefetch",
-                c, future_ring,
+                c,
+                future_ring,
             );
         }
     }
     #[test]
     fn predict_chunks_empty_when_prefetch_disabled() {
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 5, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 5,
+            dy: 0,
+            dz: 0,
+        };
         let predicted = predict_chunks(anchor, velocity, 2, 1, 0, 10);
-        assert!(predicted.is_empty(), "prefetch disabled should return empty");
+        assert!(
+            predicted.is_empty(),
+            "prefetch disabled should return empty"
+        );
     }
 
     #[test]
     fn predict_chunks_sorted_by_distance_to_future_anchor() {
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 2, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 2,
+            dy: 0,
+            dz: 0,
+        };
         let predicted = predict_chunks(anchor, velocity, 2, 1, 3, 10);
 
         // Future anchor is at (2, 0, 0). Check that returned chunks are
@@ -327,7 +347,11 @@ mod tests {
         // With mesh_ring=2, anything within ring 2 of current anchor is
         // already resident and should NOT appear in predictions.
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 3, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 3,
+            dy: 0,
+            dz: 0,
+        };
         let predicted = predict_chunks(anchor, velocity, 2, 2, 2, 20);
 
         for c in &predicted {
@@ -347,7 +371,11 @@ mod tests {
     #[test]
     fn predict_chunks_respects_budget_limit() {
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 1, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 1,
+            dy: 0,
+            dz: 0,
+        };
         let budget = 3;
         let predicted = predict_chunks(anchor, velocity, 2, 1, 5, budget);
         assert!(
@@ -361,7 +389,11 @@ mod tests {
     #[test]
     fn predict_chunks_zero_budget_returns_empty() {
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 1, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 1,
+            dy: 0,
+            dz: 0,
+        };
         let predicted = predict_chunks(anchor, velocity, 2, 1, 5, 0);
         assert!(predicted.is_empty(), "zero budget should return empty");
     }
@@ -387,7 +419,11 @@ mod tests {
         // Far away, LOD max, very old access
         let score = compute_priority(coord(100, 0, 0), anchor, 2, 4, 4, 0, 100, 60);
         // distance ~= 1/101 ≈ 0.01, lod = 1-4/4 = 0.0, recency = 1-100/60 = clamped to 0.0
-        assert!(score.weighted() < 0.1, "expected low score, got {:.4}", score.weighted());
+        assert!(
+            score.weighted() < 0.1,
+            "expected low score, got {:.4}",
+            score.weighted()
+        );
     }
 
     #[test]
@@ -429,7 +465,11 @@ mod tests {
     #[test]
     fn predict_chunks_empty_when_velocity_zero() {
         let anchor = default_anchor();
-        let velocity = CameraVelocity { dx: 0, dy: 0, dz: 0 };
+        let velocity = CameraVelocity {
+            dx: 0,
+            dy: 0,
+            dz: 0,
+        };
         // With zero velocity, the future anchor == current anchor, so all
         // in-range chunks are already within mesh_ring and get excluded.
         let predicted = predict_chunks(anchor, velocity, 2, 1, 3, 10);
@@ -475,6 +515,13 @@ mod tests {
     #[test]
     fn camera_velocity_default_is_zero() {
         let v = CameraVelocity::default();
-        assert_eq!(v, CameraVelocity { dx: 0, dy: 0, dz: 0 });
+        assert_eq!(
+            v,
+            CameraVelocity {
+                dx: 0,
+                dy: 0,
+                dz: 0
+            }
+        );
     }
 }
