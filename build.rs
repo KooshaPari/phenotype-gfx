@@ -8,7 +8,7 @@
 //! Rust build itself — they exist purely for C# P/Invoke consumers.
 
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn main() {
@@ -29,7 +29,7 @@ fn main() {
     println!("cargo:rerun-if-changed=cbindgen.toml");
 }
 
-fn run_cbindgen(crate_dir: &str, lang: &str, output: &PathBuf) {
+fn run_cbindgen(crate_dir: &str, lang: &str, output: &Path) {
     let status = Command::new("cbindgen")
         .args([
             "--crate",

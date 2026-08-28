@@ -76,6 +76,7 @@ impl PartialOrd for PriorityScore {
 /// * `current_tick` — the current tick counter.
 /// * `recency_decay_ticks` — number of ticks after which recency decays to 0.
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn compute_priority(
     coord: ChunkCoord,
     anchor: ChunkCoord,
@@ -112,7 +113,7 @@ pub fn compute_priority(
 // ============================================================================
 
 /// Camera velocity in chunks-per-tick along each axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct CameraVelocity {
     /// Change in cx per tick.
     pub dx: i32,
@@ -120,16 +121,6 @@ pub struct CameraVelocity {
     pub dy: i32,
     /// Change in cz per tick.
     pub dz: i32,
-}
-
-impl Default for CameraVelocity {
-    fn default() -> Self {
-        Self {
-            dx: 0,
-            dy: 0,
-            dz: 0,
-        }
-    }
 }
 
 // ============================================================================

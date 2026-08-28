@@ -302,7 +302,7 @@ fn batch_normalize_normals(buf: &mut MeshBuffer) {
             // SIMD path: collect normals, batch-normalise, write back.
             let normals: Vec<[f32; 3]> = buf.vertices.iter().map(|v| v.normal).collect();
             let normalized = simd_normals_batch(&normals);
-            for (v, n) in buf.vertices.iter_mut().zip(normalized.into_iter()) {
+            for (v, n) in buf.vertices.iter_mut().zip(normalized) {
                 v.normal = n;
             }
         }
