@@ -33,8 +33,25 @@ jobs:
       - name: Install cargo-criterion
         run: cargo install cargo-criterion --locked
 
-      - name: Run benchmarks (workspace)
-        run: cargo bench --workspace
+      # Validate every benchmark binary in the workspace.  `--test` runs each
+      # benchmark once and exits — it exercises the full setup/teardown paths
+      # and catches runtime regressions without paying for the full Criterion
+      # measurement loop.  Full performance numbers come from the dedicated
+      # nightly workflow that runs against `main`.
+      - name: Run benchmarks (validation, --test mode)
+        run: cargo bench --workspace -- --test 2>&1 | tail -80
+
+      # SIMD vs scalar comparison benches live behind the `simd` feature
+      # (see phenotype-gfx/benches/mesher_compare.rs).  Validate them too so
+      # the SIMD code path is exercised on every PR.
+      - name: Run SIMD benchmarks (validation, --test mode)
+        run: cargo bench --features simd --bench mesher_compare -- --test 2>&1 | tail -40
+
+      # Compile-only check across every [[bench]] target, including ones
+      # behind features the default `--workspace` invocation skips.  Mirrors
+      # the compile gate that ci.yml applies to lib + test targets.
+      - name: Verify benchmark binaries compile (all features)
+        run: cargo bench --workspace --all-features --no-run 2>&1 | tail -40
 
       - name: Upload benchmark results
         if: always()

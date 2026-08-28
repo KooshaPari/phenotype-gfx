@@ -97,6 +97,35 @@ jobs:
       - name: cargo test
         run: cargo test --workspace --no-fail-fast
 
+  bench-compile:
+    name: Bench Compile Gate (${{ matrix.os }})
+    needs: detect
+    if: needs.detect.outputs.has_rust == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # `--no-run` builds every `[[bench]]` target across the workspace
+      # without executing it.  This guarantees benchmark code keeps
+      # compiling even when the wider CI matrix skips the dedicated
+      # benchmarks.yml workflow.  The actual Criterion run lives in
+      # .github/workflows/benchmarks.yml.
+      - name: cargo bench --workspace --no-run
+        run: cargo bench --workspace --no-run 2>&1 | tail -40
+      # The SIMD vs scalar benches in `benches/mesher_compare.rs` are
+      # feature-gated behind `simd`; compile them too so SIMD-only
+      # regressions surface on every PR rather than only when somebody
+      # runs the benchmarks workflow.
+      - name: cargo bench --features simd --no-run
+        run: cargo bench --features simd --no-run 2>&1 | tail -40
+      - name: cargo bench --workspace --all-features --no-run
+        run: cargo bench --workspace --all-features --no-run 2>&1 | tail -40
+
   cargo-deny:
     name: Cargo Deny (Advisories + Licenses)
     needs: detect
@@ -192,7 +221,7 @@ jobs:
   lint:
     name: ci / lint
     if: always()
-    needs: [detect, rust, cargo-deny, python, go, typescript, security, dep-review, security-audit]
+    needs: [detect, rust, bench-compile, cargo-deny, python, go, typescript, security, dep-review, security-audit]
     runs-on: ubuntu-latest
     steps:
       - name: Aggregate lint gate
@@ -200,6 +229,7 @@ jobs:
           failed=0
           for pair in \
             "rust:${{ needs.rust.result }}" \
+            "bench-compile:${{ needs.bench-compile.result }}" \
             "cargo-deny:${{ needs.cargo-deny.result }}" \
             "python:${{ needs.python.result }}" \
             "go:${{ needs.go.result }}" \
