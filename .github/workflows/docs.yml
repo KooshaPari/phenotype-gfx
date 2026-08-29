@@ -1,0 +1,67 @@
+# mdBook documentation site
+#
+# Builds the docs/ mdBook on every push to main and on any push that
+# touches docs/** or this workflow file. Deploy to gh-pages is skipped
+# because the gh-pages branch requires repo-admin permissions to create.
+# The project owner can wire the deploy step manually once the branch
+# exists.
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+      - "docs/**"
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: mdbook build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mdBook
+        uses: taiki-e/install-action@mdbook
+        with:
+          version: "^0.4"
+
+      - name: Build book
+        working-directory: docs
+        run: |
+          mdbook build
+          echo "--- generated tree ---"
+          find book -maxdepth 2 -type f | sort
+
+      - name: Upload book artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mdbook-site
+          path: docs/book/
+          if-no-files-found: error
+          retention-days: 7
+
+  # NOTE: deploy step intentionally omitted. The gh-pages branch is
+  # not yet bootstrapped; that requires repo-admin permissions. Once
+  # created, the project owner can append a `peaceiris/actions-gh-pages`
+  # step pointing at `docs/book/`.
