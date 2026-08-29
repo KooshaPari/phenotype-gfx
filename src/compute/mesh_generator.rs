@@ -109,6 +109,29 @@ impl ComputeShader for MeshComputeShader {
     }
 }
 
+/// Return the embedded WGSL source for the parallel mesh-generation kernel.
+///
+/// Exposed as a free function (in addition to the [`ComputeShader::source`] trait
+/// method) so the wgpu-backed [`super::gpu_mesher::GpuMesher`] can compile and
+/// dispatch the same shader that engine adapters receive through the trait.
+///
+/// ## Layout (mirrors `MESH_GENERATOR_WGSL`)
+///
+/// | `@binding` | buffer              | content                                           |
+/// |------------|---------------------|---------------------------------------------------|
+/// | 0          | uniforms            | `MeshGenUniforms` (grid dims, max verts)          |
+/// | 1          | voxels (read)       | `array<u32>` of material IDs                      |
+/// | 2          | vertices (R/W)      | `array<vec4<f32>>` (xyz + material)               |
+/// | 3          | indices (R/W)       | `array<u32>`                                      |
+/// | 4          | counters (R/W)      | `array<atomic<u32>, 2>` (verts, indices)          |
+///
+/// The vertex/index counters are packed into a single storage buffer to stay
+/// under the WebGPU default `max_storage_buffers_per_shader_stage = 4` limit
+/// — adding a fifth buffer triggers `create_bind_group_layout` validation.
+pub const fn mesh_generator_wgsl() -> &'static str {
+    MESH_GENERATOR_WGSL
+}
+
 /// Embedded WGSL source for the parallel mesh generation compute shader.
 ///
 /// Each workgroup processes 64 voxels. For each solid voxel, the shader checks
@@ -130,8 +153,10 @@ struct MeshGenUniforms {
 @group(0) @binding(1) var<storage, read> voxels: array<u32>;
 @group(0) @binding(2) var<storage, read_write> vertices: array<vec4<f32>>;
 @group(0) @binding(3) var<storage, read_write> indices: array<u32>;
-@group(0) @binding(4) var<storage, read_write> vertex_counter: atomic<u32>;
-@group(0) @binding(5) var<storage, read_write> index_counter: atomic<u32>;
+// Counters are packed into a single buffer to stay under the default
+// `max_storage_buffers_per_shader_stage = 4` limit. Index 0 = vertex counter,
+// index 1 = index counter.
+@group(0) @binding(4) var<storage, read_write> counters: array<atomic<u32>, 2>;
 
 fn idx_to_coord(idx: u32) -> vec3<u32> {
     let z = idx / (uniforms.grid_size_x * uniforms.grid_size_y);
@@ -158,8 +183,8 @@ fn is_solid(flat: u32) -> bool {
 // Emit a face quad: 4 vertices + 6 indices.
 fn emit_face(origin: vec3<f32>, face_normal: vec3<f32>, face_right: vec3<f32>,
              face_up: vec3<f32>, material: f32) {
-    let base = atomicAdd(&vertex_counter, 4u);
-    let idx_base = atomicAdd(&index_counter, 6u);
+    let base = atomicAdd(&counters[0], 4u);
+    let idx_base = atomicAdd(&counters[1], 6u);
 
     if base + 4u > uniforms.max_vertices { return; }
     if idx_base + 6u > uniforms.max_indices { return; }

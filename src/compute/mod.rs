@@ -29,6 +29,12 @@ pub mod mesh_generator;
 pub mod sorting;
 pub mod voxel_processor;
 
+// Optional wgpu-backed compute pipeline. Compiled only when the `gpu`
+// feature is enabled so the rest of the crate keeps a zero-cost
+// dependency footprint (CI lint, wasm-bindgen, etc.).
+#[cfg(feature = "gpu")]
+pub mod gpu_mesher;
+
 use serde::{Deserialize, Serialize};
 
 /// Workgroup dimensions for a compute dispatch.
