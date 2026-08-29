@@ -1,0 +1,82 @@
+name: Unity Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect Unity Tests
+    runs-on: ubuntu-latest
+    outputs:
+      has_unity_tests: ${{ steps.detect.outputs.has_unity_tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - id: detect
+        run: |
+          if [ -f "tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj" ]; then
+            echo "has_unity_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_unity_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+  unity-tests:
+    name: Unity Wrapper Tests (NUnit)
+    needs: detect
+    if: needs.detect.outputs.has_unity_tests == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj
+
+      - name: Build
+        run: dotnet build tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj --no-build --configuration Release --logger "console;verbosity=normal"
+
+  unity-tests-windows:
+    name: Unity Wrapper Tests (NUnit, Windows)
+    needs: detect
+    if: needs.detect.outputs.has_unity_tests == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj
+
+      - name: Build
+        run: dotnet build tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test tests/unity/PhenotypeGfx.Tests/PhenotypeGfx.Tests.csproj --no-build --configuration Release --logger "console;verbosity=normal"
