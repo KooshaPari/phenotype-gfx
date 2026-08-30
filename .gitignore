@@ -5,4 +5,7 @@
 **/obj/
 **/*.user
 **/.vs/
+# mdBook build outputs (do not commit rendered site)
+_site/
+book/
 
