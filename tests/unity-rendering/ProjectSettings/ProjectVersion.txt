@@ -1,0 +1,4 @@
+// Unity Project Version — pins the CI image to LTS 2022.3.x.
+// Local developers should use a matching Unity Hub install (2022.3.20f1 or later).
+m_EditorVersion: 2022.3.20f1
+m_EditorVersionWithRevision: 2022.3.20f1 (b6b05b6a4bd9)

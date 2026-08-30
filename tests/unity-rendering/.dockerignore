@@ -1,0 +1,22 @@
+# Keep the Docker build context small — exclude Unity-generated state.
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Mm]emoryCaptures/
+**/artifacts/
+**/*.csproj
+**/*.sln
+**/*.user
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.log
+**/*.xml
+**/results*.xml
+.git/
+.gitattributes
+.github/
