@@ -2,6 +2,8 @@
 
 **Work-state:** scaffolding · `▓▓░░░░░░░░` 2/10
 
+[![AI slop inside](https://sladge.net/badge.svg)](https://sladge.net) [![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/KooshaPari/phenotype-gfx/total)](https://github.com/KooshaPari/phenotype-gfx/releases)
+
 Polyglot graphics SDK for Phenotype-org games. One repo, four graphics
 substrates, unified branding / versioning / interop.
 
