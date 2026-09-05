@@ -1,0 +1,56 @@
+# Unity-generated per-machine state — never commit these.
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+
+# Asset meta data should only be ignored when the corresponding asset is also ignored
+!/[Aa]ssets/**/*.meta
+
+# Recordings and capture files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D-generated build files
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics
+crashlytics/BuildManifest.xml
+
+# Packed Addressables
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# Temporary auto-generated Android Assets
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# NUnit / Unity Test Framework outputs
+artifacts/
+results*.xml
+unity-test.log
+*.trs
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vs/
+.vscode/
+.idea/
+*.csproj.user
+*.sln
+*.suo
+
+# Local config (e.g., Library/PackageCache/, Library/ArtifactDB)
+user*.json
+*.log
+!*.gitignore

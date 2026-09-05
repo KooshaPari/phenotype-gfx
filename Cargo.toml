@@ -23,7 +23,7 @@ crate-type = ["cdylib", "rlib"]
 # L5-109 (2026-06-18): voxel crate inlined into src/voxel/ — drop git dep, add direct deps.
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-bytemuck = "1"
+bytemuck = { version = "1", features = ["derive"] }
 thiserror = "2"
 # glam 0.29 for water/postfx math; 0.18+ broke Vec3 ABI relative to 0.27
 glam = { version = "0.29", features = ["serde"] }
@@ -47,12 +47,21 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "io-util
 # Bevy adapter is optional — only pulled in when consumers need ECS integration
 bevy = { version = "0.18.1", default-features = false, features = ["bevy_asset", "bevy_mesh"], optional = true }
 
+# GPU compute dispatch backend (wgpu 22). Pulled in only when the `gpu` feature
+# is enabled so non-GPU consumers (CI lint, wasm-bindgen build) are unaffected.
+wgpu = { version = "22", optional = true }
+# Tiny executor for wgpu's async handles in tests and the convenience constructor.
+pollster = { version = "0.3", optional = true }
+
 [dev-dependencies]
 criterion = "0.5"
 proptest = "1.4"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-test = "0.2"
 anyhow = "1.0"
+# wgpu is dev-only when `gpu` is enabled in non-default builds.
+wgpu = { version = "22" }
+pollster = "0.3"
 
 [[bench]]
 name = "voxelizer_bench"
@@ -101,6 +110,10 @@ path = "examples/ecs_integration.rs"
 [features]
 default = []
 bevy = ["dep:bevy"]
+# GPU compute dispatch via wgpu. Pulls in wgpu + pollster; enables the
+# `phenotype_gfx::compute::gpu_mesher` module with `GpuMesher` and the
+# `tests/gpu_compute_smoke.rs` integration test.
+gpu = ["dep:wgpu", "dep:pollster"]
 # OTLP + Prometheus observability stack
 otlp = ["dep:opentelemetry", "dep:opentelemetry_sdk", "dep:opentelemetry-otlp", "dep:tokio"]
 prometheus = ["dep:opentelemetry-prometheus", "dep:prometheus"]
