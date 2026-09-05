@@ -55,7 +55,7 @@ jobs:
 
       - name: Build book
         run: |
-          mdbook build --dest ./_site
+          mdbook build --dest-dir ./_site
           echo "--- generated tree ---"
           find _site -maxdepth 2 -type f | sort
 
