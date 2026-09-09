@@ -199,16 +199,10 @@ impl ChunkStorage for DiskChunkStorage {
 
     fn load_chunk(&self, coord: ChunkCoord) -> Result<ChunkPayload, ChunkStorageError> {
         let started = std::time::Instant::now();
-        crate::gfx_trace!(
-            "streaming_io: load_chunk start chunk_id={:?}",
-            coord
-        );
+        crate::gfx_trace!("streaming_io: load_chunk start chunk_id={:?}", coord);
         let path = self.chunk_path(coord);
         if !path.exists() {
-            crate::gfx_debug!(
-                "streaming_io: cache miss (no file) chunk_id={:?}",
-                coord
-            );
+            crate::gfx_debug!("streaming_io: cache miss (no file) chunk_id={:?}", coord);
             return Err(ChunkStorageError::NotFound(coord));
         }
 
@@ -492,10 +486,7 @@ impl StreamingManager {
     /// Evict a chunk from memory, saving it to disk first.
     pub fn evict_chunk(&mut self, coord: ChunkCoord) -> Result<(), ChunkStorageError> {
         let started = std::time::Instant::now();
-        crate::gfx_trace!(
-            "streaming_io: evict_chunk start chunk_id={:?}",
-            coord
-        );
+        crate::gfx_trace!("streaming_io: evict_chunk start chunk_id={:?}", coord);
         if let Some(payload) = self.resident.remove(&coord) {
             self.storage.save_chunk(&payload)?;
             self.stats.evictions += 1;
