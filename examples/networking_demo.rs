@@ -5,6 +5,15 @@
 //! responds with the chunk data. It highlights the use of `ChunkCoord`
 //! for addressing and `VoxelWorld` as the backend storage.
 
+// Suppress clippy lints on a demo example that intentionally tolerates
+// client-side errors and uses low-level byte indexing for protocol parsing.
+#![allow(clippy::let_underscore_must_use)]
+#![allow(clippy::needless_pass_by_value)]
+#![allow(clippy::single_match)]
+#![allow(clippy::needless_range_loop)]
+#![allow(clippy::manual_range_contains)]
+#![allow(unused_imports)]
+
 use anyhow::{Context, Result};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
