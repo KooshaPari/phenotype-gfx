@@ -19,5 +19,8 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install cbindgen
+        run: cargo install cbindgen --locked
+
       - name: Run rustdoc
         run: cargo doc --workspace --all-features --no-deps
