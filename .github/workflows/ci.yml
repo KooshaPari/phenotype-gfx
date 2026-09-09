@@ -90,6 +90,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      # cbindgen is required by build.rs to regenerate include/phenotype_gfx.h
+      # and include/phenotype_gfx.hpp at compile time. Without this install,
+      # every cargo build/check/test job fails on a fresh runner.
+      - name: Install cbindgen
+        if: matrix.os != 'windows-latest'
+        run: cargo install cbindgen --locked
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
       - name: cargo clippy
@@ -110,6 +116,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Install cbindgen
+        if: matrix.os != 'windows-latest'
+        run: cargo install cbindgen --locked
       # `--no-run` builds every `[[bench]]` target across the workspace
       # without executing it.  This guarantees benchmark code keeps
       # compiling even when the wider CI matrix skips the dedicated
@@ -134,6 +143,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      # cargo-deny-action v2 also requires cbindgen because the action
+      # invokes `cargo check` against the workspace to evaluate the
+      # `wildcards = "allow"` directive under [bans].
+      - name: Install cbindgen
+        run: cargo install cbindgen --locked
       - name: cargo-deny check
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
