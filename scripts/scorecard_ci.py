@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
+# ruff: noqa: BLE001
 """
 88-Pillar Scorecard CI Script
 Audits a repository against 88 quality and security pillars.
+
+BLE001 (Do not catch blind exception) is intentionally suppressed: this
+script audits 88 independent pillars and a failure in one pillar must
+not crash the others; each pillar must catch its own exceptions and
+report the failure. Removing the suppression requires per-pillar
+typed exception handling, which is a separate refactor.
 """
 import sys
 import json
