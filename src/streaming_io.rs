@@ -199,16 +199,10 @@ impl ChunkStorage for DiskChunkStorage {
 
     fn load_chunk(&self, coord: ChunkCoord) -> Result<ChunkPayload, ChunkStorageError> {
         let started = std::time::Instant::now();
-        crate::gfx_trace!(
-            "streaming_io: load_chunk start chunk_id={:?}",
-            coord
-        );
+        crate::gfx_trace!("streaming_io: load_chunk start chunk_id={:?}", coord);
         let path = self.chunk_path(coord);
         if !path.exists() {
-            crate::gfx_debug!(
-                "streaming_io: cache miss (no file) chunk_id={:?}",
-                coord
-            );
+            crate::gfx_debug!("streaming_io: cache miss (no file) chunk_id={:?}", coord);
             return Err(ChunkStorageError::NotFound(coord));
         }
 
@@ -492,12 +486,10 @@ impl StreamingManager {
     /// Evict a chunk from memory, saving it to disk first.
     pub fn evict_chunk(&mut self, coord: ChunkCoord) -> Result<(), ChunkStorageError> {
         let started = std::time::Instant::now();
-        crate::gfx_trace!(
-            "streaming_io: evict_chunk start chunk_id={:?}",
-            coord
-        );
-        if let Some(payload) = self.resident.remove(&coord) {
-            self.storage.save_chunk(&payload)?;
+        crate::gfx_trace!("streaming_io: evict_chunk start chunk_id={:?}", coord);
+        if let Some(payload) = self.resident.get(&coord) {
+            self.storage.save_chunk(payload)?;
+            let payload = self.resident.remove(&coord).expect("saved resident chunk");
             self.stats.evictions += 1;
             self.stats.pending_evictions = self.stats.pending_evictions.saturating_sub(1);
             self.lod_levels.remove(&coord);
@@ -715,6 +707,41 @@ mod tests {
             data: vec![0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x90],
             metadata,
         }
+    }
+
+    #[test]
+    fn failed_eviction_preserves_resident_payload_and_priority() {
+        struct FailingStorage;
+        impl ChunkStorage for FailingStorage {
+            fn save_chunk(&self, _: &ChunkPayload) -> Result<(), ChunkStorageError> {
+                Err(ChunkStorageError::Io("injected save failure".into()))
+            }
+            fn load_chunk(&self, coord: ChunkCoord) -> Result<ChunkPayload, ChunkStorageError> {
+                Err(ChunkStorageError::NotFound(coord))
+            }
+            fn delete_chunk(&self, _: ChunkCoord) -> Result<(), ChunkStorageError> {
+                Ok(())
+            }
+            fn chunk_exists(&self, _: ChunkCoord) -> bool {
+                false
+            }
+        }
+        let payload = sample_payload(1, 2, 3);
+        let coord = payload.coord;
+        let mut manager = StreamingManager::new(Box::new(FailingStorage), 1);
+        manager.insert_chunk_with_lod(payload.clone(), 2).unwrap();
+        let access = manager.last_access[&coord];
+        assert!(matches!(
+            manager.evict_chunk(coord),
+            Err(ChunkStorageError::Io(_))
+        ));
+        assert_eq!(manager.request_chunk(coord).unwrap(), Some(&payload));
+        assert_eq!(manager.get_lod_level(coord), 2);
+        assert_eq!(manager.last_access[&coord], access);
+        assert_eq!(manager.stats().evictions, 0);
+        assert!(manager.insert_chunk(sample_payload(4, 5, 6)).is_err());
+        assert_eq!(manager.request_chunk(coord).unwrap(), Some(&payload));
+        assert_eq!(manager.resident.len(), 1);
     }
 
     // ========================================================================

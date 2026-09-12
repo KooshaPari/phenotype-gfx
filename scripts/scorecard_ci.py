@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
+# ruff: noqa: BLE001
 """
 88-Pillar Scorecard CI Script
 Audits a repository against 88 quality and security pillars.
+
+BLE001 (Do not catch blind exception) is intentionally suppressed: this
+script audits 88 independent pillars and a failure in one pillar must
+not crash the others; each pillar must catch its own exceptions and
+report the failure. Removing the suppression requires per-pillar
+typed exception handling, which is a separate refactor.
 """
-import os, sys, json, argparse
+import sys
+import json
+import argparse
 from pathlib import Path
 
 PILLARS = [
@@ -105,11 +114,13 @@ def audit_repo(repo_path):
     for pillar in PILLARS:
         try:
             passed = pillar["check"](path)
-            if isinstance(passed, list): passed = len(passed) > 0
-            results.append({"id":pillar["id"],"name":pillar["name"],"passed":bool(passed)})
-            if passed: score += 1
+            if isinstance(passed, list):
+                passed = len(passed) > 0
+            results.append({"id": pillar["id"], "name": pillar["name"], "passed": bool(passed)})
+            if passed:
+                score += 1
         except Exception as e:
-            results.append({"id":pillar["id"],"name":pillar["name"],"passed":False,"error":str(e)})
+            results.append({"id": pillar["id"], "name": pillar["name"], "passed": False, "error": str(e)})
     return {"score":score,"total":len(PILLARS),"percentage":(score/len(PILLARS))*100,"results":results}
 
 def main():
@@ -132,12 +143,19 @@ def main():
             for r in report["results"]:
                 print(f"| {r['id']} | {r['name']} | {'PASS' if r['passed'] else 'FAIL'} |")
         else:
-            print(f"Scorecard: {report['score']}/{report['total']} ({report['percentage']:.1f}%)")
+            score_str = f"{report['score']}/{report['total']} ({report['percentage']:.1f}%)"
+            print(f"Scorecard: {score_str}")
             print(f"Threshold: {args.threshold}")
-            print("Status: PASS" if report['score'] >= args.threshold else f"Status: FAIL\nFailed: {', '.join(r['name'] for r in report['results'] if not r['passed'])}")
-        if args.fail_on_drop and report['score'] < args.threshold: sys.exit(1)
+            if report["score"] >= args.threshold:
+                print("Status: PASS")
+            else:
+                failed = ", ".join(r["name"] for r in report["results"] if not r["passed"])
+                print(f"Status: FAIL\nFailed: {failed}")
+        if args.fail_on_drop and report['score'] < args.threshold:
+            sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr); sys.exit(2)
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(2)
 
 if __name__ == "__main__":
     main()

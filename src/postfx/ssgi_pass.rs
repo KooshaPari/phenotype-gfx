@@ -145,6 +145,7 @@ impl PostFxPass for SsgiPass {
 }
 
 #[cfg(test)]
+#[allow(clippy::manual_range_contains)] // pre-existing on main; explicit opt-out for CI matrix
 mod tests {
     use super::*;
     use crate::postfx::ports::post_fx_pass::{PassEffect, PassQuality, PostFxContext};

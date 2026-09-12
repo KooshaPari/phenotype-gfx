@@ -342,10 +342,7 @@ pub unsafe extern "C" fn phenotype_gfx_voxel_vertex_count(handle: *const MeshBuf
 #[no_mangle]
 pub unsafe extern "C" fn phenotype_gfx_voxel_index_count(handle: *const MeshBufferHandle) -> u32 {
     // SAFETY: Caller guarantees non-null valid handle.
-    assert!(
-        !handle.is_null(),
-        "null handle passed to voxel_index_count"
-    );
+    assert!(!handle.is_null(), "null handle passed to voxel_index_count");
     let h = unsafe { &*handle };
     h.mesh.index_count() as u32
 }

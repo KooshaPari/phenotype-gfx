@@ -1016,6 +1016,11 @@ pub fn dispatch_conditional_mix_batch(
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_range_contains,
+    clippy::similar_names
+)]
 mod tests {
     use super::*;
 
