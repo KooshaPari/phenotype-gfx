@@ -1,0 +1,8 @@
+[book]
+title = "Phenotype-gfx Developer Guide"
+src = "docs"
+description = "Developer guide for the phenotype-gfx polyglot graphics SDK: voxel kernel, post-processing, FFI, Unity integration, and operational procedures."
+
+[build]
+build-dir = "_site"
+create-missing = true
